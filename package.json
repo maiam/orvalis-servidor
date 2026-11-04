@@ -1,15 +1,16 @@
 {
   "name": "orvalis-servidor",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
-  "description": "Servidor do Orvalis (multiplayer). Etapa 0: teste de WebSocket na hospedagem.",
+  "description": "Servidor do Orvalis (multiplayer co-op com código de convite).",
   "main": "server.js",
   "engines": {
     "node": ">=22.12"
   },
   "scripts": {
     "start": "node server.js",
-    "test": "node --test"
+    "test": "node --test",
+    "sync-net": "bash scripts/sync-net.sh"
   },
   "dependencies": {
     "ws": "^8.22.1"

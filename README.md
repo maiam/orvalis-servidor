@@ -1,21 +1,28 @@
 # Orvalis — servidor
 
-Servidor do **Orvalis** (multiplayer, depois contas e nuvem). O jogo fica em outro repositório
-(`maiam/mundoblocos-2d`, publicado em `orvalis.pensamentos.online`); este é só o backend (ADR 0015 do jogo).
+Servidor do **Orvalis** (multiplayer co-op; depois contas e nuvem). O jogo fica em `maiam/mundoblocos-2d`
+(`orvalis.pensamentos.online`); este é só o backend (ADRs 0015 e 0016 do jogo).
 
-**Etapa atual: 0 — teste de hospedagem.** Um servidor mínimo que confirma se a hospedagem aceita conexões WebSocket.
+**Etapa atual: 2 — salas co-op.** Até 4 convidados por sala, entrada só com nome, código de convite de 6 caracteres,
+sem combate entre jogadores. O servidor é autoritativo: as regras são as do jogo, vindas de `vendor/orvalis-net.cjs`
+(a classe `Room` do jogo, empacotada — **nunca edite à mão**; atualize com `npm run sync-net`).
 
 | Rota | O que faz |
 |---|---|
-| `GET /` | Página de teste: conecta por WebSocket, manda "ping" a cada 2 s e mostra o eco |
-| `GET /saude` | JSON `{ ok, conectados, segundosNoAr }` |
-| `WS /ws` | Eco das mensagens + aviso de quantos estão conectados (ping a cada 25 s mantém a conexão viva) |
+| `GET /` | Página de teste: criar sala ou entrar com código e ver quem está nela |
+| `GET /saude` | JSON `{ ok, protocolo, pacote, salas, jogadores, segundosNoAr }` |
+| `WS /ws` | Protocolo do jogo (`src/net/protocol.ts` no jogo) |
+
+Limites: 16 kB por mensagem; 40 mensagens/s por conexão (acima são ignoradas; acima de 200/s a conexão cai); até
+200 salas. Origens permitidas: o jogo, o Santuário, este servidor e `localhost:5173` (troque com `ALLOWED_ORIGINS`,
+lista separada por vírgula). Salas vivem só na memória: acabam quando o último sai ou o servidor reinicia.
 
 ## Rodar
 ```bash
 npm ci
 npm start      # http://localhost:3000 (ou a porta de PORT)
 npm test
+npm run sync-net -- ../mundoblocos-2d   # atualiza o pacote do jogo (rode depois de mudar src/net ou src/world lá)
 ```
 
 ## Hospedagem (Hostinger, app web Node.js)
@@ -30,9 +37,8 @@ Subdomínio: `orvalis-servidor.pensamentos.online` (provisório até o domínio 
 | Arquivo de entrada / comando de início | `server.js` / `npm start` (CommonJS: o carregador da hospedagem usa `require`) |
 | Variáveis | nenhuma (a porta vem de `PORT`, definida pela Hostinger) |
 
-**Como saber se funcionou:** abrir `https://orvalis-servidor.pensamentos.online/` — deve aparecer **"✅ Conectado"** e
-o eco a cada 2 s. Abrindo em duas abas, "Conectados agora" mostra 2. Se aparecer **"❌ Não conectou"**, a hospedagem não
-aceita WebSocket de entrada → plano B: VPS (mesmo código).
+**Como testar no ar:** abrir `https://orvalis-servidor.pensamentos.online/`, clicar **Entrar / criar sala** (aparece o
+código), abrir outra aba, digitar o código e entrar — as duas abas mostram os dois nomes.
 
 ## Regras
 - Sem dependência do maiamapps. Regras do jogo não são copiadas: virão do código `src/world/` do jogo (próximas etapas).

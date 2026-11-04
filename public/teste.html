@@ -9,37 +9,59 @@
   main { max-width: 560px; margin: auto; }
   #estado { font-weight: 800; font-size: 20px; }
   .ok { color: #8ef0a7; } .erro { color: #ff8a9a; }
+  label { display: block; margin: 8px 0 4px; }
+  input { font: inherit; padding: 8px; border-radius: 8px; border: 0; width: 100%; box-sizing: border-box; }
+  button { font: inherit; padding: 8px 14px; border-radius: 10px; border: 0; background: #ffd36b; color: #2a1a40; font-weight: 800; margin: 10px 6px 0 0; }
   pre { background: #2a2260; padding: 12px; border-radius: 10px; white-space: pre-wrap; min-height: 120px; }
-  button { font: inherit; padding: 8px 14px; border-radius: 10px; border: 0; background: #ffd36b; color: #2a1a40; font-weight: 800; }
+  #codigo { font-size: 28px; letter-spacing: 4px; color: #ffd36b; }
 </style>
 </head>
 <body>
 <main>
   <h1>Orvalis — teste do servidor</h1>
-  <p>Esta página abre uma conexão em tempo real (WebSocket) com o servidor e manda uma mensagem a cada 2 segundos.</p>
   <p id="estado">Conectando…</p>
-  <p>Conectados agora: <b id="conectados">–</b></p>
-  <button id="enviar">Mandar "olá"</button>
+  <label>Seu nome <input id="nome" value="Teste" maxlength="16"></label>
+  <label>Código de convite (vazio = criar sala) <input id="sala" maxlength="8"></label>
+  <button id="entrar">Entrar / criar sala</button>
+  <p>Sala: <b id="codigo">–</b> · Na sala: <b id="gente">–</b></p>
   <pre id="log"></pre>
 </main>
 <script>
+  // Mesmo protocolo do jogo (src/net/protocol.ts, PROTOCOL_VERSION abaixo deve bater com /saude).
   const log = (t) => { const el = document.getElementById('log'); el.textContent = (new Date().toLocaleTimeString() + '  ' + t + '\n' + el.textContent).slice(0, 4000); };
   const estado = document.getElementById('estado');
   const url = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws';
-  const ws = new WebSocket(url);
-  let n = 0;
-  ws.onopen = () => {
-    estado.textContent = '✅ Conectado — o servidor aceita WebSocket'; estado.className = 'ok'; log('conectado em ' + url);
-    setInterval(() => ws.readyState === 1 && ws.send('ping ' + (++n)), 2000);
+  let versao = 1;
+  fetch('/saude').then((r) => r.json()).then((s) => { versao = s.protocolo; log('servidor: ' + s.pacote); });
+  const nomes = new Map();
+  const mostrarGente = () => { document.getElementById('gente').textContent = [...nomes.values()].join(', ') || '–'; };
+  let ws;
+  function conectar() {
+    ws = new WebSocket(url);
+    ws.onopen = () => { estado.textContent = '✅ Conectado'; estado.className = 'ok'; };
+    ws.onclose = (e) => { estado.textContent = '❌ Conexão fechada (' + e.code + ')'; estado.className = 'erro'; };
+    ws.onmessage = (e) => {
+      const m = JSON.parse(e.data);
+      if (m.t === 'welcome') {
+        document.getElementById('codigo').textContent = m.room;
+        nomes.clear(); nomes.set(m.you, document.getElementById('nome').value + ' (você)');
+        for (const p of m.players) nomes.set(p.id, p.name);
+        mostrarGente();
+        log('entrou na sala ' + m.room + ' (seed ' + m.seed + ', ' + m.edits.length + ' edições)');
+      } else if (m.t === 'joined') { nomes.set(m.player.id, m.player.name); mostrarGente(); log(m.player.name + ' entrou'); }
+      else if (m.t === 'left') { log((nomes.get(m.id) || m.id) + ' saiu'); nomes.delete(m.id); mostrarGente(); }
+      else if (m.t === 'error') log('erro: ' + m.message);
+      else if (m.t !== 'state') log(JSON.stringify(m));
+    };
+  }
+  conectar();
+  document.getElementById('entrar').onclick = () => {
+    const room = document.getElementById('sala').value.trim();
+    const hello = { t: 'hello', v: versao, name: document.getElementById('nome').value };
+    if (room) hello.room = room;
+    if (ws.readyState !== 1) { conectar(); ws.addEventListener('open', () => ws.send(JSON.stringify(hello)), { once: true }); return; }
+    ws.send(JSON.stringify(hello));
   };
-  ws.onmessage = (e) => {
-    const m = JSON.parse(e.data);
-    if (m.conectados !== undefined) document.getElementById('conectados').textContent = m.conectados;
-    log(m.tipo === 'eco' ? 'eco: ' + m.texto : m.tipo + ' (' + m.conectados + ' conectados)');
-  };
-  ws.onclose = (e) => { estado.textContent = '❌ Conexão fechada (código ' + e.code + ')'; estado.className = 'erro'; log('fechou: ' + e.code); };
-  ws.onerror = () => { estado.textContent = '❌ Não conectou — a hospedagem pode não aceitar WebSocket'; estado.className = 'erro'; };
-  document.getElementById('enviar').onclick = () => ws.send('olá');
 </script>
 </body>
 </html>
