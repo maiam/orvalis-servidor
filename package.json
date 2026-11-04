@@ -3,7 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "description": "Servidor do Orvalis (multiplayer). Etapa 0: teste de WebSocket na hospedagem.",
-  "type": "module",
   "main": "server.js",
   "engines": {
     "node": ">=22.12"

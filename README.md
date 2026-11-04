@@ -19,7 +19,7 @@ npm test
 ```
 
 ## Hospedagem (Hostinger, app web Node.js)
-Subdomínio: `servidor.orvalis.pensamentos.online` (provisório até o domínio próprio do Orvalis).
+Subdomínio: `orvalis-servidor.pensamentos.online` (provisório até o domínio próprio do Orvalis).
 
 | Campo no hPanel | Valor |
 |---|---|
@@ -27,10 +27,10 @@ Subdomínio: `servidor.orvalis.pensamentos.online` (provisório até o domínio 
 | Versão do Node | 22.x |
 | Diretório raiz | `./` |
 | Comando de build | *(vazio — não há build)*; se o campo for obrigatório: `npm ci` |
-| Arquivo de entrada / comando de início | `server.js` / `npm start` |
+| Arquivo de entrada / comando de início | `server.js` / `npm start` (CommonJS: o carregador da hospedagem usa `require`) |
 | Variáveis | nenhuma (a porta vem de `PORT`, definida pela Hostinger) |
 
-**Como saber se funcionou:** abrir `https://servidor.orvalis.pensamentos.online/` — deve aparecer **"✅ Conectado"** e
+**Como saber se funcionou:** abrir `https://orvalis-servidor.pensamentos.online/` — deve aparecer **"✅ Conectado"** e
 o eco a cada 2 s. Abrindo em duas abas, "Conectados agora" mostra 2. Se aparecer **"❌ Não conectou"**, a hospedagem não
 aceita WebSocket de entrada → plano B: VPS (mesmo código).
 

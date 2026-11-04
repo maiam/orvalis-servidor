@@ -1,7 +1,7 @@
-import { test } from 'node:test';
-import assert from 'node:assert/strict';
-import WebSocket from 'ws';
-import { startServer } from '../server.js';
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+const WebSocket = require('ws');
+const { startServer } = require('../src/app');
 
 test('saúde, página de teste e eco pelo WebSocket', async () => {
   const s = startServer(0);
