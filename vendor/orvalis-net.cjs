@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.53.0 (0930c62) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.55.0 (9b461ce) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -110,6 +110,8 @@ var Block = {
   DUNGEON_ROOTS: 109,
   /** Parede do labirinto: cubo de pedra escura (variantes por célula). */
   DUNGEON_WALL: 110,
+  /** Entrada do Covil das Aranhas no mundo (arte da caverna; base 5 × 3, as outras células são `TOWN_PART`). */
+  DUNGEON_CAVE: 111,
   // --- Cidade do Despertar (área protegida: construções fixas, nada quebra nem é colocado) ---
   /** Célula ocupada por uma construção além do canto inferior esquerdo (onde fica o id dela): bloqueia, sem arte. */
   TOWN_PART: 120,
@@ -281,6 +283,7 @@ var defs = [
     [Block.DUNGEON_ROOTS, "Ra\xEDzes"],
     [Block.DUNGEON_WALL, "Parede da Caverna"]
   ].map(([id, name]) => object(id, name, { shape: "rock", breakable: false, placeable: false })),
+  object(Block.DUNGEON_CAVE, "Covil das Aranhas", { shape: "building", breakable: false, placeable: false }),
   // Cidade do Despertar: construções (várias células) e enfeites fixos; o World protege a área inteira.
   object(Block.TOWN_PART, "Constru\xE7\xE3o", { shape: "building", breakable: false, placeable: false }),
   ...[
@@ -412,7 +415,9 @@ var Item = {
   /** Hortaliças: o próprio legume é o que se planta (e o que se colhe). */
   POTATO: "potato",
   TOMATO: "tomato",
-  CARROT: "carrot"
+  CARROT: "carrot",
+  /** Pano de Seda (10 sedas): ingrediente da tenda. */
+  SILK_CLOTH: "silk_cloth"
 };
 var ITEMS = {
   wheat_seed: { id: Item.WHEAT_SEED, name: "Semente de Trigo", plants: Block.WHEAT_0 },
@@ -425,7 +430,8 @@ var ITEMS = {
   apple: { id: Item.APPLE, name: "Ma\xE7\xE3" },
   potato: { id: Item.POTATO, name: "Batata", plants: Block.POTATO_0 },
   tomato: { id: Item.TOMATO, name: "Tomate", plants: Block.TOMATO_0 },
-  carrot: { id: Item.CARROT, name: "Cenoura", plants: Block.CARROT_0 }
+  carrot: { id: Item.CARROT, name: "Cenoura", plants: Block.CARROT_0 },
+  silk_cloth: { id: Item.SILK_CLOTH, name: "Pano de Seda" }
 };
 var VEGETABLES = [Item.POTATO, Item.TOMATO, Item.CARROT];
 var LOOT_ITEMS = [Item.SILK, Item.FANG, Item.QUEEN_HEART];
@@ -568,11 +574,19 @@ var RECIPES = [
     inputs: [{ item: blockStack(Block.STONE), count: 6 }],
     output: { item: blockStack(Block.OVEN), count: 1 }
   },
+  // Pano de Seda (dono do produto, 2026-11-06): 10 sedas viram 1 pano; a tenda passou a pedir o pano.
+  {
+    id: "silk-cloth",
+    name: "Pano de Seda",
+    profession: "builder",
+    inputs: [{ item: Item.SILK, count: 10 }],
+    output: { item: Item.SILK_CLOTH, count: 1 }
+  },
   {
     id: "tent",
     name: "Tenda",
     profession: "builder",
-    inputs: [{ item: Item.SILK, count: 10 }, { item: blockStack(Block.OAK_PLANKS), count: 10 }, { item: Item.FANG, count: 4 }],
+    inputs: [{ item: Item.SILK_CLOTH, count: 1 }, { item: blockStack(Block.OAK_PLANKS), count: 10 }, { item: Item.FANG, count: 4 }],
     output: { item: blockStack(Block.TENT), count: 1 }
   }
 ];
@@ -1001,64 +1015,101 @@ function decorateDungeon(seed, m, x0, y0) {
 function buildDungeon(seed, x0, y0, side, size = dungeonSize(seed)) {
   return decorateDungeon(seed, buildMaze(seed, size[0], size[1], side), x0, y0);
 }
-function sideFacing(area, px, py) {
-  const cx = (area.x0 + area.x1) / 2;
-  const cy = (area.y0 + area.y1) / 2;
-  const dx = (px - cx) / (area.x1 - area.x0);
-  const dy = (py - cy) / (area.y1 - area.y0);
-  if (Math.abs(dx) > Math.abs(dy)) return dx < 0 ? "west" : "east";
-  return dy < 0 ? "north" : "south";
+var DUNGEON_ORIGIN = [-1e5, -1e5];
+var DUNGEON_RIM = 6;
+var CAVE_MIN_CASTLE_DIST = 10 * CHUNK_SIZE;
+var CAVE_W = 5;
+var CAVE_D = 3;
+function isolatedDungeon(seed) {
+  return buildDungeon(seed, DUNGEON_ORIGIN[0], DUNGEON_ORIGIN[1], "south");
 }
-function planDungeon(base, spawnX, spawnY, avoid = null) {
-  const [w, h] = dungeonSize(base.seed);
-  const dirs = [[1, 0], [0, 1], [-1, 0], [0, -1], [1, 1], [-1, 1], [1, -1], [-1, -1]];
-  const land = (x, y) => base.groundAt(x, y) !== Block.WATER;
+function dungeonGuard(l) {
+  return { x0: l.area.x0 - DUNGEON_RIM, y0: l.area.y0 - DUNGEON_RIM, x1: l.area.x1 + DUNGEON_RIM, y1: l.area.y1 + DUNGEON_RIM };
+}
+function dungeonEntry(l) {
+  const c = l.gate[l.gate.length - 2];
+  const inward = { north: [0, 1], south: [0, -1], west: [1, 0], east: [-1, 0] }[l.side];
+  return [c[0] + inward[0], c[1] + inward[1]];
+}
+function isDungeonExit(l, x, y) {
+  return l.gate.slice(0, 3).some(([gx, gy]) => gx === x && gy === y);
+}
+function caveAt(x, y) {
+  const footprint = { x0: x, y0: y - CAVE_D + 1, x1: x + CAVE_W - 1, y1: y };
+  const outside = [x + (CAVE_W >> 1), y + 1];
+  return {
+    x,
+    y,
+    footprint,
+    outside,
+    guard: { x0: footprint.x0 - 1, y0: footprint.y0 - 1, x1: footprint.x1 + 1, y1: footprint.y1 },
+    front: { x0: outside[0] - 2, y0: outside[1], x1: outside[0] + 2, y1: outside[1] + 2 }
+  };
+}
+function planCave(base, castle, avoid) {
+  const seed = base.seed;
+  const a0 = hash2(seed, 7001, 3) * Math.PI * 2;
+  const overlaps = (r) => !!avoid && r.x0 <= avoid.x1 && r.x1 >= avoid.x0 && r.y0 <= avoid.y1 && r.y1 >= avoid.y0;
   let fallback = null;
-  for (let dist = Math.ceil(h / 2) + 10; dist <= 170; dist += 8) {
-    for (const [dx, dy] of dirs) {
-      const x0 = spawnX + Math.round(dx * (dist + (w - h) / 2 * Math.abs(dx))) - Math.floor(w / 2);
-      const y0 = spawnY + Math.round(dy * dist) - Math.floor(h / 2);
-      const area = { x0, y0, x1: x0 + w - 1, y1: y0 + h - 1 };
-      if (inRect({ x0: area.x0 - 6, y0: area.y0 - 6, x1: area.x1 + 6, y1: area.y1 + 6 }, spawnX, spawnY)) continue;
-      if (avoid && area.x0 <= avoid.x1 && area.x1 >= avoid.x0 && area.y0 <= avoid.y1 && area.y1 >= avoid.y0) continue;
-      let water = 0;
-      let total = 0;
-      for (let y = area.y0; y <= area.y1; y += 4) for (let x = area.x0; x <= area.x1; x += 4) {
-        total++;
-        if (!land(x, y)) water++;
-      }
-      if (water / total > 0.3 && fallback) continue;
-      const layout = buildDungeon(base.seed, x0, y0, sideFacing(area, spawnX, spawnY), [w, h]);
-      fallback ??= layout;
-      const [sx, sy] = layout.doorstep;
-      const front = [-1, 0, 1].every((k) => layout.side === "north" || layout.side === "south" ? land(sx + k, sy) : land(sx, sy + k));
-      if (water / total <= 0.3 && front) return layout;
+  for (let t = 0; t < 96; t++) {
+    const a = a0 + t * 0.7;
+    const dist = CAVE_MIN_CASTLE_DIST + 8 + hash2(seed, 7002, t) * 80 + Math.floor(t / 9) * 24;
+    const ox = Math.round(castle[0] + Math.cos(a) * dist);
+    const oy = Math.round(castle[1] + Math.sin(a) * dist);
+    const cave = caveAt(ox - (CAVE_W >> 1), oy);
+    if (Math.hypot(cave.outside[0] - castle[0], cave.outside[1] - castle[1]) < CAVE_MIN_CASTLE_DIST) continue;
+    if (overlaps(cave.guard) || overlaps(cave.front)) continue;
+    fallback ??= cave;
+    let dry = true;
+    for (const r of [cave.footprint, cave.front]) {
+      for (let y = r.y0; y <= r.y1 && dry; y++) for (let x = r.x0; x <= r.x1 && dry; x++) if (base.groundAt(x, y) === Block.WATER) dry = false;
     }
+    if (dry) return cave;
   }
   return fallback;
 }
 var DungeonTerrain = class {
-  constructor(base, layout) {
+  constructor(base, layout, cave = null) {
     this.base = base;
     this.layout = layout;
+    this.cave = cave;
+    this.guard = dungeonGuard(layout);
     const [dx, dy] = layout.doorstep;
-    this.front = { x0: dx - 2, y0: dy - 2, x1: dx + 2, y1: dy + 2 };
+    this.landing = layout.side === "north" || layout.side === "south" ? { x0: dx - 1, y0: dy, x1: dx + 1, y1: dy } : { x0: dx, y0: dy - 1, x1: dx, y1: dy + 1 };
   }
   base;
   layout;
-  /** Diante da entrada (fora da área): terra firme e sem objetos, para a entrada nunca ficar bloqueada. */
-  front;
+  cave;
+  guard;
+  landing;
   clearFront(c) {
     return { ground: blockDef(c.ground).liquid || c.ground === Block.HOLE ? Block.GRASS : c.ground, object: Block.AIR, upper: Block.AIR };
   }
   get seed() {
     return this.base.seed;
   }
-  cellAt(x, y) {
+  /** Célula sobreposta, ou null se for terreno base puro. `baseCell` só é calculada quando precisa. */
+  overlay(x, y, baseCell) {
     const l = this.layout;
-    if (!inRect(l.area, x, y)) return inRect(this.front, x, y) ? this.clearFront(this.base.cellAt(x, y)) : this.base.cellAt(x, y);
-    const i = (y - l.area.y0) * l.w + (x - l.area.x0);
-    return { ground: l.ground[i], object: l.objects[i], upper: Block.AIR };
+    if (inRect(l.area, x, y)) {
+      const i = (y - l.area.y0) * l.w + (x - l.area.x0);
+      return { ground: l.ground[i], object: l.objects[i], upper: Block.AIR };
+    }
+    if (inRect(this.guard, x, y)) {
+      const floor = inRect(this.landing, x, y);
+      return { ground: Block.DUNGEON_DIRT, object: floor ? Block.AIR : Block.DUNGEON_MOUNTAIN, upper: Block.AIR };
+    }
+    const cave = this.cave;
+    if (cave && inRect(cave.footprint, x, y)) {
+      const g = baseCell().ground;
+      const ground2 = blockDef(g).liquid || g === Block.HOLE ? Block.GRASS : g;
+      return { ground: ground2, object: x === cave.x && y === cave.y ? Block.DUNGEON_CAVE : Block.TOWN_PART, upper: Block.AIR };
+    }
+    if (cave && inRect(cave.front, x, y)) return this.clearFront(baseCell());
+    return null;
+  }
+  cellAt(x, y) {
+    return this.overlay(x, y, () => this.base.cellAt(x, y)) ?? this.base.cellAt(x, y);
   }
   groundAt(x, y) {
     return this.cellAt(x, y).ground;
@@ -1075,25 +1126,20 @@ var DungeonTerrain = class {
   /** Cada chunk copia a sua parte do mapa lógico (corredores seguem sem interrupção entre chunks). */
   generateChunk(cx, cy, ground2, objects, upper) {
     this.base.generateChunk(cx, cy, ground2, objects, upper);
-    const l = this.layout.area;
-    const f = this.front;
     const S = Math.round(Math.sqrt(ground2.length));
     const x0 = cx * S;
     const y0 = cy * S;
     const misses = (r) => x0 > r.x1 || x0 + S - 1 < r.x0 || y0 > r.y1 || y0 + S - 1 < r.y0;
-    if (misses(l) && misses(f)) return;
+    const c = this.cave;
+    if (misses(this.guard) && (!c || misses(c.footprint) && misses(c.front))) return;
     for (let ly = 0; ly < S; ly++) {
       for (let lx = 0; lx < S; lx++) {
-        const x = x0 + lx;
-        const y = y0 + ly;
         const i = ly * S + lx;
-        let c;
-        if (inRect(l, x, y)) c = this.cellAt(x, y);
-        else if (inRect(f, x, y)) c = this.clearFront({ ground: ground2[i], object: objects[i], upper: upper[i] });
-        else continue;
-        ground2[i] = c.ground;
-        objects[i] = c.object;
-        upper[i] = c.upper;
+        const cell = this.overlay(x0 + lx, y0 + ly, () => ({ ground: ground2[i], object: objects[i], upper: upper[i] }));
+        if (!cell) continue;
+        ground2[i] = cell.ground;
+        objects[i] = cell.object;
+        upper[i] = cell.upper;
       }
     }
   }
@@ -1872,8 +1918,7 @@ var BIOMES = {
     decoChance: 0
   }
 };
-function pickBiome(temperature, moisture) {
-  if (temperature > 0.32) return BIOMES.desert;
+function pickBiome(_temperature, moisture) {
   if (moisture < -0.18) return BIOMES.sakura;
   return BIOMES.meadow;
 }
@@ -2171,8 +2216,13 @@ var World = class {
   crops = /* @__PURE__ */ new Set();
   /** Árvores plantadas crescendo e macieiras colhidas (avançam em `tick`). */
   trees = /* @__PURE__ */ new Set();
-  /** Dungeon deste mundo (perfil com `dungeon`), ou null. Área protegida: só se luta lá dentro. */
+  /**
+   * Covil deste mundo (perfil com `dungeon`), ou null: labirinto isolado do mapa (ADR 0019), protegido; só se luta lá
+   * dentro. No mundo fica só a entrada, a caverna (`cave`).
+   */
   dungeon = null;
+  /** Entrada do covil no mundo (a pelo menos 10 chunks do castelo), ou null. */
+  cave = null;
   /** Cidade do Despertar (perfil com `town`), ou null. Área protegida; início e renascer sem tenda. */
   town = null;
   /** Interiores das construções da cidade (ADR 0014): cômodos isolados e protegidos. Vazio sem cidade. */
@@ -2193,11 +2243,14 @@ var World = class {
     }
     if (profile.dungeon) {
       const base = this.generator;
-      const [sx, sy] = this.spawn = this.findSpawn();
+      const spawn = this.spawn = this.findSpawn();
       const keep = this.town ? grow(this.town.area, TOWN_MARGIN + 4) : null;
       if (keep) keep.y1 = this.town.area.y1 + TOWN_SOUTH_FIELD;
-      this.dungeon = planDungeon(base, sx, sy, keep);
-      this.generator = new DungeonTerrain(base, this.dungeon);
+      const castle = this.town?.buildings.find((b2) => b2.id === Block.CASTLE);
+      const center = castle ? [castle.x + castle.w / 2, castle.y - castle.d / 2] : spawn;
+      this.dungeon = isolatedDungeon(seed);
+      this.cave = planCave(base, center, keep);
+      this.generator = new DungeonTerrain(base, this.dungeon, this.cave);
     }
     if (this.town) {
       this.interiors = interiorLayouts(this.town);
@@ -2206,7 +2259,7 @@ var World = class {
   }
   /** Célula dentro da dungeon, da cidade (muralhas incluídas) ou de um interior? Lá nada é quebrado, colocado, arado nem plantado. */
   isProtected(x, y) {
-    return !!this.dungeon && inRect(this.dungeon.area, x, y) || !!this.town && inRect(this.town.area, x, y) || this.interiors.some((l) => inRect(l.guard, x, y));
+    return !!this.dungeon && inRect(dungeonGuard(this.dungeon), x, y) || !!this.cave && inRect(this.cave.guard, x, y) || !!this.town && inRect(this.town.area, x, y) || this.interiors.some((l) => inRect(l.guard, x, y));
   }
   /** Interior (cômodo) que contém a célula, ou null. */
   interiorAt(x, y) {
@@ -2215,6 +2268,22 @@ var World = class {
   /** Interior cuja porta fica diante desta célula da rua (andar para cima nela = entrar), ou null. */
   interiorEntrance(x, y) {
     return this.interiors.find((l) => l.outside[0] === x && l.outside[1] === y) ?? null;
+  }
+  /** Diante da boca da caverna (andar para cima aqui = entrar no covil)? */
+  isCaveDoor(x, y) {
+    return !!this.cave && this.cave.outside[0] === x && this.cave.outside[1] === y;
+  }
+  /** Dentro do covil (labirinto), sem o anel em volta? */
+  inDungeon(x, y) {
+    return !!this.dungeon && inRect(this.dungeon.area, x, y);
+  }
+  /** Pisar nesta célula sai do covil (anel externo do vão da entrada)? */
+  isDungeonExit(x, y) {
+    return !!this.dungeon && isDungeonExit(this.dungeon, x, y);
+  }
+  /** Onde se chega ao entrar no covil (logo para dentro do vão), ou null sem covil. */
+  dungeonEntry() {
+    return this.dungeon ? dungeonEntry(this.dungeon) : null;
   }
   /** Construção (ou placa) da cidade que ocupa a célula, ou null. */
   townBuildingAt(x, y) {
@@ -2781,7 +2850,7 @@ var World = class {
 };
 
 // src/net/protocol.ts
-var PROTOCOL_VERSION = 3;
+var PROTOCOL_VERSION = 4;
 var MAX_PLAYERS = 4;
 var ROOM_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 var ROOM_CODE_LENGTH = 6;
