@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.52.0 (0062f1e) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.53.0 (0930c62) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -139,6 +139,10 @@ var Block = {
   // --- plantação de trigo: 16 estágios consecutivos (60 = semente ... 75 = maduro) ---
   WHEAT_0: 60,
   WHEAT_15: 75,
+  // --- hortaliças: 16 estágios consecutivos cada (plantadas pelo próprio legume; ver CROPS) ---
+  POTATO_0: 150,
+  TOMATO_0: 170,
+  CARROT_0: 190,
   // --- Santuário Celestial (prancha "Blocos do Mundo Celestial") ---
   CLOUD_SOLID: 80,
   CLOUD_ETHEREAL: 81,
@@ -159,16 +163,30 @@ var Block = {
   WOOD_CELESTIAL: 96,
   FOLIAGE_GOLDEN: 97
 };
-var WHEAT_STAGES = 16;
 var WHEAT_FIRST = 60;
-function isWheat(id) {
-  return id >= WHEAT_FIRST && id < WHEAT_FIRST + WHEAT_STAGES;
+var CROP_STAGES = 16;
+var CROPS = {
+  wheat: { first: WHEAT_FIRST, name: "Trigo", ripe: "Trigo Maduro" },
+  potato: { first: Block.POTATO_0, name: "Batata", ripe: "Batata Madura" },
+  tomato: { first: Block.TOMATO_0, name: "Tomate", ripe: "Tomate Maduro" },
+  carrot: { first: Block.CARROT_0, name: "Cenoura", ripe: "Cenoura Madura" }
+};
+var CROP_KINDS = Object.keys(CROPS);
+function cropKind(id) {
+  for (const k of CROP_KINDS) if (id >= CROPS[k].first && id < CROPS[k].first + CROP_STAGES) return k;
+  return null;
 }
-function wheatStage(id) {
-  return id - WHEAT_FIRST;
+function isCrop(id) {
+  return cropKind(id) !== null;
 }
-function wheatId(stage) {
-  return WHEAT_FIRST + Math.max(0, Math.min(WHEAT_STAGES - 1, stage));
+function cropStage(id) {
+  return id - CROPS[cropKind(id)].first;
+}
+function cropId(kind, stage) {
+  return CROPS[kind].first + Math.max(0, Math.min(CROP_STAGES - 1, stage));
+}
+function isCropSeedling(id) {
+  return CROP_KINDS.some((k) => CROPS[k].first === id);
 }
 var ground = (id, name, extra = {}) => ({
   id,
@@ -308,13 +326,13 @@ var defs = [
   object(Block.LIGHT_BLOCK, "Bloco de Luz", { glow: true }),
   object(Block.WOOD_CELESTIAL, "Madeira Celestial"),
   object(Block.FOLIAGE_GOLDEN, "Folhagem Dourada"),
-  // Trigo: não bloqueia passagem, não aceita nada por cima, só entra plantando a semente.
-  ...Array.from({ length: WHEAT_STAGES }, (_, s) => object(WHEAT_FIRST + s, s === WHEAT_STAGES - 1 ? "Trigo Maduro" : "Trigo em crescimento", {
+  // Plantações (trigo, batata, tomate, cenoura): não bloqueiam passagem, não aceitam nada por cima, só entram plantando.
+  ...CROP_KINDS.flatMap((k) => Array.from({ length: CROP_STAGES }, (_, s) => object(CROPS[k].first + s, s === CROP_STAGES - 1 ? CROPS[k].ripe : `${CROPS[k].name} em crescimento`, {
     shape: "crop",
     solid: false,
     placeable: false,
     organic: "plant"
-  }))
+  })))
 ];
 var BLOCKS = (() => {
   const table = [];
@@ -390,7 +408,11 @@ var Item = {
   /** Mudas (cortar a árvore adulta) e a fruta da macieira (comer vem com a comida, Fase P). */
   OAK_SAPLING: "oak_sapling",
   APPLE_SAPLING: "apple_sapling",
-  APPLE: "apple"
+  APPLE: "apple",
+  /** Hortaliças: o próprio legume é o que se planta (e o que se colhe). */
+  POTATO: "potato",
+  TOMATO: "tomato",
+  CARROT: "carrot"
 };
 var ITEMS = {
   wheat_seed: { id: Item.WHEAT_SEED, name: "Semente de Trigo", plants: Block.WHEAT_0 },
@@ -400,8 +422,12 @@ var ITEMS = {
   queen_heart: { id: Item.QUEEN_HEART, name: "Cora\xE7\xE3o da Rainha", loot: true },
   oak_sapling: { id: Item.OAK_SAPLING, name: "Muda de Carvalho", plants: Block.OAK_SAPLING },
   apple_sapling: { id: Item.APPLE_SAPLING, name: "Muda de Macieira", plants: Block.APPLE_SAPLING },
-  apple: { id: Item.APPLE, name: "Ma\xE7\xE3" }
+  apple: { id: Item.APPLE, name: "Ma\xE7\xE3" },
+  potato: { id: Item.POTATO, name: "Batata", plants: Block.POTATO_0 },
+  tomato: { id: Item.TOMATO, name: "Tomate", plants: Block.TOMATO_0 },
+  carrot: { id: Item.CARROT, name: "Cenoura", plants: Block.CARROT_0 }
 };
+var VEGETABLES = [Item.POTATO, Item.TOMATO, Item.CARROT];
 var LOOT_ITEMS = [Item.SILK, Item.FANG, Item.QUEEN_HEART];
 var blockStack = (id) => `block:${id}`;
 var Tool = {
@@ -2115,6 +2141,7 @@ var WORLD_PROFILES = {
 
 // src/world/world.ts
 var WHEAT_STAGE_SECONDS = 6;
+var CROP_STAGE_SECONDS = { wheat: WHEAT_STAGE_SECONDS, potato: 8, carrot: 8, tomato: 10 };
 var TREE_STAGE_SECONDS = 120;
 var FRUIT_REGROW_SECONDS = 150;
 var SAPLING_GROUND = /* @__PURE__ */ new Set([Block.DIRT, Block.GRASS]);
@@ -2305,7 +2332,7 @@ var World = class {
     if (level === "ground") chunk.setGround(lx, ly, id);
     else chunk.setLevel(lx, ly, level, id);
     if (level === 0) {
-      if (isWheat(id)) this.crops.add(chunkKey(x, y));
+      if (isCrop(id)) this.crops.add(chunkKey(x, y));
       else this.crops.delete(chunkKey(x, y));
       if (isGrowingTree(id)) this.trees.add(chunkKey(x, y));
       else this.trees.delete(chunkKey(x, y));
@@ -2568,13 +2595,14 @@ var World = class {
   }
   // ---- Plantação ----
   /**
-   * Dá para plantar `id` aqui? Semente de trigo: só em Terra Arada. Muda de árvore: em Terra ou Terra com Grama.
+   * Dá para plantar `id` aqui? Plantação (trigo, batata, tomate, cenoura): só em Terra Arada. Muda de árvore: em Terra
+   * ou Terra com Grama.
    * Sempre com a célula livre (ou só com enfeite).
    */
   canPlant(x, y, id = Block.WHEAT_0) {
     if (this.isProtected(x, y)) return false;
     const sapling = id === Block.OAK_SAPLING || id === Block.APPLE_SAPLING;
-    if (!sapling && id !== Block.WHEAT_0) return false;
+    if (!sapling && !isCropSeedling(id)) return false;
     if (sapling ? !SAPLING_GROUND.has(this.getGround(x, y)) : this.getGround(x, y) !== PLANTABLE_GROUND) return false;
     const base = blockDef(this.getObject(x, y));
     return base.id === Block.AIR || base.shape === "decoration";
@@ -2636,21 +2664,21 @@ var World = class {
     return this.crops.size;
   }
   /**
-   * Avança o tempo das plantações: cada trigo não maduro sobe um estágio com
-   * probabilidade dt / WHEAT_STAGE_SECONDS (crescimento natural, não sincronizado).
+   * Avança o tempo: cada plantação não madura sobe um estágio com probabilidade dt / CROP_STAGE_SECONDS[cultura]
+   * (crescimento natural, não sincronizado); depois as árvores.
    */
   tick(dt, rand = Math.random) {
     this.tickWater(dt);
-    const p = dt / WHEAT_STAGE_SECONDS;
     for (const key of [...this.crops]) {
       const [x, y] = key.split(",").map(Number);
       const id = this.getObject(x, y);
-      if (!isWheat(id)) {
+      const kind = cropKind(id);
+      if (!kind) {
         this.crops.delete(key);
         continue;
       }
-      const stage = wheatStage(id);
-      if (stage < WHEAT_STAGES - 1 && rand() < p) this.setLevel(x, y, 0, wheatId(stage + 1));
+      const stage = cropStage(id);
+      if (stage < CROP_STAGES - 1 && rand() < dt / CROP_STAGE_SECONDS[kind]) this.setLevel(x, y, 0, cropId(kind, stage + 1));
     }
     for (const key of [...this.trees]) {
       const [x, y] = key.split(",").map(Number);
@@ -2745,7 +2773,7 @@ var World = class {
     for (let ly = 0; ly < CHUNK_SIZE; ly++) {
       for (let lx = 0; lx < CHUNK_SIZE; lx++) {
         const id = c.getObject(lx, ly);
-        if (isWheat(id)) this.crops.add(chunkKey(cx * CHUNK_SIZE + lx, cy * CHUNK_SIZE + ly));
+        if (isCrop(id)) this.crops.add(chunkKey(cx * CHUNK_SIZE + lx, cy * CHUNK_SIZE + ly));
         if (isGrowingTree(id)) this.trees.add(chunkKey(cx * CHUNK_SIZE + lx, cy * CHUNK_SIZE + ly));
       }
     }
@@ -2753,7 +2781,7 @@ var World = class {
 };
 
 // src/net/protocol.ts
-var PROTOCOL_VERSION = 2;
+var PROTOCOL_VERSION = 3;
 var MAX_PLAYERS = 4;
 var ROOM_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 var ROOM_CODE_LENGTH = 6;
