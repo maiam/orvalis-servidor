@@ -19,7 +19,11 @@ const MAX_ROOMS = 200;
 /** Mensagens por segundo por conexão: acima disso são ignoradas; muito acima, a conexão cai. */
 const MSG_PER_SEC = 40;
 const MSG_KICK = 200;
-/** Endereços de onde o jogo pode conectar (o navegador manda a origem; clientes sem origem, como testes, passam). */
+/**
+ * Endereços de onde o jogo pode conectar (o navegador manda a origem; clientes sem origem, como testes, passam).
+ * O jogo espelha esta lista em `ONLINE_HOSTS` (`src/net/socket.ts` do mundoblocos-2d) para esconder "Jogar com amigos"
+ * onde a conexão seria recusada: mudou aqui → mude lá.
+ */
 const DEFAULT_ORIGINS = [
   'https://orvalis.pensamentos.online',
   'https://santuario.orvalis.pensamentos.online',
