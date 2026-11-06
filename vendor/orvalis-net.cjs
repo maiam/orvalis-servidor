@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.55.0 (9b461ce) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.58.0 (59286bb) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -72,6 +72,8 @@ var Block = {
   // --- móveis (por receita) ---
   /** Cadeira de Madeira (4 Tábuas). */
   CHAIR: 46,
+  /** Pedregulho solto no mundo (arte da prancha de pedras, variante por célula); minerado solta Pedra Bruta. */
+  ROCK_BOULDER: 47,
   // --- variações de pedra (prancha de pedras; por receita ou, no futuro, em construções prontas) ---
   STONE_COBBLE: 34,
   STONE_BRICK: 35,
@@ -249,6 +251,7 @@ var defs = [
   // madeira: o machado quebra
   object(Block.TENT_PART, "Tenda", { shape: "rock", placeable: false, organic: "wood" }),
   object(Block.CHEST, "Ba\xFA de Carvalho", { shape: "rock", organic: "wood" }),
+  object(Block.ROCK_BOULDER, "Pedregulho", { shape: "rock", placeable: false }),
   object(Block.CHAIR, "Cadeira de Madeira", { shape: "rock", organic: "wood" }),
   // madeira: o machado desmonta
   object(Block.CAMPFIRE, "Fogueira", { shape: "rock", organic: "wood", glow: true }),
@@ -417,7 +420,10 @@ var Item = {
   TOMATO: "tomato",
   CARROT: "carrot",
   /** Pano de Seda (10 sedas): ingrediente da tenda. */
-  SILK_CLOTH: "silk_cloth"
+  SILK_CLOTH: "silk_cloth",
+  /** Pratos do Cozinheiro (feitos no caldeirão; quanto enchem a fome: `FOOD` em progression). */
+  BREAD: "bread",
+  PASTA_TOMATO: "pasta_tomato"
 };
 var ITEMS = {
   wheat_seed: { id: Item.WHEAT_SEED, name: "Semente de Trigo", plants: Block.WHEAT_0 },
@@ -431,7 +437,9 @@ var ITEMS = {
   potato: { id: Item.POTATO, name: "Batata", plants: Block.POTATO_0 },
   tomato: { id: Item.TOMATO, name: "Tomate", plants: Block.TOMATO_0 },
   carrot: { id: Item.CARROT, name: "Cenoura", plants: Block.CARROT_0 },
-  silk_cloth: { id: Item.SILK_CLOTH, name: "Pano de Seda" }
+  silk_cloth: { id: Item.SILK_CLOTH, name: "Pano de Seda" },
+  bread: { id: Item.BREAD, name: "P\xE3o" },
+  pasta_tomato: { id: Item.PASTA_TOMATO, name: "Macarr\xE3o ao Molho" }
 };
 var VEGETABLES = [Item.POTATO, Item.TOMATO, Item.CARROT];
 var LOOT_ITEMS = [Item.SILK, Item.FANG, Item.QUEEN_HEART];
@@ -588,6 +596,23 @@ var RECIPES = [
     profession: "builder",
     inputs: [{ item: Item.SILK_CLOTH, count: 1 }, { item: blockStack(Block.OAK_PLANKS), count: 10 }, { item: Item.FANG, count: 4 }],
     output: { item: blockStack(Block.TENT), count: 1 }
+  },
+  // Cozinheiro (dono do produto, 2026-11-06): cozinhar só perto de um Caldeirão de Pedra colocado no mundo.
+  {
+    id: "bread",
+    name: "P\xE3o",
+    profession: "cook",
+    station: Block.CAULDRON,
+    inputs: [{ item: Item.WHEAT, count: 2 }],
+    output: { item: Item.BREAD, count: 1 }
+  },
+  {
+    id: "pasta-tomato",
+    name: "Macarr\xE3o ao Molho",
+    profession: "cook",
+    station: Block.CAULDRON,
+    inputs: [{ item: Item.WHEAT, count: 4 }, { item: Item.TOMATO, count: 2 }],
+    output: { item: Item.PASTA_TOMATO, count: 1 }
   }
 ];
 
@@ -2115,7 +2140,7 @@ var WorldGenerator = class {
     if (r < density) {
       const alt = biome.altTree;
       object2 = alt && hash2(this.seed, x + 4409, y - 2027) < alt.share ? alt.id : biome.tree;
-    } else if (r > 0.994) object2 = Block.STONE;
+    } else if (r > 0.994) object2 = Block.ROCK_BOULDER;
     else if (hash2(this.seed, x, y + 7919) < biome.decoChance) {
       object2 = biome.decorations[Math.floor(hash2(this.seed, x - 31, y) * biome.decorations.length)];
     }
@@ -2163,6 +2188,7 @@ var WORLD_PROFILES = {
     town: true,
     collectBlocks: true,
     minimap: true,
+    hunger: true,
     sky: ["#1b1838", "#1b1838"]
   },
   santuario: {
@@ -2180,6 +2206,7 @@ var WORLD_PROFILES = {
     town: false,
     collectBlocks: false,
     minimap: false,
+    hunger: false,
     sky: ["#8fb8ff", "#f6d9ff"]
   }
 };
@@ -2850,7 +2877,7 @@ var World = class {
 };
 
 // src/net/protocol.ts
-var PROTOCOL_VERSION = 4;
+var PROTOCOL_VERSION = 5;
 var MAX_PLAYERS = 4;
 var ROOM_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 var ROOM_CODE_LENGTH = 6;
