@@ -47,6 +47,10 @@ test('dois jogadores na mesma sala: entrada, posição, ação aplicada para tod
   b.send({ t: 'hello', v: net.PROTOCOL_VERSION, name: 'Beto', room: wa.room.toLowerCase() });
   const wb = await b.wait((m) => m.t === 'welcome');
   assert.equal(wb.seed, wa.seed);
+  // Protocolo 7: a sala tem hora própria (a mesma para todos) e o relógio dela anda sozinho.
+  assert.equal(typeof wa.time, 'number');
+  assert.ok(wb.time >= wa.time);
+  assert.ok(Array.isArray(wb.grown));
   assert.deepEqual(wb.players.map((p) => p.name), ['Ana']);
   await a.wait((m) => m.t === 'joined' && m.player.name === 'Beto');
 

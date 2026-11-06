@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.59.0 (714884c) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.63.0 (5c05b1a) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -31,6 +31,12 @@ __export(index_exports, {
   sanitizeName: () => sanitizeName
 });
 module.exports = __toCommonJS(index_exports);
+
+// src/config.ts
+var DAY_LENGTH_S = 480;
+var MAX_STACK = 3;
+var CHUNK_SIZE = 16;
+var UNLOAD_MARGIN = 3;
 
 // src/world/blocks.ts
 var Block = {
@@ -460,8 +466,9 @@ var Item = {
   PASTA_TOMATO: "pasta_tomato"
 };
 var ITEMS = {
-  wheat_seed: { id: Item.WHEAT_SEED, name: "Semente de Trigo", plants: Block.WHEAT_0 },
-  wheat: { id: Item.WHEAT, name: "Trigo", feeds: "sheep" },
+  // Alimento de cada animal (dono do produto, 2026-11-06): ovelha e vaca = trigo; galinha = semente; cavalo = cenoura.
+  wheat_seed: { id: Item.WHEAT_SEED, name: "Semente de Trigo", plants: Block.WHEAT_0, feeds: ["chicken"] },
+  wheat: { id: Item.WHEAT, name: "Trigo", feeds: ["sheep", "cow"] },
   silk: { id: Item.SILK, name: "Seda de Aranha", loot: true },
   fang: { id: Item.FANG, name: "Presa de Aranha", loot: true },
   queen_heart: { id: Item.QUEEN_HEART, name: "Cora\xE7\xE3o da Rainha", loot: true },
@@ -470,7 +477,7 @@ var ITEMS = {
   apple: { id: Item.APPLE, name: "Ma\xE7\xE3" },
   potato: { id: Item.POTATO, name: "Batata", plants: Block.POTATO_0 },
   tomato: { id: Item.TOMATO, name: "Tomate", plants: Block.TOMATO_0 },
-  carrot: { id: Item.CARROT, name: "Cenoura", plants: Block.CARROT_0 },
+  carrot: { id: Item.CARROT, name: "Cenoura", plants: Block.CARROT_0, feeds: ["horse"] },
   silk_cloth: { id: Item.SILK_CLOTH, name: "Pano de Seda" },
   bread: { id: Item.BREAD, name: "P\xE3o" },
   pasta_tomato: { id: Item.PASTA_TOMATO, name: "Macarr\xE3o ao Molho" }
@@ -708,11 +715,6 @@ function applyAction(world, a) {
       return world.toggleDoor(a.x, a.y);
   }
 }
-
-// src/config.ts
-var MAX_STACK = 3;
-var CHUNK_SIZE = 16;
-var UNLOAD_MARGIN = 3;
 
 // src/world/chunk.ts
 var Chunk = class {
@@ -1861,38 +1863,60 @@ var SMITHY_INTERIOR = {
   ],
   keeper: { at: [4, 11], rows: [9, 11] }
 };
+var TENT_INTERIOR = {
+  id: "tent",
+  name: "Tenda",
+  map: [
+    "#######",
+    // 0  parede do fundo (cortina)
+    "#######",
+    // 1  pé da cortina do fundo, lampião, cabeceira do colchão
+    "##..###",
+    // 2  lampião | colchão
+    "#...###",
+    // 3
+    "#...###",
+    // 4
+    "#...###",
+    // 5  pé do colchão
+    "###E###"
+    // 6  capacho entre os postes
+  ]
+};
 var INTERIOR_DEFS = [SMITHY_INTERIOR];
 var INTERIOR_ORIGIN = [0, -1e5];
 var INTERIOR_SPACING = 64;
 var INTERIOR_MARGIN = 2;
+function layoutFor(def, k, outside) {
+  const w = def.map[0].length;
+  const h = def.map.length;
+  const x0 = INTERIOR_ORIGIN[0] + k * INTERIOR_SPACING;
+  const y0 = INTERIOR_ORIGIN[1];
+  const row = def.map.findIndex((r) => r.includes("E"));
+  const exit = [x0 + def.map[row].indexOf("E"), y0 + row];
+  const area = { x0, y0, x1: x0 + w - 1, y1: y0 + h - 1 };
+  return {
+    def,
+    w,
+    h,
+    area,
+    guard: { x0: x0 - INTERIOR_MARGIN, y0: y0 - INTERIOR_MARGIN, x1: area.x1 + INTERIOR_MARGIN, y1: area.y1 + INTERIOR_MARGIN },
+    entry: [exit[0], exit[1] - 1],
+    exit,
+    outside,
+    keeper: def.keeper ? { at: [x0 + def.keeper.at[0], y0 + def.keeper.at[1]], rows: [y0 + def.keeper.rows[0], y0 + def.keeper.rows[1]] } : null
+  };
+}
 function interiorLayouts(town) {
   const out = [];
   INTERIOR_DEFS.forEach((def, k) => {
     const b = town.buildings.find((x) => x.id === def.building && x.door);
-    if (!b) return;
-    const w = def.map[0].length;
-    const h = def.map.length;
-    const x0 = INTERIOR_ORIGIN[0] + k * INTERIOR_SPACING;
-    const y0 = INTERIOR_ORIGIN[1];
-    const find = (ch) => {
-      const row = def.map.findIndex((r) => r.includes(ch));
-      return [x0 + def.map[row].indexOf(ch), y0 + row];
-    };
-    const exit = find("E");
-    const area = { x0, y0, x1: x0 + w - 1, y1: y0 + h - 1 };
-    out.push({
-      def,
-      w,
-      h,
-      area,
-      guard: { x0: x0 - INTERIOR_MARGIN, y0: y0 - INTERIOR_MARGIN, x1: area.x1 + INTERIOR_MARGIN, y1: area.y1 + INTERIOR_MARGIN },
-      entry: [exit[0], exit[1] - 1],
-      exit,
-      outside: b.door,
-      keeper: def.keeper ? { at: [x0 + def.keeper.at[0], y0 + def.keeper.at[1]], rows: [y0 + def.keeper.rows[0], y0 + def.keeper.rows[1]] } : null
-    });
+    if (b) out.push(layoutFor(def, k, b.door));
   });
   return out;
+}
+function tentLayout() {
+  return layoutFor(TENT_INTERIOR, INTERIOR_DEFS.length, null);
 }
 function interiorFloor(l, x, y) {
   if (!inRect(l.area, x, y)) return false;
@@ -2328,10 +2352,9 @@ var World = class {
       this.cave = planCave(base, center, keep);
       this.generator = new DungeonTerrain(base, this.dungeon, this.cave);
     }
-    if (this.town) {
-      this.interiors = interiorLayouts(this.town);
-      this.generator = new InteriorTerrain(this.generator, this.interiors);
-    }
+    if (this.town) this.interiors = interiorLayouts(this.town);
+    if (this.profile.blocks.includes(Block.TENT)) this.interiors = [...this.interiors, tentLayout()];
+    if (this.interiors.length) this.generator = new InteriorTerrain(this.generator, this.interiors);
   }
   /** Célula dentro da dungeon, da cidade (muralhas incluídas) ou de um interior? Lá nada é quebrado, colocado, arado nem plantado. */
   isProtected(x, y) {
@@ -2343,7 +2366,20 @@ var World = class {
   }
   /** Interior cuja porta fica diante desta célula da rua (andar para cima nela = entrar), ou null. */
   interiorEntrance(x, y) {
-    return this.interiors.find((l) => l.outside[0] === x && l.outside[1] === y) ?? null;
+    return this.interiors.find((l) => l.outside?.[0] === x && l.outside?.[1] === y) ?? null;
+  }
+  /** Cômodo da tenda (mundos com tenda), ou null. */
+  get tentRoom() {
+    return this.interiors.find((l) => l.def.id === "tent") ?? null;
+  }
+  /**
+   * Diante da frente de uma tenda (a célula logo abaixo de uma das duas da fileira de baixo)? Devolve o canto da tenda
+   * (andar para cima aqui = entrar nela), ou null.
+   */
+  tentDoorAt(x, y) {
+    if (!this.tentRoom) return null;
+    const a = this.tentAnchor(x, y - 1);
+    return a && a[1] === y - 1 ? a : null;
   }
   /** Diante da boca da caverna (andar para cima aqui = entrar no covil)? */
   isCaveDoor(x, y) {
@@ -2814,8 +2850,20 @@ var World = class {
    * Avança o tempo: cada plantação não madura sobe um estágio com probabilidade dt / CROP_STAGE_SECONDS[cultura]
    * (crescimento natural, não sincronizado); depois as árvores.
    */
-  tick(dt, rand = Math.random) {
+  /**
+   * Avança o tempo do mundo: água sempre; crescimento de plantas/árvores só com `grow` (no multiplayer quem faz crescer
+   * é a sala do servidor, que avisa cada célula pelo `onGrow`).
+   */
+  tick(dt, rand = Math.random, grow2 = true, onGrow) {
     this.tickWater(dt);
+    if (grow2) this.tickGrowth(dt, rand, onGrow);
+  }
+  /** Plantas e árvores: cada estágio avança com probabilidade dt / tempo do estágio. */
+  tickGrowth(dt, rand, onGrow) {
+    const set = (x, y, id) => {
+      this.setLevel(x, y, 0, id);
+      onGrow?.(x, y, id);
+    };
     for (const key of [...this.crops]) {
       const [x, y] = key.split(",").map(Number);
       const id = this.getObject(x, y);
@@ -2825,7 +2873,7 @@ var World = class {
         continue;
       }
       const stage = cropStage(id);
-      if (stage < CROP_STAGES - 1 && rand() < dt / CROP_STAGE_SECONDS[kind]) this.setLevel(x, y, 0, cropId(kind, stage + 1));
+      if (stage < CROP_STAGES - 1 && rand() < dt / CROP_STAGE_SECONDS[kind]) set(x, y, cropId(kind, stage + 1));
     }
     for (const key of [...this.trees]) {
       const [x, y] = key.split(",").map(Number);
@@ -2836,8 +2884,18 @@ var World = class {
         continue;
       }
       const t = id === Block.APPLE_TREE_BARE ? FRUIT_REGROW_SECONDS : TREE_STAGE_SECONDS;
-      if (rand() < dt / t) this.setLevel(x, y, 0, next);
+      if (rand() < dt / t) set(x, y, next);
     }
+  }
+  /**
+   * Multiplayer: aplica o crescimento que a sala decidiu (só se a célula ainda tem planta ou árvore que cresce — uma
+   * ação que chegou antes vale). Retorna se aplicou.
+   */
+  applyGrowth(x, y, id) {
+    const cur = this.getObject(x, y);
+    if (!isCrop(cur) && TREE_NEXT[cur] === void 0) return false;
+    this.setLevel(x, y, 0, id);
+    return true;
   }
   /** Célula andável (com vizinhos andáveis) mais próxima de (x0, y0), em espiral. */
   nearestWalkable(x0, y0, maxRadius = 200) {
@@ -2928,7 +2986,7 @@ var World = class {
 };
 
 // src/net/protocol.ts
-var PROTOCOL_VERSION = 6;
+var PROTOCOL_VERSION = 7;
 var MAX_PLAYERS = 4;
 var ROOM_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 var ROOM_CODE_LENGTH = 6;
@@ -2985,19 +3043,49 @@ function parseClientMessage(text) {
 }
 
 // src/net/room.ts
+var ROOM_START_TIME = 0.31;
+var TIME_SYNC_SECONDS = 30;
 var Room = class {
-  constructor(code, seed) {
+  constructor(code, seed, rand = Math.random) {
     this.code = code;
     this.seed = seed;
+    this.rand = rand;
     this.world = new World(seed);
   }
   code;
   seed;
+  rand;
   world;
   players = /* @__PURE__ */ new Map();
   /** Ações aplicadas desde que a sala abriu (quem entra depois recebe e reaplica; persistência por chunk vem depois). */
   edits = [];
   nextId = 1;
+  /** Hora do dia da sala (0..1): a mesma para todos os jogadores. */
+  time = ROOM_START_TIME;
+  /** Células cujo último estado veio do crescimento ("x,y" → bloco); uma ação na célula apaga a entrada. */
+  grown = /* @__PURE__ */ new Map();
+  syncTimer = TIME_SYNC_SECONDS;
+  /**
+   * Passa o tempo da sala (o servidor chama ~1×/s com o tempo real): avança a hora, faz plantas e árvores crescerem
+   * (a sala decide; os aparelhos só aplicam) e, de tempos em tempos, manda a hora a todos.
+   */
+  tick(dt) {
+    this.time = (this.time + dt / DAY_LENGTH_S) % 1;
+    const cells = [];
+    this.world.tick(dt, this.rand, true, (x, y, id) => {
+      const g = [x, y, id];
+      this.grown.set(`${x},${y}`, g);
+      cells.push(g);
+    });
+    const out = [];
+    if (cells.length) out.push({ to: "all", msg: { t: "grow", cells } });
+    this.syncTimer -= dt;
+    if (this.syncTimer <= 0) {
+      this.syncTimer = TIME_SYNC_SECONDS;
+      out.push({ to: "all", msg: { t: "time", time: this.time } });
+    }
+    return this.players.size ? out : [];
+  }
   get size() {
     return this.players.size;
   }
@@ -3015,7 +3103,7 @@ var Room = class {
     return {
       id,
       out: [
-        { to: id, msg: { t: "welcome", you: id, room: this.code, seed: this.seed, players: others, edits: this.edits } },
+        { to: id, msg: { t: "welcome", you: id, room: this.code, seed: this.seed, players: others, edits: this.edits, time: this.time, grown: [...this.grown.values()] } },
         { to: { except: id }, msg: { t: "joined", player } }
       ]
     };
@@ -3036,6 +3124,7 @@ var Room = class {
       if (!applyAction(this.world, m.a)) return [{ to: id, msg: { t: "rejected", seq: m.seq } }];
       const applied = { by: id, action: m.a };
       this.edits.push(applied);
+      this.grown.delete(`${m.a.x},${m.a.y}`);
       return [{ to: "all", msg: { t: "applied", ...applied } }];
     }
     return [];

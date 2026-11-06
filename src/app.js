@@ -128,6 +128,15 @@ function startServer(port = Number(process.env.PORT) || 3000, options = {}) {
     });
   });
 
+  // Relógio das salas (protocolo 7): 1×/s cada sala avança a hora e faz as plantas crescerem; as mudanças vão a todos.
+  let last = Date.now();
+  const clock = setInterval(() => {
+    const now = Date.now();
+    const dt = Math.min(5, (now - last) / 1000); // servidor pausado/atrasado: não pula dias de uma vez
+    last = now;
+    for (const entry of rooms.values()) route(entry, null, entry.room.tick(dt));
+  }, 1000);
+
   // Mantém a conexão viva atrás de proxies e derruba quem sumiu.
   const ping = setInterval(() => {
     for (const ws of wss.clients) {
@@ -139,7 +148,7 @@ function startServer(port = Number(process.env.PORT) || 3000, options = {}) {
   http.listen(port, () => console.log(`orvalis-servidor ouvindo na porta ${http.address().port} — ${PACKAGE}`));
   return {
     http, wss, rooms,
-    close: () => new Promise((r) => { clearInterval(ping); for (const c of wss.clients) c.terminate(); wss.close(); http.close(r); }),
+    close: () => new Promise((r) => { clearInterval(ping); clearInterval(clock); for (const c of wss.clients) c.terminate(); wss.close(); http.close(r); }),
   };
 }
 
