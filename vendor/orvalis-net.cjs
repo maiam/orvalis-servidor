@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.58.0 (59286bb) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.59.0 (714884c) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -74,6 +74,13 @@ var Block = {
   CHAIR: 46,
   /** Pedregulho solto no mundo (arte da prancha de pedras, variante por célula); minerado solta Pedra Bruta. */
   ROCK_BOULDER: 47,
+  // --- cerca de tábuas (por receita; o render emenda cada célula com as cercas/portões vizinhos) ---
+  /** Cerca de Madeira: bloqueia a passagem (cercados para animais). */
+  FENCE: 48,
+  /** Portão da cerca, fechado (o id guarda o estado, como a porta). */
+  FENCE_GATE: 49,
+  /** Portão aberto: passável. Só existe no mundo (a bolsa coloca o fechado). */
+  FENCE_GATE_OPEN: 76,
   // --- variações de pedra (prancha de pedras; por receita ou, no futuro, em construções prontas) ---
   STONE_COBBLE: 34,
   STONE_BRICK: 35,
@@ -259,6 +266,10 @@ var defs = [
   object(Block.CAULDRON, "Caldeir\xE3o de Pedra", { shape: "rock", stone: true, glow: true }),
   object(Block.OVEN, "Forno de Pedra", { shape: "rock", stone: true, glow: true }),
   object(Block.OAK_DOOR_OPEN, "Porta de Carvalho (aberta)", { shape: "door", solid: false, placeable: false, organic: "wood" }),
+  // Cerca e portão: ocupam a célula (nada empilha em cima); madeira: o machado desmonta.
+  object(Block.FENCE, "Cerca de Madeira", { shape: "fence", organic: "wood" }),
+  object(Block.FENCE_GATE, "Port\xE3o de Madeira", { shape: "fence", organic: "wood" }),
+  object(Block.FENCE_GATE_OPEN, "Port\xE3o de Madeira (aberto)", { shape: "fence", solid: false, placeable: false, organic: "wood" }),
   object(Block.CACTUS, "Cacto", { placeable: false, organic: "plant" }),
   object(Block.OAK_TREE, "Carvalho", { shape: "tree", placeable: false, organic: "wood" }),
   object(Block.SAKURA_TREE, "Cerejeira", { shape: "tree", placeable: false, organic: "wood" }),
@@ -387,7 +398,18 @@ var CELESTIAL_BLOCKS = [
   Block.WOOD_CELESTIAL,
   Block.FOLIAGE_GOLDEN
 ];
-var HOTBAR_BLOCKS = [...MATERIALS, Block.OAK_DOOR, Block.TENT, Block.CHEST, Block.CAMPFIRE, Block.CAULDRON, Block.OVEN, Block.CHAIR];
+var HOTBAR_BLOCKS = [
+  ...MATERIALS,
+  Block.OAK_DOOR,
+  Block.TENT,
+  Block.CHEST,
+  Block.CAMPFIRE,
+  Block.CAULDRON,
+  Block.OVEN,
+  Block.CHAIR,
+  Block.FENCE,
+  Block.FENCE_GATE
+];
 var TREE_NEXT = {
   [Block.OAK_SAPLING]: Block.OAK_YOUNG,
   [Block.OAK_YOUNG]: Block.OAK_GROWING,
@@ -399,8 +421,20 @@ var TREE_NEXT = {
 function isGrowingTree(id) {
   return TREE_NEXT[id] !== void 0;
 }
-function isDoor(id) {
-  return id === Block.OAK_DOOR || id === Block.OAK_DOOR_OPEN;
+var TOGGLES = {
+  [Block.OAK_DOOR]: Block.OAK_DOOR_OPEN,
+  [Block.OAK_DOOR_OPEN]: Block.OAK_DOOR,
+  [Block.FENCE_GATE]: Block.FENCE_GATE_OPEN,
+  [Block.FENCE_GATE_OPEN]: Block.FENCE_GATE
+};
+function isOpenable(id) {
+  return TOGGLES[id] !== void 0;
+}
+function toggled(id) {
+  return TOGGLES[id] ?? null;
+}
+function isOpen(id) {
+  return id === Block.OAK_DOOR_OPEN || id === Block.FENCE_GATE_OPEN;
 }
 
 // src/world/items.ts
@@ -517,7 +551,7 @@ function toolCanBreak(tool, id) {
   return false;
 }
 var TOOL_ORDER = [Tool.SWORD, Tool.HOE, Tool.PICKAXE, Tool.SHOVEL, Tool.AXE];
-var COLLECTABLE = /* @__PURE__ */ new Set([...MATERIALS, Block.OAK_DOOR, Block.TENT, Block.CHEST, Block.CAMPFIRE, Block.CAULDRON, Block.OVEN, Block.CHAIR]);
+var COLLECTABLE = /* @__PURE__ */ new Set([...MATERIALS, Block.OAK_DOOR, Block.TENT, Block.CHEST, Block.CAMPFIRE, Block.CAULDRON, Block.OVEN, Block.CHAIR, Block.FENCE]);
 var ADULT_TREES = /* @__PURE__ */ new Set([Block.OAK_TREE, Block.SAKURA_TREE, Block.APPLE_TREE, Block.APPLE_TREE_BARE]);
 var RECIPES = [
   {
@@ -559,6 +593,21 @@ var RECIPES = [
     profession: "builder",
     inputs: [{ item: blockStack(Block.OAK_PLANKS), count: 4 }],
     output: { item: blockStack(Block.CHAIR), count: 1 }
+  },
+  // Cerca de tábuas (dono do produto, 2026-11-06): as células se emendam sozinhas; o portão abre e fecha.
+  {
+    id: "wooden-fence",
+    name: "Cerca de Madeira",
+    profession: "builder",
+    inputs: [{ item: blockStack(Block.OAK_PLANKS), count: 2 }],
+    output: { item: blockStack(Block.FENCE), count: 4 }
+  },
+  {
+    id: "fence-gate",
+    name: "Port\xE3o de Madeira",
+    profession: "builder",
+    inputs: [{ item: blockStack(Block.OAK_PLANKS), count: 4 }],
+    output: { item: blockStack(Block.FENCE_GATE), count: 1 }
   },
   // Cozinha (dono do produto, 2026-11-05): por enquanto só se fabricam e se colocam; cozinhar vem com a comida.
   {
@@ -2587,20 +2636,22 @@ var World = class {
   hasDoorFrame(x, y) {
     return this.isDoorJamb(x - 1, y) && this.isDoorJamb(x + 1, y);
   }
+  /** Porta ou portão da cerca (abre e fecha com um toque)? */
   isDoor(x, y) {
-    return isDoor(this.getObject(x, y));
+    return isOpenable(this.getObject(x, y));
   }
+  /** Porta ou portão aberto? */
   isDoorOpen(x, y) {
-    return this.getObject(x, y) === Block.OAK_DOOR_OPEN;
+    return isOpen(this.getObject(x, y));
   }
   /**
-   * Abre/fecha a porta da célula (o id guarda o estado: fechada bloqueia, aberta deixa passar).
-   * Quem chama garante que ninguém está na célula ao fechar. Retorna false se não há porta.
+   * Abre/fecha a porta ou o portão da célula (o id guarda o estado: fechado bloqueia, aberto deixa passar).
+   * Quem chama garante que ninguém está na célula ao fechar. Retorna false se não há porta nem portão.
    */
   toggleDoor(x, y) {
-    const id = this.getObject(x, y);
-    if (!isDoor(id)) return false;
-    this.setLevel(x, y, 0, id === Block.OAK_DOOR ? Block.OAK_DOOR_OPEN : Block.OAK_DOOR);
+    const next = toggled(this.getObject(x, y));
+    if (next === null) return false;
+    this.setLevel(x, y, 0, next);
     return true;
   }
   canPlace(x, y, id) {
@@ -2877,7 +2928,7 @@ var World = class {
 };
 
 // src/net/protocol.ts
-var PROTOCOL_VERSION = 5;
+var PROTOCOL_VERSION = 6;
 var MAX_PLAYERS = 4;
 var ROOM_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 var ROOM_CODE_LENGTH = 6;
