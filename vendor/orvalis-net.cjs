@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.46.0 (48fb751) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.52.0 (0062f1e) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -62,6 +62,16 @@ var Block = {
   /** Baú de Carvalho: guarda 27 pilhas (conteúdo no World). */
   CHEST: 33,
   CACTUS: 31,
+  // --- objetos de cozinha (por receita; cozinhar vem com a comida, Fase P entrega 4) ---
+  /** Fogueira (3 Toras). */
+  CAMPFIRE: 43,
+  /** Caldeirão de Pedra (3 Pedras + 1 Fogueira). */
+  CAULDRON: 44,
+  /** Forno de Pedra (6 Pedras). */
+  OVEN: 45,
+  // --- móveis (por receita) ---
+  /** Cadeira de Madeira (4 Tábuas). */
+  CHAIR: 46,
   // --- variações de pedra (prancha de pedras; por receita ou, no futuro, em construções prontas) ---
   STONE_COBBLE: 34,
   STONE_BRICK: 35,
@@ -73,6 +83,16 @@ var Block = {
   // --- árvores (objeto alto) ---
   OAK_TREE: 40,
   SAKURA_TREE: 41,
+  // --- árvores que crescem (prancha de crescimento): muda → jovem → (crescendo) → adulta ---
+  OAK_SAPLING: 52,
+  OAK_YOUNG: 53,
+  OAK_GROWING: 54,
+  APPLE_SAPLING: 55,
+  APPLE_YOUNG: 56,
+  /** Macieira adulta com maçãs (tocar colhe). */
+  APPLE_TREE: 57,
+  /** Macieira adulta já colhida: florida, as maçãs voltam com o tempo. */
+  APPLE_TREE_BARE: 58,
   // --- enfeites (não bloqueiam passagem) ---
   TALL_GRASS: 50,
   FLOWER: 51,
@@ -209,10 +229,24 @@ var defs = [
   // madeira: o machado quebra
   object(Block.TENT_PART, "Tenda", { shape: "rock", placeable: false, organic: "wood" }),
   object(Block.CHEST, "Ba\xFA de Carvalho", { shape: "rock", organic: "wood" }),
+  object(Block.CHAIR, "Cadeira de Madeira", { shape: "rock", organic: "wood" }),
+  // madeira: o machado desmonta
+  object(Block.CAMPFIRE, "Fogueira", { shape: "rock", organic: "wood", glow: true }),
+  // madeira: o machado desmonta
+  object(Block.CAULDRON, "Caldeir\xE3o de Pedra", { shape: "rock", stone: true, glow: true }),
+  object(Block.OVEN, "Forno de Pedra", { shape: "rock", stone: true, glow: true }),
   object(Block.OAK_DOOR_OPEN, "Porta de Carvalho (aberta)", { shape: "door", solid: false, placeable: false, organic: "wood" }),
   object(Block.CACTUS, "Cacto", { placeable: false, organic: "plant" }),
   object(Block.OAK_TREE, "Carvalho", { shape: "tree", placeable: false, organic: "wood" }),
   object(Block.SAKURA_TREE, "Cerejeira", { shape: "tree", placeable: false, organic: "wood" }),
+  // Mudas são plantas (a enxada arranca); dali em diante, madeira.
+  object(Block.OAK_SAPLING, "Muda de Carvalho", { shape: "tree", placeable: false, organic: "plant" }),
+  object(Block.OAK_YOUNG, "Carvalho Jovem", { shape: "tree", placeable: false, organic: "wood" }),
+  object(Block.OAK_GROWING, "Carvalho Jovem", { shape: "tree", placeable: false, organic: "wood" }),
+  object(Block.APPLE_SAPLING, "Muda de Macieira", { shape: "tree", placeable: false, organic: "plant" }),
+  object(Block.APPLE_YOUNG, "Macieira Jovem", { shape: "tree", placeable: false, organic: "wood" }),
+  object(Block.APPLE_TREE, "Macieira", { shape: "tree", placeable: false, organic: "wood" }),
+  object(Block.APPLE_TREE_BARE, "Macieira", { shape: "tree", placeable: false, organic: "wood" }),
   object(Block.TALL_GRASS, "Capim", { shape: "decoration", solid: false, placeable: false, organic: "plant" }),
   object(Block.FLOWER, "Flor", { shape: "decoration", solid: false, placeable: false, organic: "plant" }),
   // Dungeon: chão e cenário fixos (inquebráveis; o World também protege a área inteira).
@@ -329,7 +363,18 @@ var CELESTIAL_BLOCKS = [
   Block.WOOD_CELESTIAL,
   Block.FOLIAGE_GOLDEN
 ];
-var HOTBAR_BLOCKS = [...MATERIALS, Block.OAK_DOOR, Block.TENT, Block.CHEST];
+var HOTBAR_BLOCKS = [...MATERIALS, Block.OAK_DOOR, Block.TENT, Block.CHEST, Block.CAMPFIRE, Block.CAULDRON, Block.OVEN, Block.CHAIR];
+var TREE_NEXT = {
+  [Block.OAK_SAPLING]: Block.OAK_YOUNG,
+  [Block.OAK_YOUNG]: Block.OAK_GROWING,
+  [Block.OAK_GROWING]: Block.OAK_TREE,
+  [Block.APPLE_SAPLING]: Block.APPLE_YOUNG,
+  [Block.APPLE_YOUNG]: Block.APPLE_TREE,
+  [Block.APPLE_TREE_BARE]: Block.APPLE_TREE
+};
+function isGrowingTree(id) {
+  return TREE_NEXT[id] !== void 0;
+}
 function isDoor(id) {
   return id === Block.OAK_DOOR || id === Block.OAK_DOOR_OPEN;
 }
@@ -341,14 +386,21 @@ var Item = {
   /** Espólios das aranhas (sem uso ainda — futuras receitas). */
   SILK: "silk",
   FANG: "fang",
-  QUEEN_HEART: "queen_heart"
+  QUEEN_HEART: "queen_heart",
+  /** Mudas (cortar a árvore adulta) e a fruta da macieira (comer vem com a comida, Fase P). */
+  OAK_SAPLING: "oak_sapling",
+  APPLE_SAPLING: "apple_sapling",
+  APPLE: "apple"
 };
 var ITEMS = {
   wheat_seed: { id: Item.WHEAT_SEED, name: "Semente de Trigo", plants: Block.WHEAT_0 },
   wheat: { id: Item.WHEAT, name: "Trigo", feeds: "sheep" },
   silk: { id: Item.SILK, name: "Seda de Aranha", loot: true },
   fang: { id: Item.FANG, name: "Presa de Aranha", loot: true },
-  queen_heart: { id: Item.QUEEN_HEART, name: "Cora\xE7\xE3o da Rainha", loot: true }
+  queen_heart: { id: Item.QUEEN_HEART, name: "Cora\xE7\xE3o da Rainha", loot: true },
+  oak_sapling: { id: Item.OAK_SAPLING, name: "Muda de Carvalho", plants: Block.OAK_SAPLING },
+  apple_sapling: { id: Item.APPLE_SAPLING, name: "Muda de Macieira", plants: Block.APPLE_SAPLING },
+  apple: { id: Item.APPLE, name: "Ma\xE7\xE3" }
 };
 var LOOT_ITEMS = [Item.SILK, Item.FANG, Item.QUEEN_HEART];
 var blockStack = (id) => `block:${id}`;
@@ -425,7 +477,8 @@ function toolCanBreak(tool, id) {
   return false;
 }
 var TOOL_ORDER = [Tool.SWORD, Tool.HOE, Tool.PICKAXE, Tool.SHOVEL, Tool.AXE];
-var COLLECTABLE = /* @__PURE__ */ new Set([...MATERIALS, Block.OAK_DOOR, Block.TENT, Block.CHEST]);
+var COLLECTABLE = /* @__PURE__ */ new Set([...MATERIALS, Block.OAK_DOOR, Block.TENT, Block.CHEST, Block.CAMPFIRE, Block.CAULDRON, Block.OVEN, Block.CHAIR]);
+var ADULT_TREES = /* @__PURE__ */ new Set([Block.OAK_TREE, Block.SAKURA_TREE, Block.APPLE_TREE, Block.APPLE_TREE_BARE]);
 var RECIPES = [
   {
     id: "oak-planks",
@@ -459,6 +512,36 @@ var RECIPES = [
     inputs: [{ item: blockStack(Block.OAK_PLANKS), count: 8 }],
     output: { item: blockStack(Block.CHEST), count: 1 }
   },
+  // Móveis (dono do produto, 2026-11-06).
+  {
+    id: "wooden-chair",
+    name: "Cadeira de Madeira",
+    profession: "builder",
+    inputs: [{ item: blockStack(Block.OAK_PLANKS), count: 4 }],
+    output: { item: blockStack(Block.CHAIR), count: 1 }
+  },
+  // Cozinha (dono do produto, 2026-11-05): por enquanto só se fabricam e se colocam; cozinhar vem com a comida.
+  {
+    id: "campfire",
+    name: "Fogueira",
+    profession: "builder",
+    inputs: [{ item: blockStack(Block.OAK_LOG), count: 3 }],
+    output: { item: blockStack(Block.CAMPFIRE), count: 1 }
+  },
+  {
+    id: "stone-cauldron",
+    name: "Caldeir\xE3o de Pedra",
+    profession: "builder",
+    inputs: [{ item: blockStack(Block.STONE), count: 3 }, { item: blockStack(Block.CAMPFIRE), count: 1 }],
+    output: { item: blockStack(Block.CAULDRON), count: 1 }
+  },
+  {
+    id: "stone-oven",
+    name: "Forno de Pedra",
+    profession: "builder",
+    inputs: [{ item: blockStack(Block.STONE), count: 6 }],
+    output: { item: blockStack(Block.OVEN), count: 1 }
+  },
   {
     id: "tent",
     name: "Tenda",
@@ -469,7 +552,7 @@ var RECIPES = [
 ];
 
 // src/world/actions.ts
-var KINDS = /* @__PURE__ */ new Set(["break", "place", "till", "flatten", "plant", "door"]);
+var KINDS = /* @__PURE__ */ new Set(["break", "place", "till", "flatten", "plant", "pick", "door"]);
 var isInt = (v) => typeof v === "number" && Number.isInteger(v) && Math.abs(v) < 2 ** 30;
 function parseAction(v) {
   if (!v || typeof v !== "object") return null;
@@ -483,6 +566,9 @@ function parseAction(v) {
     case "place":
       if (!isInt(a.block) || !blockDef(a.block).placeable) return null;
       return { kind: "place", x, y, block: a.block };
+    case "plant":
+      if (a.block === void 0) return { kind: "plant", x, y };
+      return isInt(a.block) ? { kind: "plant", x, y, block: a.block } : null;
     default:
       return { kind: a.kind, x, y };
   }
@@ -501,7 +587,9 @@ function applyAction(world, a) {
     case "flatten":
       return world.flatten(a.x, a.y);
     case "plant":
-      return world.plant(a.x, a.y);
+      return world.plant(a.x, a.y, a.block);
+    case "pick":
+      return world.pick(a.x, a.y);
     case "door":
       return world.toggleDoor(a.x, a.y);
   }
@@ -1726,6 +1814,7 @@ var BIOMES = {
     ground: Block.GRASS,
     tree: Block.OAK_TREE,
     treeDensity: 0.22,
+    altTree: { id: Block.APPLE_TREE, share: 1 / 6 },
     decorations: [Block.TALL_GRASS, Block.TALL_GRASS, Block.FLOWER],
     decoChance: 0.12
   },
@@ -1952,8 +2041,10 @@ var WorldGenerator = class {
     const forest = this.detail.fbm2(x / 38 + 50, y / 38 - 50, 2);
     const density = biome.treeDensity * (forest > 0.05 ? 1 : 0.12);
     let object2 = Block.AIR;
-    if (r < density) object2 = biome.tree;
-    else if (r > 0.994) object2 = Block.STONE;
+    if (r < density) {
+      const alt = biome.altTree;
+      object2 = alt && hash2(this.seed, x + 4409, y - 2027) < alt.share ? alt.id : biome.tree;
+    } else if (r > 0.994) object2 = Block.STONE;
     else if (hash2(this.seed, x, y + 7919) < biome.decoChance) {
       object2 = biome.decorations[Math.floor(hash2(this.seed, x - 31, y) * biome.decorations.length)];
     }
@@ -2000,6 +2091,7 @@ var WORLD_PROFILES = {
     dungeon: true,
     town: true,
     collectBlocks: true,
+    minimap: true,
     sky: ["#1b1838", "#1b1838"]
   },
   santuario: {
@@ -2016,12 +2108,16 @@ var WORLD_PROFILES = {
     dungeon: false,
     town: false,
     collectBlocks: false,
+    minimap: false,
     sky: ["#8fb8ff", "#f6d9ff"]
   }
 };
 
 // src/world/world.ts
 var WHEAT_STAGE_SECONDS = 6;
+var TREE_STAGE_SECONDS = 120;
+var FRUIT_REGROW_SECONDS = 150;
+var SAPLING_GROUND = /* @__PURE__ */ new Set([Block.DIRT, Block.GRASS]);
 var PLANTABLE_GROUND = Block.TILLED;
 var TILLABLE = /* @__PURE__ */ new Set([Block.DIRT, Block.GRASS]);
 var FLATTENABLE = /* @__PURE__ */ new Set([Block.DIRT, Block.GRASS, Block.TILLED]);
@@ -2046,6 +2142,8 @@ var World = class {
   last = null;
   /** Células com trigo plantado (crescem com o tempo). Só existem em chunks modificados, que não descarregam. */
   crops = /* @__PURE__ */ new Set();
+  /** Árvores plantadas crescendo e macieiras colhidas (avançam em `tick`). */
+  trees = /* @__PURE__ */ new Set();
   /** Dungeon deste mundo (perfil com `dungeon`), ou null. Área protegida: só se luta lá dentro. */
   dungeon = null;
   /** Cidade do Despertar (perfil com `town`), ou null. Área protegida; início e renascer sem tenda. */
@@ -2209,6 +2307,8 @@ var World = class {
     if (level === 0) {
       if (isWheat(id)) this.crops.add(chunkKey(x, y));
       else this.crops.delete(chunkKey(x, y));
+      if (isGrowingTree(id)) this.trees.add(chunkKey(x, y));
+      else this.trees.delete(chunkKey(x, y));
     }
     if (lx === 0) this.touch(cx - 1, cy);
     if (lx === CHUNK_SIZE - 1) this.touch(cx + 1, cy);
@@ -2467,10 +2567,15 @@ var World = class {
     return this.nearestWalkable(0, 0);
   }
   // ---- Plantação ----
-  /** A semente pode ser plantada aqui? Só em chão de Terra Arada, com a célula livre (ou com enfeite). */
-  canPlant(x, y) {
+  /**
+   * Dá para plantar `id` aqui? Semente de trigo: só em Terra Arada. Muda de árvore: em Terra ou Terra com Grama.
+   * Sempre com a célula livre (ou só com enfeite).
+   */
+  canPlant(x, y, id = Block.WHEAT_0) {
     if (this.isProtected(x, y)) return false;
-    if (this.getGround(x, y) !== PLANTABLE_GROUND) return false;
+    const sapling = id === Block.OAK_SAPLING || id === Block.APPLE_SAPLING;
+    if (!sapling && id !== Block.WHEAT_0) return false;
+    if (sapling ? !SAPLING_GROUND.has(this.getGround(x, y)) : this.getGround(x, y) !== PLANTABLE_GROUND) return false;
     const base = blockDef(this.getObject(x, y));
     return base.id === Block.AIR || base.shape === "decoration";
   }
@@ -2508,10 +2613,24 @@ var World = class {
     this.setLevel(x, y, "ground", Block.PATH);
     return true;
   }
-  plant(x, y) {
-    if (!this.canPlant(x, y)) return false;
-    this.setLevel(x, y, 0, Block.WHEAT_0);
+  plant(x, y, id = Block.WHEAT_0) {
+    if (!this.canPlant(x, y, id)) return false;
+    this.setLevel(x, y, 0, id);
     return true;
+  }
+  /** Macieira carregada aqui (tocar colhe)? */
+  canPick(x, y) {
+    return this.getObject(x, y) === Block.APPLE_TREE && !this.isProtected(x, y);
+  }
+  /** Colhe as maçãs: a macieira fica florida e as frutas voltam com o tempo (as maçãs em si: `pickDrops`). */
+  pick(x, y) {
+    if (!this.canPick(x, y)) return false;
+    this.setLevel(x, y, 0, Block.APPLE_TREE_BARE);
+    return true;
+  }
+  /** Árvores plantadas crescendo (testes e depuração). */
+  get growingTreeCount() {
+    return this.trees.size;
   }
   get cropCount() {
     return this.crops.size;
@@ -2532,6 +2651,17 @@ var World = class {
       }
       const stage = wheatStage(id);
       if (stage < WHEAT_STAGES - 1 && rand() < p) this.setLevel(x, y, 0, wheatId(stage + 1));
+    }
+    for (const key of [...this.trees]) {
+      const [x, y] = key.split(",").map(Number);
+      const id = this.getObject(x, y);
+      const next = TREE_NEXT[id];
+      if (next === void 0) {
+        this.trees.delete(key);
+        continue;
+      }
+      const t = id === Block.APPLE_TREE_BARE ? FRUIT_REGROW_SECONDS : TREE_STAGE_SECONDS;
+      if (rand() < dt / t) this.setLevel(x, y, 0, next);
     }
   }
   /** Célula andável (com vizinhos andáveis) mais próxima de (x0, y0), em espiral. */
@@ -2614,14 +2744,16 @@ var World = class {
     this.last = null;
     for (let ly = 0; ly < CHUNK_SIZE; ly++) {
       for (let lx = 0; lx < CHUNK_SIZE; lx++) {
-        if (isWheat(c.getObject(lx, ly))) this.crops.add(chunkKey(cx * CHUNK_SIZE + lx, cy * CHUNK_SIZE + ly));
+        const id = c.getObject(lx, ly);
+        if (isWheat(id)) this.crops.add(chunkKey(cx * CHUNK_SIZE + lx, cy * CHUNK_SIZE + ly));
+        if (isGrowingTree(id)) this.trees.add(chunkKey(cx * CHUNK_SIZE + lx, cy * CHUNK_SIZE + ly));
       }
     }
   }
 };
 
 // src/net/protocol.ts
-var PROTOCOL_VERSION = 1;
+var PROTOCOL_VERSION = 2;
 var MAX_PLAYERS = 4;
 var ROOM_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 var ROOM_CODE_LENGTH = 6;
