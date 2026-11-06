@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.63.0 (5c05b1a) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.64.0 (4527ca8) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -23,11 +23,11 @@ var index_exports = {};
 __export(index_exports, {
   MAX_PLAYERS: () => MAX_PLAYERS,
   PROTOCOL_VERSION: () => PROTOCOL_VERSION,
-  ROOM_CODE_LENGTH: () => ROOM_CODE_LENGTH,
+  ROOMS: () => ROOMS,
+  ROOM_SNAPSHOT_VERSION: () => ROOM_SNAPSHOT_VERSION,
   Room: () => Room,
-  makeRoomCode: () => makeRoomCode,
-  normalizeRoomCode: () => normalizeRoomCode,
   parseClientMessage: () => parseClientMessage,
+  roomById: () => roomById,
   sanitizeName: () => sanitizeName
 });
 module.exports = __toCommonJS(index_exports);
@@ -2985,24 +2985,27 @@ var World = class {
   }
 };
 
+// src/net/b64.ts
+function toB64(a) {
+  let s = "";
+  for (let i = 0; i < a.length; i++) s += String.fromCharCode(a[i]);
+  return btoa(s);
+}
+function fromB64(s) {
+  return Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+}
+
 // src/net/protocol.ts
-var PROTOCOL_VERSION = 7;
-var MAX_PLAYERS = 4;
-var ROOM_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
-var ROOM_CODE_LENGTH = 6;
+var PROTOCOL_VERSION = 8;
+var MAX_PLAYERS = 10;
+var ROOMS = [
+  { id: 1, name: "Sala 1", seed: 20261106 }
+];
+function roomById(id) {
+  return ROOMS.find((r) => r.id === id);
+}
 var NAME_MIN = 2;
 var NAME_MAX = 16;
-function normalizeRoomCode(text) {
-  const c = text.toUpperCase().replace(/[\s-]/g, "");
-  if (c.length !== ROOM_CODE_LENGTH) return null;
-  for (const ch of c) if (!ROOM_CODE_ALPHABET.includes(ch)) return null;
-  return c;
-}
-function makeRoomCode(rand) {
-  let s = "";
-  for (let i = 0; i < ROOM_CODE_LENGTH; i++) s += ROOM_CODE_ALPHABET[Math.floor(rand() * ROOM_CODE_ALPHABET.length)];
-  return s;
-}
 function sanitizeName(text) {
   const n = text.normalize("NFC").replace(/\s+/g, " ").trim();
   if (n.length < NAME_MIN || n.length > NAME_MAX) return null;
@@ -3027,8 +3030,12 @@ function parseClientMessage(text) {
   const o = m;
   switch (o.t) {
     case "hello":
-      if (!Number.isInteger(o.v) || typeof o.name !== "string" || o.room !== void 0 && typeof o.room !== "string") return null;
+      if (!Number.isInteger(o.v) || typeof o.name !== "string" || !Number.isInteger(o.room)) return null;
       return { t: "hello", v: o.v, name: o.name, room: o.room };
+    case "bag": {
+      const bag = parseBag(o.bag);
+      return bag ? { t: "bag", bag } : null;
+    }
     case "state": {
       const s = parseState(o.s);
       return s ? { t: "state", s } : null;
@@ -3041,61 +3048,66 @@ function parseClientMessage(text) {
       return null;
   }
 }
+var MAX_BAG_ENTRIES = 128;
+var STACK_RE = /^(block:\d{1,4}|tool:[a-z_]{1,24}|[a-z_]{1,32})$/;
+function parseBag(v) {
+  if (!v || typeof v !== "object") return null;
+  const o = v;
+  if (!o.inventory || typeof o.inventory !== "object" || !finite(o.x) || !finite(o.y)) return null;
+  const inventory = {};
+  const entries = Object.entries(o.inventory);
+  if (entries.length > MAX_BAG_ENTRIES) return null;
+  for (const [k, n] of entries) {
+    if (!STACK_RE.test(k) || !Number.isInteger(n) || n < 0 || n > 99999) return null;
+    inventory[k] = n;
+  }
+  let hotbar = null;
+  if (o.hotbar !== null && o.hotbar !== void 0) {
+    if (!Array.isArray(o.hotbar) || o.hotbar.length > 64) return null;
+    if (!o.hotbar.every((s) => s === null || typeof s === "string" && STACK_RE.test(s))) return null;
+    hotbar = o.hotbar;
+  }
+  return { inventory, hotbar, x: o.x, y: o.y };
+}
 
 // src/net/room.ts
 var ROOM_START_TIME = 0.31;
 var TIME_SYNC_SECONDS = 30;
+var ROOM_SNAPSHOT_VERSION = 1;
+var bagKey = (name) => name.toLocaleLowerCase("pt-BR");
 var Room = class {
-  constructor(code, seed, rand = Math.random) {
-    this.code = code;
+  constructor(id, name, seed, rand = Math.random) {
+    this.id = id;
+    this.name = name;
     this.seed = seed;
     this.rand = rand;
     this.world = new World(seed);
   }
-  code;
+  id;
+  name;
   seed;
   rand;
   world;
   players = /* @__PURE__ */ new Map();
-  /** Ações aplicadas desde que a sala abriu (quem entra depois recebe e reaplica; persistência por chunk vem depois). */
-  edits = [];
   nextId = 1;
   /** Hora do dia da sala (0..1): a mesma para todos os jogadores. */
   time = ROOM_START_TIME;
-  /** Células cujo último estado veio do crescimento ("x,y" → bloco); uma ação na célula apaga a entrada. */
-  grown = /* @__PURE__ */ new Map();
+  /** Bolsas guardadas por nome (minúsculas). */
+  bags = /* @__PURE__ */ new Map();
   syncTimer = TIME_SYNC_SECONDS;
-  /**
-   * Passa o tempo da sala (o servidor chama ~1×/s com o tempo real): avança a hora, faz plantas e árvores crescerem
-   * (a sala decide; os aparelhos só aplicam) e, de tempos em tempos, manda a hora a todos.
-   */
-  tick(dt) {
-    this.time = (this.time + dt / DAY_LENGTH_S) % 1;
-    const cells = [];
-    this.world.tick(dt, this.rand, true, (x, y, id) => {
-      const g = [x, y, id];
-      this.grown.set(`${x},${y}`, g);
-      cells.push(g);
-    });
-    const out = [];
-    if (cells.length) out.push({ to: "all", msg: { t: "grow", cells } });
-    this.syncTimer -= dt;
-    if (this.syncTimer <= 0) {
-      this.syncTimer = TIME_SYNC_SECONDS;
-      out.push({ to: "all", msg: { t: "time", time: this.time } });
-    }
-    return this.players.size ? out : [];
-  }
+  /** Algo mudou desde o último `snapshot` (o servidor só grava quando há o que gravar). */
+  dirty = false;
   get size() {
     return this.players.size;
   }
-  /** Pedido de entrada já com a sala escolhida. Retorna o id do novo jogador e o que enviar (ou só um erro). */
+  /** Pedido de entrada. Retorna o id do novo jogador e o que enviar (ou só um erro, para quem pediu). */
   join(hello) {
     const fail = (code, message) => ({ id: null, out: [{ to: 0, msg: { t: "error", code, message } }] });
     if (hello.v !== PROTOCOL_VERSION) return fail("version", "Vers\xE3o do jogo diferente da do servidor: recarregue a p\xE1gina.");
     const name = sanitizeName(hello.name);
     if (!name) return fail("name", "Nome inv\xE1lido: use de 2 a 16 letras ou n\xFAmeros.");
-    if (this.players.size >= MAX_PLAYERS) return fail("full", `Sala cheia (m\xE1ximo ${MAX_PLAYERS} jogadores).`);
+    if (this.players.size >= MAX_PLAYERS) return fail("full", `${this.name} cheia (m\xE1ximo ${MAX_PLAYERS} jogadores). Tente daqui a pouco.`);
+    if ([...this.players.values()].some((p) => bagKey(p.name) === bagKey(name))) return fail("name", `J\xE1 tem algu\xE9m com o nome ${name} na sala: escolha outro.`);
     const id = this.nextId++;
     const player = { id, name, state: null };
     const others = [...this.players.values()];
@@ -3103,7 +3115,20 @@ var Room = class {
     return {
       id,
       out: [
-        { to: id, msg: { t: "welcome", you: id, room: this.code, seed: this.seed, players: others, edits: this.edits, time: this.time, grown: [...this.grown.values()] } },
+        {
+          to: id,
+          msg: {
+            t: "welcome",
+            you: id,
+            room: this.id,
+            roomName: this.name,
+            seed: this.seed,
+            players: others,
+            chunks: this.chunks(),
+            time: this.time,
+            bag: this.bags.get(bagKey(name)) ?? null
+          }
+        },
         { to: { except: id }, msg: { t: "joined", player } }
       ]
     };
@@ -3120,24 +3145,73 @@ var Room = class {
       p.state = m.s;
       return [{ to: { except: id }, msg: { t: "state", id, s: m.s } }];
     }
+    if (m.t === "bag") {
+      this.bags.set(bagKey(p.name), m.bag);
+      this.dirty = true;
+      return [];
+    }
     if (m.t === "action") {
       if (!applyAction(this.world, m.a)) return [{ to: id, msg: { t: "rejected", seq: m.seq } }];
+      this.dirty = true;
       const applied = { by: id, action: m.a };
-      this.edits.push(applied);
-      this.grown.delete(`${m.a.x},${m.a.y}`);
       return [{ to: "all", msg: { t: "applied", ...applied } }];
     }
     return [];
+  }
+  /**
+   * Passa o tempo da sala (o servidor chama ~1×/s, com gente ou sem): avança a hora e faz plantas e árvores crescerem
+   * (a sala decide; os aparelhos só aplicam). Com jogadores, manda o crescimento e, de tempos em tempos, a hora.
+   */
+  tick(dt) {
+    this.time = (this.time + dt / DAY_LENGTH_S) % 1;
+    const cells = [];
+    this.world.tick(dt, this.rand, true, (x, y, id) => cells.push([x, y, id]));
+    if (cells.length) this.dirty = true;
+    const out = [];
+    if (cells.length) out.push({ to: "all", msg: { t: "grow", cells } });
+    this.syncTimer -= dt;
+    if (this.syncTimer <= 0) {
+      this.syncTimer = TIME_SYNC_SECONDS;
+      out.push({ to: "all", msg: { t: "time", time: this.time } });
+    }
+    return this.players.size ? out : [];
+  }
+  /** Mundo da sala como está: os chunks editados (o resto vem da seed). */
+  chunks() {
+    return this.world.modifiedChunks().map((c) => ({ cx: c.cx, cy: c.cy, ground: toB64(c.ground), levels: c.levels.map(toB64) }));
+  }
+  /** Fotografia para o disco (o servidor grava quando `dirty`). */
+  snapshot() {
+    this.dirty = false;
+    return {
+      v: ROOM_SNAPSHOT_VERSION,
+      room: this.id,
+      seed: this.seed,
+      time: this.time,
+      savedAt: Date.now(),
+      chunks: this.chunks(),
+      bags: Object.fromEntries(this.bags)
+    };
+  }
+  /** Recarrega o que o servidor gravou (só se for desta sala e desta seed; senão, a sala começa do zero). */
+  restore(s) {
+    if (!s || s.v !== ROOM_SNAPSHOT_VERSION || s.room !== this.id || s.seed !== this.seed) return false;
+    for (const c of s.chunks) this.world.restoreChunk(c.cx, c.cy, fromB64(c.ground), c.levels.map(fromB64));
+    this.world.settleWater();
+    if (Number.isFinite(s.time)) this.time = (s.time % 1 + 1) % 1;
+    for (const [k, bag] of Object.entries(s.bags ?? {})) this.bags.set(k, bag);
+    this.dirty = false;
+    return true;
   }
 };
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   MAX_PLAYERS,
   PROTOCOL_VERSION,
-  ROOM_CODE_LENGTH,
+  ROOMS,
+  ROOM_SNAPSHOT_VERSION,
   Room,
-  makeRoomCode,
-  normalizeRoomCode,
   parseClientMessage,
+  roomById,
   sanitizeName
 });

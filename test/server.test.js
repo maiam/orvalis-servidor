@@ -3,9 +3,14 @@ const assert = require('node:assert/strict');
 const WebSocket = require('ws');
 const { startServer } = require('../src/app');
 const net = require('../vendor/orvalis-net.cjs');
+const { mkdtempSync } = require('node:fs');
+const { tmpdir } = require('node:os');
+const { join } = require('node:path');
 
-async function boot() {
-  const s = startServer(0);
+const tempDir = () => mkdtempSync(join(tmpdir(), 'orvalis-'));
+
+async function boot(dataDir = tempDir()) {
+  const s = startServer(0, { dataDir, noSignals: true });
   await new Promise((r) => s.http.once('listening', r));
   return { s, url: `ws://127.0.0.1:${s.http.address().port}/ws`, port: s.http.address().port };
 }
@@ -40,17 +45,18 @@ test('saúde mostra protocolo e pacote', async () => {
 test('dois jogadores na mesma sala: entrada, posição, ação aplicada para todos e recusa na cidade', async () => {
   const { s, url } = await boot();
   const a = client(url); await a.open;
-  a.send({ t: 'hello', v: net.PROTOCOL_VERSION, name: 'Ana' });
+  a.send({ t: 'hello', v: net.PROTOCOL_VERSION, name: 'Ana', room: 1 });
   const wa = await a.wait((m) => m.t === 'welcome');
-  assert.match(wa.room, /^[A-Z2-9]{6}$/);
+  assert.equal(wa.room, 1);
+  assert.equal(wa.roomName, 'Sala 1');
   const b = client(url); await b.open;
-  b.send({ t: 'hello', v: net.PROTOCOL_VERSION, name: 'Beto', room: wa.room.toLowerCase() });
+  b.send({ t: 'hello', v: net.PROTOCOL_VERSION, name: 'Beto', room: 1 });
   const wb = await b.wait((m) => m.t === 'welcome');
   assert.equal(wb.seed, wa.seed);
-  // Protocolo 7: a sala tem hora própria (a mesma para todos) e o relógio dela anda sozinho.
+  // A sala tem hora própria (a mesma para todos) e o mundo vem nos chunks editados.
   assert.equal(typeof wa.time, 'number');
   assert.ok(wb.time >= wa.time);
-  assert.ok(Array.isArray(wb.grown));
+  assert.ok(Array.isArray(wb.chunks));
   assert.deepEqual(wb.players.map((p) => p.name), ['Ana']);
   await a.wait((m) => m.t === 'joined' && m.player.name === 'Beto');
 
@@ -59,7 +65,7 @@ test('dois jogadores na mesma sala: entrada, posição, ação aplicada para tod
   assert.equal(st.id, wa.you);
 
   // Ação fora da cidade, num lugar onde o mundo da sala deixa colocar: aplicada para os dois.
-  const room = s.rooms.get(wa.room).room;
+  const room = s.rooms.get(1).room;
   const [gx, gy] = room.world.outsideGate();
   let spot = [gx, gy];
   for (let k = 1; k < 200 && !room.world.canPlace(spot[0], spot[1], 25); k++) spot = [gx + (k % 15) - 7, gy + 2 + Math.floor(k / 15)];
@@ -79,23 +85,54 @@ test('dois jogadores na mesma sala: entrada, posição, ação aplicada para tod
   await b.wait((m) => m.t === 'left' && m.id === wa.you);
   b.ws.close();
   await new Promise((r) => setTimeout(r, 50));
-  assert.equal(s.rooms.size, 0); // sala vazia acaba
+  assert.equal(s.rooms.size, 1); // sala fixa: continua aberta, vazia
   await s.close();
 });
 
 test('erros: sala inexistente, nome e versão inválidos, origem não permitida', async () => {
   const { s, url } = await boot();
   const c = client(url); await c.open;
-  c.send({ t: 'hello', v: net.PROTOCOL_VERSION, name: 'Ana', room: 'ZZZZZZ' });
+  c.send({ t: 'hello', v: net.PROTOCOL_VERSION, name: 'Ana', room: 99 });
   assert.equal((await c.wait((m) => m.t === 'error')).code, 'room');
   const d = client(url); await d.open;
-  d.send({ t: 'hello', v: net.PROTOCOL_VERSION + 1, name: 'Ana' });
+  d.send({ t: 'hello', v: net.PROTOCOL_VERSION + 1, name: 'Ana', room: 1 });
   assert.equal((await d.wait((m) => m.t === 'error')).code, 'version');
   const e = client(url); await e.open;
-  e.send({ t: 'hello', v: net.PROTOCOL_VERSION, name: '?' });
+  e.send({ t: 'hello', v: net.PROTOCOL_VERSION, name: '?', room: 1 });
   assert.equal((await e.wait((m) => m.t === 'error')).code, 'name');
   const bad = client(url, 'https://site-estranho.example');
   await assert.rejects(bad.open);
   for (const x of [c, d, e]) x.ws.close();
+  await s.close();
+});
+
+test('sala fixa salva em disco: mundo e bolsa voltam depois de reiniciar; /salas lista quem está', async () => {
+  const dir = tempDir();
+  let { s, url, port } = await boot(dir);
+  const lista = await (await fetch(`http://127.0.0.1:${port}/salas`)).json();
+  assert.deepEqual(lista, [{ numero: 1, nome: 'Sala 1', jogadores: 0, maximo: net.MAX_PLAYERS }]);
+  const a = client(url); await a.open;
+  a.send({ t: 'hello', v: net.PROTOCOL_VERSION, name: 'Ana', room: 1 });
+  await a.wait((m) => m.t === 'welcome');
+  const room = s.rooms.get(1).room;
+  const [gx, gy] = room.world.outsideGate();
+  let spot = [gx, gy];
+  for (let k = 1; k < 200 && !room.world.canPlace(spot[0], spot[1], 25); k++) spot = [gx + (k % 15) - 7, gy + 2 + Math.floor(k / 15)];
+  a.send({ t: 'action', seq: 1, a: { kind: 'place', x: spot[0], y: spot[1], block: 25 } });
+  await a.wait((m) => m.t === 'applied');
+  a.send({ t: 'bag', bag: { inventory: { wheat: 4 }, hotbar: null, x: 3.5, y: 4.5 } });
+  await new Promise((r) => setTimeout(r, 50));
+  a.ws.close();
+  await new Promise((r) => setTimeout(r, 50));
+  await s.close(); // grava ao desligar
+
+  ({ s, url } = await boot(dir));
+  assert.equal(s.rooms.get(1).room.world.getObject(spot[0], spot[1]), 25);
+  const b = client(url); await b.open;
+  b.send({ t: 'hello', v: net.PROTOCOL_VERSION, name: 'ana', room: 1 });
+  const w = await b.wait((m) => m.t === 'welcome');
+  assert.deepEqual(w.bag, { inventory: { wheat: 4 }, hotbar: null, x: 3.5, y: 4.5 });
+  assert.ok(w.chunks.length > 0);
+  b.ws.close();
   await s.close();
 });

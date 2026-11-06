@@ -3,19 +3,22 @@
 Servidor do **Orvalis** (multiplayer co-op; depois contas e nuvem). O jogo fica em `maiam/mundoblocos-2d`
 (`orvalis.pensamentos.online`); este é só o backend (ADRs 0015 e 0016 do jogo).
 
-**Etapa atual: 2 — salas co-op.** Até 4 convidados por sala, entrada só com nome, código de convite de 6 caracteres,
-sem combate entre jogadores. O servidor é autoritativo: as regras são as do jogo, vindas de `vendor/orvalis-net.cjs`
+**Etapa atual: salas fixas (protocolo 8).** Salas por número (`ROOMS` do jogo; hoje só a Sala 1), até 10 jogadores ao
+mesmo tempo, entrada só com nome, sem combate entre jogadores. Cada sala é um mundo compartilhado **salvo em disco**:
+o que se faz nela e a bolsa de cada jogador (pelo nome) ficam guardados para a próxima entrada. O servidor é autoritativo: as regras são as do jogo, vindas de `vendor/orvalis-net.cjs`
 (a classe `Room` do jogo, empacotada — **nunca edite à mão**; atualize com `npm run sync-net`).
 
 | Rota | O que faz |
 |---|---|
-| `GET /` | Página de teste: criar sala ou entrar com código e ver quem está nela |
-| `GET /saude` | JSON `{ ok, protocolo, pacote, salas, jogadores, segundosNoAr }` |
+| `GET /` | Página de teste: entrar numa sala pelo número e ver quem está nela |
+| `GET /salas` | JSON `[{ numero, nome, jogadores, maximo }]` (o menu do jogo mostra) |
+| `GET /saude` | JSON `{ ok, protocolo, pacote, salas, jogadores, segundosNoAr, dados }` (`dados`: pasta, última gravação, se cada sala veio do disco) |
 | `WS /ws` | Protocolo do jogo (`src/net/protocol.ts` no jogo) |
 
-Limites: 16 kB por mensagem; 40 mensagens/s por conexão (acima são ignoradas; acima de 200/s a conexão cai); até
-200 salas. Origens permitidas: o jogo, o Santuário, este servidor e `localhost:5173` (troque com `ALLOWED_ORIGINS`,
-lista separada por vírgula). Salas vivem só na memória: acabam quando o último sai ou o servidor reinicia.
+Limites: 16 kB por mensagem; 40 mensagens/s por conexão (acima são ignoradas; acima de 200/s a conexão cai).
+Origens permitidas: o jogo, o Santuário, este servidor e `localhost:5173` (troque com `ALLOWED_ORIGINS`,
+lista separada por vírgula). **Dados**: um arquivo `sala-<n>.json` por sala em `DATA_DIR` (padrão `~/orvalis-dados`, fora
+da pasta do código, que o deploy troca), gravado a cada 15 s quando algo mudou e ao desligar; carregado ao ligar.
 
 ## Rodar
 ```bash
