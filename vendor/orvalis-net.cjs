@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.74.0 (31af3d9) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.77.0 (368f1b8) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -505,51 +505,6 @@ function isOpen(id) {
   return id === Block.OAK_DOOR_OPEN || id === Block.FENCE_GATE_OPEN;
 }
 
-// src/world/random.ts
-function mulberry32(seed) {
-  let a = seed >>> 0;
-  return () => {
-    a = a + 1831565813 >>> 0;
-    let t = a;
-    t = Math.imul(t ^ t >>> 15, t | 1);
-    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
-    return ((t ^ t >>> 14) >>> 0) / 4294967296;
-  };
-}
-function hash2(seed, x, y) {
-  let h = (seed ^ Math.imul(x | 0, 668265261) ^ Math.imul(y | 0, 374761393)) >>> 0;
-  h = Math.imul(h ^ h >>> 15, 2246822507);
-  h = Math.imul(h ^ h >>> 13, 3266489909);
-  h ^= h >>> 16;
-  return (h >>> 0) / 4294967296;
-}
-
-// src/world/progression.ts
-var BASE_STATS = { maxHp: 100, attack: 5, defense: 2 };
-function playerStats(_level = 1) {
-  return { ...BASE_STATS };
-}
-var WEAPON_POWER = { sword: 12, axe: 7 };
-function weaponPower(tool) {
-  return (tool && WEAPON_POWER[tool]) ?? 0;
-}
-var MONSTER_STATS = {
-  "spider-small": { hp: 20, attack: 8, defense: 0 },
-  "spider-big": { hp: 45, attack: 14, defense: 2 },
-  "spider-boss": { hp: 180, attack: 36, defense: 6 }
-};
-var DAMAGE_SPREAD = 0.1;
-var CRIT_CHANCE = 0.05;
-var CRIT_MULTIPLIER = 1.5;
-function rollDamage(attack, defense, rand) {
-  const base = Math.max(1, attack - defense);
-  const varied = base * (1 + (rand() * 2 - 1) * DAMAGE_SPREAD);
-  const crit = rand() < CRIT_CHANCE;
-  return { amount: Math.max(1, Math.round(varied * (crit ? CRIT_MULTIPLIER : 1))), crit };
-}
-var REGEN = { delay: 6, every: 1.5, fraction: 0.05 };
-var HUNGER = { max: 100, perSecond: 100 / 720, regenMin: 30, starveEvery: 4, starveDamage: 2 };
-
 // src/world/items.ts
 var Item = {
   WHEAT_SEED: "wheat_seed",
@@ -884,6 +839,216 @@ var RECIPES = [
     output: { item: Item.APPLE_PIE, count: 1 }
   }
 ];
+
+// src/world/actions.ts
+var KINDS = /* @__PURE__ */ new Set(["break", "place", "till", "flatten", "plant", "pick", "door"]);
+var isInt = (v) => typeof v === "number" && Number.isInteger(v) && Math.abs(v) < 2 ** 30;
+function parseAction(v) {
+  if (!v || typeof v !== "object") return null;
+  const a = v;
+  if (!KINDS.has(a.kind) || !isInt(a.x) || !isInt(a.y)) return null;
+  const { x, y } = a;
+  switch (a.kind) {
+    case "break":
+      if (a.tool !== null && !(typeof a.tool === "string" && a.tool in TOOLS)) return null;
+      return { kind: "break", x, y, tool: a.tool };
+    case "place":
+      if (!isInt(a.block) || !blockDef(a.block).placeable) return null;
+      return { kind: "place", x, y, block: a.block };
+    case "plant":
+      if (a.block === void 0) return { kind: "plant", x, y };
+      return isInt(a.block) ? { kind: "plant", x, y, block: a.block } : null;
+    default:
+      return { kind: a.kind, x, y };
+  }
+}
+function applyAction(world, a) {
+  switch (a.kind) {
+    case "break": {
+      const id = world.breakTargetId(a.x, a.y);
+      if (id === null || !toolCanBreak(a.tool, id)) return false;
+      return world.breakBlock(a.x, a.y) !== null;
+    }
+    case "place":
+      return world.placeBlock(a.x, a.y, a.block);
+    case "till":
+      return world.till(a.x, a.y);
+    case "flatten":
+      return world.flatten(a.x, a.y);
+    case "plant":
+      return world.plant(a.x, a.y, a.block);
+    case "pick":
+      return world.pick(a.x, a.y);
+    case "door":
+      return world.toggleDoor(a.x, a.y);
+  }
+}
+
+// src/net/protocol.ts
+var PROTOCOL_VERSION = 17;
+var MAX_PLAYERS = 10;
+var ROOMS = [
+  { id: 1, name: "Sala 1", seed: 20261106 }
+];
+function roomById(id) {
+  return ROOMS.find((r) => r.id === id);
+}
+var NAME_MIN = 2;
+var NAME_MAX = 16;
+function sanitizeName(text) {
+  const n = text.normalize("NFC").replace(/\s+/g, " ").trim();
+  if (n.length < NAME_MIN || n.length > NAME_MAX) return null;
+  return /^[\p{L}\p{N} _-]+$/u.test(n) ? n : null;
+}
+var APPEARANCE_BODIES = ["heroine", "hero", "hood", "gino"];
+var DEFAULT_APPEARANCE = { body: "heroine", look: null };
+var FACING_ORDER = ["down", "left", "right", "up"];
+var FACINGS = /* @__PURE__ */ new Set(["down", "left", "right", "up"]);
+var finite = (v) => typeof v === "number" && Number.isFinite(v) && Math.abs(v) < 2 ** 30;
+function parseState(v) {
+  if (!v || typeof v !== "object") return null;
+  const s = v;
+  if (!finite(s.x) || !finite(s.y) || !FACINGS.has(s.facing) || typeof s.moving !== "boolean") return null;
+  const out = { x: s.x, y: s.y, facing: s.facing, moving: s.moving };
+  if (typeof s.tool === "string" && s.tool in TOOLS) out.tool = s.tool;
+  if (Number.isInteger(s.swing) && s.swing >= 0 && s.swing < 2 ** 31) out.swing = s.swing;
+  return out;
+}
+function parseClientMessage(text) {
+  let m;
+  try {
+    m = JSON.parse(text);
+  } catch {
+    return null;
+  }
+  if (!m || typeof m !== "object") return null;
+  const o = m;
+  switch (o.t) {
+    case "hello":
+      if (!Number.isInteger(o.v) || typeof o.name !== "string" || !Number.isInteger(o.room)) return null;
+      return { t: "hello", v: o.v, name: o.name, room: o.room, appearance: parseAppearance(o.appearance) };
+    case "bag": {
+      const bag = parseBag(o.bag);
+      return bag ? { t: "bag", bag } : null;
+    }
+    case "take":
+      return Number.isInteger(o.id) ? { t: "take", id: o.id } : null;
+    case "chest": {
+      const slots = parseChestSlots(o.slots);
+      return slots && Number.isInteger(o.x) && Number.isInteger(o.y) ? { t: "chest", x: o.x, y: o.y, slots } : null;
+    }
+    case "state": {
+      const s = parseState(o.s);
+      return s ? { t: "state", s } : null;
+    }
+    case "strike":
+      if (!FACINGS.has(o.facing) || !finite(o.attack) || o.attack < 0 || o.attack > 1e3) return null;
+      return { t: "strike", facing: o.facing, attack: o.attack };
+    case "feed":
+      return Number.isInteger(o.id) && typeof o.item === "string" && /^[a-z_]{1,32}$/.test(o.item) ? { t: "feed", id: o.id, item: o.item } : null;
+    case "action": {
+      const a = parseAction(o.a);
+      return a && Number.isInteger(o.seq) ? { t: "action", seq: o.seq, a } : null;
+    }
+    default:
+      return null;
+  }
+}
+var MAX_BAG_ENTRIES = 128;
+var STACK_RE = /^(block:\d{1,4}|tool:[a-z_]{1,24}|[a-z_]{1,32})$/;
+function parseBag(v) {
+  if (!v || typeof v !== "object") return null;
+  const o = v;
+  if (!o.inventory || typeof o.inventory !== "object" || !finite(o.x) || !finite(o.y)) return null;
+  const inventory = {};
+  const entries = Object.entries(o.inventory);
+  if (entries.length > MAX_BAG_ENTRIES) return null;
+  for (const [k, n] of entries) {
+    if (!STACK_RE.test(k) || !Number.isInteger(n) || n < 0 || n > 99999) return null;
+    inventory[k] = n;
+  }
+  let hotbar = null;
+  if (o.hotbar !== null && o.hotbar !== void 0) {
+    if (!Array.isArray(o.hotbar) || o.hotbar.length > 64) return null;
+    if (!o.hotbar.every((s) => s === null || typeof s === "string" && STACK_RE.test(s))) return null;
+    hotbar = o.hotbar;
+  }
+  return { inventory, hotbar, x: o.x, y: o.y };
+}
+var PIECE_RE = /^[a-z0-9-]{1,40}$/;
+function parseAppearance(v) {
+  if (!v || typeof v !== "object") return DEFAULT_APPEARANCE;
+  const o = v;
+  const body = APPEARANCE_BODIES.includes(o.body) ? o.body : "heroine";
+  let look = null;
+  if (o.look && typeof o.look === "object") {
+    const entries = Object.entries(o.look);
+    if (entries.length <= 12 && entries.every(([k, val]) => PIECE_RE.test(k) && typeof val === "string" && PIECE_RE.test(val))) {
+      look = Object.fromEntries(entries);
+    }
+  }
+  return { body, look };
+}
+function parseChestSlots(v, size = 27) {
+  if (!Array.isArray(v) || v.length !== size) return null;
+  const out = [];
+  for (const s of v) {
+    if (s === null) {
+      out.push(null);
+      continue;
+    }
+    if (!s || typeof s !== "object") return null;
+    const o = s;
+    if (typeof o.item !== "string" || !STACK_RE.test(o.item) || !Number.isInteger(o.count) || o.count < 1 || o.count > 99999) return null;
+    out.push({ item: o.item, count: o.count });
+  }
+  return out;
+}
+
+// src/world/random.ts
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = a + 1831565813 >>> 0;
+    let t = a;
+    t = Math.imul(t ^ t >>> 15, t | 1);
+    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function hash2(seed, x, y) {
+  let h = (seed ^ Math.imul(x | 0, 668265261) ^ Math.imul(y | 0, 374761393)) >>> 0;
+  h = Math.imul(h ^ h >>> 15, 2246822507);
+  h = Math.imul(h ^ h >>> 13, 3266489909);
+  h ^= h >>> 16;
+  return (h >>> 0) / 4294967296;
+}
+
+// src/world/progression.ts
+var BASE_STATS = { maxHp: 100, attack: 5, defense: 2 };
+function playerStats(_level = 1) {
+  return { ...BASE_STATS };
+}
+var WEAPON_POWER = { sword: 12, axe: 7 };
+function weaponPower(tool) {
+  return (tool && WEAPON_POWER[tool]) ?? 0;
+}
+var MONSTER_STATS = {
+  "spider-small": { hp: 20, attack: 8, defense: 0 },
+  "spider-big": { hp: 45, attack: 14, defense: 2 },
+  "spider-boss": { hp: 180, attack: 36, defense: 6 }
+};
+var DAMAGE_SPREAD = 0.1;
+var CRIT_CHANCE = 0.05;
+var CRIT_MULTIPLIER = 1.5;
+function rollDamage(attack, defense, rand) {
+  const base = Math.max(1, attack - defense);
+  const varied = base * (1 + (rand() * 2 - 1) * DAMAGE_SPREAD);
+  const crit = rand() < CRIT_CHANCE;
+  return { amount: Math.max(1, Math.round(varied * (crit ? CRIT_MULTIPLIER : 1))), crit };
+}
+var REGEN = { delay: 6, every: 1.5, fraction: 0.05 };
+var HUNGER = { max: 100, perSecond: 100 / 720, regenMin: 30, starveEvery: 4, starveDamage: 2 };
 
 // src/game/walker.ts
 var Z_SMOOTH = 14;
@@ -2772,50 +2937,6 @@ var Player = class extends Walker {
   }
 };
 
-// src/world/actions.ts
-var KINDS = /* @__PURE__ */ new Set(["break", "place", "till", "flatten", "plant", "pick", "door"]);
-var isInt = (v) => typeof v === "number" && Number.isInteger(v) && Math.abs(v) < 2 ** 30;
-function parseAction(v) {
-  if (!v || typeof v !== "object") return null;
-  const a = v;
-  if (!KINDS.has(a.kind) || !isInt(a.x) || !isInt(a.y)) return null;
-  const { x, y } = a;
-  switch (a.kind) {
-    case "break":
-      if (a.tool !== null && !(typeof a.tool === "string" && a.tool in TOOLS)) return null;
-      return { kind: "break", x, y, tool: a.tool };
-    case "place":
-      if (!isInt(a.block) || !blockDef(a.block).placeable) return null;
-      return { kind: "place", x, y, block: a.block };
-    case "plant":
-      if (a.block === void 0) return { kind: "plant", x, y };
-      return isInt(a.block) ? { kind: "plant", x, y, block: a.block } : null;
-    default:
-      return { kind: a.kind, x, y };
-  }
-}
-function applyAction(world, a) {
-  switch (a.kind) {
-    case "break": {
-      const id = world.breakTargetId(a.x, a.y);
-      if (id === null || !toolCanBreak(a.tool, id)) return false;
-      return world.breakBlock(a.x, a.y) !== null;
-    }
-    case "place":
-      return world.placeBlock(a.x, a.y, a.block);
-    case "till":
-      return world.till(a.x, a.y);
-    case "flatten":
-      return world.flatten(a.x, a.y);
-    case "plant":
-      return world.plant(a.x, a.y, a.block);
-    case "pick":
-      return world.pick(a.x, a.y);
-    case "door":
-      return world.toggleDoor(a.x, a.y);
-  }
-}
-
 // src/world/coords.ts
 function toChunk(v) {
   return Math.floor(v / CHUNK_SIZE);
@@ -4482,126 +4603,6 @@ function toB64(a) {
 }
 function fromB64(s) {
   return Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
-}
-
-// src/net/protocol.ts
-var PROTOCOL_VERSION = 16;
-var MAX_PLAYERS = 10;
-var ROOMS = [
-  { id: 1, name: "Sala 1", seed: 20261106 }
-];
-function roomById(id) {
-  return ROOMS.find((r) => r.id === id);
-}
-var NAME_MIN = 2;
-var NAME_MAX = 16;
-function sanitizeName(text) {
-  const n = text.normalize("NFC").replace(/\s+/g, " ").trim();
-  if (n.length < NAME_MIN || n.length > NAME_MAX) return null;
-  return /^[\p{L}\p{N} _-]+$/u.test(n) ? n : null;
-}
-var DEFAULT_APPEARANCE = { body: "heroine", look: null };
-var FACING_ORDER = ["down", "left", "right", "up"];
-var FACINGS = /* @__PURE__ */ new Set(["down", "left", "right", "up"]);
-var finite = (v) => typeof v === "number" && Number.isFinite(v) && Math.abs(v) < 2 ** 30;
-function parseState(v) {
-  if (!v || typeof v !== "object") return null;
-  const s = v;
-  if (!finite(s.x) || !finite(s.y) || !FACINGS.has(s.facing) || typeof s.moving !== "boolean") return null;
-  const out = { x: s.x, y: s.y, facing: s.facing, moving: s.moving };
-  if (typeof s.tool === "string" && s.tool in TOOLS) out.tool = s.tool;
-  if (Number.isInteger(s.swing) && s.swing >= 0 && s.swing < 2 ** 31) out.swing = s.swing;
-  return out;
-}
-function parseClientMessage(text) {
-  let m;
-  try {
-    m = JSON.parse(text);
-  } catch {
-    return null;
-  }
-  if (!m || typeof m !== "object") return null;
-  const o = m;
-  switch (o.t) {
-    case "hello":
-      if (!Number.isInteger(o.v) || typeof o.name !== "string" || !Number.isInteger(o.room)) return null;
-      return { t: "hello", v: o.v, name: o.name, room: o.room, appearance: parseAppearance(o.appearance) };
-    case "bag": {
-      const bag = parseBag(o.bag);
-      return bag ? { t: "bag", bag } : null;
-    }
-    case "take":
-      return Number.isInteger(o.id) ? { t: "take", id: o.id } : null;
-    case "chest": {
-      const slots = parseChestSlots(o.slots);
-      return slots && Number.isInteger(o.x) && Number.isInteger(o.y) ? { t: "chest", x: o.x, y: o.y, slots } : null;
-    }
-    case "state": {
-      const s = parseState(o.s);
-      return s ? { t: "state", s } : null;
-    }
-    case "strike":
-      if (!FACINGS.has(o.facing) || !finite(o.attack) || o.attack < 0 || o.attack > 1e3) return null;
-      return { t: "strike", facing: o.facing, attack: o.attack };
-    case "feed":
-      return Number.isInteger(o.id) && typeof o.item === "string" && /^[a-z_]{1,32}$/.test(o.item) ? { t: "feed", id: o.id, item: o.item } : null;
-    case "action": {
-      const a = parseAction(o.a);
-      return a && Number.isInteger(o.seq) ? { t: "action", seq: o.seq, a } : null;
-    }
-    default:
-      return null;
-  }
-}
-var MAX_BAG_ENTRIES = 128;
-var STACK_RE = /^(block:\d{1,4}|tool:[a-z_]{1,24}|[a-z_]{1,32})$/;
-function parseBag(v) {
-  if (!v || typeof v !== "object") return null;
-  const o = v;
-  if (!o.inventory || typeof o.inventory !== "object" || !finite(o.x) || !finite(o.y)) return null;
-  const inventory = {};
-  const entries = Object.entries(o.inventory);
-  if (entries.length > MAX_BAG_ENTRIES) return null;
-  for (const [k, n] of entries) {
-    if (!STACK_RE.test(k) || !Number.isInteger(n) || n < 0 || n > 99999) return null;
-    inventory[k] = n;
-  }
-  let hotbar = null;
-  if (o.hotbar !== null && o.hotbar !== void 0) {
-    if (!Array.isArray(o.hotbar) || o.hotbar.length > 64) return null;
-    if (!o.hotbar.every((s) => s === null || typeof s === "string" && STACK_RE.test(s))) return null;
-    hotbar = o.hotbar;
-  }
-  return { inventory, hotbar, x: o.x, y: o.y };
-}
-var PIECE_RE = /^[a-z0-9-]{1,40}$/;
-function parseAppearance(v) {
-  if (!v || typeof v !== "object") return DEFAULT_APPEARANCE;
-  const o = v;
-  const body = o.body === "hero" || o.body === "hood" ? o.body : "heroine";
-  let look = null;
-  if (o.look && typeof o.look === "object") {
-    const entries = Object.entries(o.look);
-    if (entries.length <= 12 && entries.every(([k, val]) => PIECE_RE.test(k) && typeof val === "string" && PIECE_RE.test(val))) {
-      look = Object.fromEntries(entries);
-    }
-  }
-  return { body, look };
-}
-function parseChestSlots(v, size = 27) {
-  if (!Array.isArray(v) || v.length !== size) return null;
-  const out = [];
-  for (const s of v) {
-    if (s === null) {
-      out.push(null);
-      continue;
-    }
-    if (!s || typeof s !== "object") return null;
-    const o = s;
-    if (typeof o.item !== "string" || !STACK_RE.test(o.item) || !Number.isInteger(o.count) || o.count < 1 || o.count > 99999) return null;
-    out.push({ item: o.item, count: o.count });
-  }
-  return out;
 }
 
 // src/net/room.ts
