@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.71.0 (46e7b0d) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.72.0 (05af3ed) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -1976,6 +1976,10 @@ var PAIR_RANGE = 6;
 var COURT_DISTANCE = 1.5;
 var MAX_SHEEP = 16;
 var MAX_PER_SPECIES = { sheep: MAX_SHEEP, horse: 6, cow: 10, chicken: 12 };
+function heroActorKind(body, equipped, attackTool, attacking) {
+  if (attacking && attackTool && TOOLS[attackTool].swings) return `${body}-${attackTool}-attack`;
+  return equipped ? `${body}-${equipped}` : body;
+}
 var NOBODY = { x: 1e9, y: 1e9 };
 var Entities = class {
   constructor(player, rand = Math.random, character = "heroine") {
@@ -2454,7 +2458,7 @@ var Entities = class {
     const p = this.player;
     if (p) {
       const b = this.body;
-      const kind = this.character === "goddess" ? "goddess" : p.attacking && p.attackTool && TOOLS[p.attackTool].swings ? `${b}-${p.attackTool}-attack` : p.equipped ? `${b}-${p.equipped}` : b;
+      const kind = this.character === "goddess" ? "goddess" : heroActorKind(b, p.equipped, p.attackTool, p.attacking);
       out.unshift({
         kind,
         x: p.x,
@@ -2555,6 +2559,8 @@ var Player = class extends Walker {
   attackTime = 0;
   /** Ferramenta do golpe em andamento (define a folha de animação). */
   attackTool = null;
+  /** Golpes começados (a sala repassa aos outros, que tocam a animação ao ver o número mudar). */
+  swings = 0;
   hitDone = true;
   /** Atributos atuais (vida máxima, ataque, defesa — `world/progression.ts`). */
   stats = playerStats(1);
@@ -2586,6 +2592,7 @@ var Player = class extends Walker {
     if (this.attacking) return false;
     this.attackTool = tool;
     this.attackTime = ATTACK_SECONDS;
+    this.swings++;
     this.hitDone = false;
     return true;
   }
@@ -4387,7 +4394,7 @@ function fromB64(s) {
 }
 
 // src/net/protocol.ts
-var PROTOCOL_VERSION = 14;
+var PROTOCOL_VERSION = 15;
 var MAX_PLAYERS = 10;
 var ROOMS = [
   { id: 1, name: "Sala 1", seed: 20261106 }
@@ -4410,7 +4417,10 @@ function parseState(v) {
   if (!v || typeof v !== "object") return null;
   const s = v;
   if (!finite(s.x) || !finite(s.y) || !FACINGS.has(s.facing) || typeof s.moving !== "boolean") return null;
-  return { x: s.x, y: s.y, facing: s.facing, moving: s.moving };
+  const out = { x: s.x, y: s.y, facing: s.facing, moving: s.moving };
+  if (typeof s.tool === "string" && s.tool in TOOLS) out.tool = s.tool;
+  if (Number.isInteger(s.swing) && s.swing >= 0 && s.swing < 2 ** 31) out.swing = s.swing;
+  return out;
 }
 function parseClientMessage(text) {
   let m;
