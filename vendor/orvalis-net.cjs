@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.66.0 (a7fa929) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.67.0 (177d65f) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -180,7 +180,14 @@ var Block = {
   WOOD_CELESTIAL: 96,
   FOLIAGE_GOLDEN: 97
 };
+var WHEAT_STAGES = 16;
 var WHEAT_FIRST = 60;
+function isWheat(id) {
+  return id >= WHEAT_FIRST && id < WHEAT_FIRST + WHEAT_STAGES;
+}
+function wheatStage(id) {
+  return id - WHEAT_FIRST;
+}
 var CROP_STAGES = 16;
 var CROPS = {
   wheat: { first: WHEAT_FIRST, name: "Trigo", ripe: "Trigo Maduro" },
@@ -427,6 +434,12 @@ var TREE_NEXT = {
 function isGrowingTree(id) {
   return TREE_NEXT[id] !== void 0;
 }
+function isDoor(id) {
+  return id === Block.OAK_DOOR || id === Block.OAK_DOOR_OPEN;
+}
+function isGate(id) {
+  return id === Block.FENCE_GATE || id === Block.FENCE_GATE_OPEN;
+}
 var TOGGLES = {
   [Block.OAK_DOOR]: Block.OAK_DOOR_OPEN,
   [Block.OAK_DOOR_OPEN]: Block.OAK_DOOR,
@@ -483,8 +496,50 @@ var ITEMS = {
   pasta_tomato: { id: Item.PASTA_TOMATO, name: "Macarr\xE3o ao Molho" }
 };
 var VEGETABLES = [Item.POTATO, Item.TOMATO, Item.CARROT];
+var GRASS_VEGETABLE_CHANCE = 0.12;
 var LOOT_ITEMS = [Item.SILK, Item.FANG, Item.QUEEN_HEART];
 var blockStack = (id) => `block:${id}`;
+function dropsFor(id, rand = Math.random) {
+  const tree = treeDrops(id, rand);
+  if (tree) return tree;
+  if (id === Block.TALL_GRASS) {
+    if (rand() >= GRASS_VEGETABLE_CHANCE) return [];
+    return [{ item: VEGETABLES[Math.min(VEGETABLES.length - 1, Math.floor(rand() * VEGETABLES.length))], count: 1 }];
+  }
+  const kind = cropKind(id);
+  if (kind && kind !== "wheat") {
+    const item = kind;
+    return [{ item, count: cropStage(id) === CROP_STAGES - 1 ? 2 + (rand() < 0.5 ? 1 : 0) : 1 }];
+  }
+  if (!isWheat(id)) return [];
+  if (wheatStage(id) === WHEAT_STAGES - 1) {
+    return [
+      { item: Item.WHEAT, count: 1 },
+      { item: Item.WHEAT_SEED, count: 1 + (rand() < 0.5 ? 1 : 0) }
+    ];
+  }
+  return [{ item: Item.WHEAT_SEED, count: 1 }];
+}
+function treeDrops(id, rand) {
+  const sapling = (item) => rand() < 0.5 ? [{ item, count: 1 }] : [];
+  switch (id) {
+    case Block.OAK_SAPLING:
+      return [{ item: Item.OAK_SAPLING, count: 1 }];
+    case Block.APPLE_SAPLING:
+      return [{ item: Item.APPLE_SAPLING, count: 1 }];
+    case Block.OAK_TREE:
+      return sapling(Item.OAK_SAPLING);
+    case Block.APPLE_TREE:
+      return [...pickDrops(rand), ...sapling(Item.APPLE_SAPLING)];
+    case Block.APPLE_TREE_BARE:
+      return sapling(Item.APPLE_SAPLING);
+    default:
+      return null;
+  }
+}
+function pickDrops(rand = Math.random) {
+  return [{ item: Item.APPLE, count: 2 + (rand() < 0.5 ? 1 : 0) }];
+}
 var Tool = {
   SWORD: "sword",
   HOE: "hoe",
@@ -557,9 +612,24 @@ function toolCanBreak(tool, id) {
   if (rule === "nonWood") return organic !== "wood";
   return false;
 }
+function toolDrops(tool, id, rand = Math.random) {
+  if (tool && TOOLS[tool].destroysPlants && blockDef(id).organic === "plant") return [];
+  return dropsFor(id, rand);
+}
 var TOOL_ORDER = [Tool.SWORD, Tool.HOE, Tool.PICKAXE, Tool.SHOVEL, Tool.AXE];
 var COLLECTABLE = /* @__PURE__ */ new Set([...MATERIALS, Block.OAK_DOOR, Block.TENT, Block.CHEST, Block.CAMPFIRE, Block.CAULDRON, Block.OVEN, Block.CHAIR, Block.FENCE]);
 var ADULT_TREES = /* @__PURE__ */ new Set([Block.OAK_TREE, Block.SAKURA_TREE, Block.APPLE_TREE, Block.APPLE_TREE_BARE]);
+function blockDrops(id, rand = Math.random) {
+  if (ADULT_TREES.has(id)) return [{ item: blockStack(Block.OAK_LOG), count: 2 + (rand() < 0.5 ? 1 : 0) }];
+  if (id === Block.OAK_YOUNG || id === Block.OAK_GROWING || id === Block.APPLE_YOUNG) return [{ item: blockStack(Block.OAK_LOG), count: 1 }];
+  if (isDoor(id)) return [{ item: blockStack(Block.OAK_DOOR), count: 1 }];
+  if (isGate(id)) return [{ item: blockStack(Block.FENCE_GATE), count: 1 }];
+  if (id === Block.ROCK_BOULDER) return [{ item: blockStack(Block.STONE), count: 1 + Math.floor(rand() * 3) }];
+  return COLLECTABLE.has(id) ? [{ item: blockStack(id), count: 1 }] : [];
+}
+function breakDrops(tool, id, collect, rand = Math.random) {
+  return [...toolDrops(tool, id, rand), ...collect ? blockDrops(id, rand) : []];
+}
 var RECIPES = [
   {
     id: "oak-planks",
@@ -2996,7 +3066,7 @@ function fromB64(s) {
 }
 
 // src/net/protocol.ts
-var PROTOCOL_VERSION = 9;
+var PROTOCOL_VERSION = 10;
 var MAX_PLAYERS = 10;
 var ROOMS = [
   { id: 1, name: "Sala 1", seed: 20261106 }
@@ -3036,6 +3106,12 @@ function parseClientMessage(text) {
     case "bag": {
       const bag = parseBag(o.bag);
       return bag ? { t: "bag", bag } : null;
+    }
+    case "take":
+      return Number.isInteger(o.id) ? { t: "take", id: o.id } : null;
+    case "chest": {
+      const slots = parseChestSlots(o.slots);
+      return slots && Number.isInteger(o.x) && Number.isInteger(o.y) ? { t: "chest", x: o.x, y: o.y, slots } : null;
     }
     case "state": {
       const s = parseState(o.s);
@@ -3084,11 +3160,28 @@ function parseAppearance(v) {
   }
   return { body, look };
 }
+function parseChestSlots(v, size = 27) {
+  if (!Array.isArray(v) || v.length !== size) return null;
+  const out = [];
+  for (const s of v) {
+    if (s === null) {
+      out.push(null);
+      continue;
+    }
+    if (!s || typeof s !== "object") return null;
+    const o = s;
+    if (typeof o.item !== "string" || !STACK_RE.test(o.item) || !Number.isInteger(o.count) || o.count < 1 || o.count > 99999) return null;
+    out.push({ item: o.item, count: o.count });
+  }
+  return out;
+}
 
 // src/net/room.ts
 var ROOM_START_TIME = 0.31;
 var TIME_SYNC_SECONDS = 30;
-var ROOM_SNAPSHOT_VERSION = 1;
+var ROOM_SNAPSHOT_VERSION = 2;
+var DROP_LIFETIME = 300;
+var TAKE_REACH = 3;
 var bagKey = (name) => name.toLocaleLowerCase("pt-BR");
 var Room = class {
   constructor(id, name, seed, rand = Math.random) {
@@ -3110,6 +3203,10 @@ var Room = class {
   /** Bolsas guardadas por nome (minúsculas). */
   bags = /* @__PURE__ */ new Map();
   syncTimer = TIME_SYNC_SECONDS;
+  /** Itens no chão da sala (com a hora em que caíram, em segundos de sala). */
+  drops = /* @__PURE__ */ new Map();
+  nextDropId = 1;
+  clock = 0;
   /** Algo mudou desde o último `snapshot` (o servidor só grava quando há o que gravar). */
   dirty = false;
   get size() {
@@ -3141,7 +3238,9 @@ var Room = class {
             players: others,
             chunks: this.chunks(),
             time: this.time,
-            bag: this.bags.get(bagKey(name)) ?? null
+            bag: this.bags.get(bagKey(name)) ?? null,
+            drops: [...this.drops.values()].map(({ id: id2, item, x, y }) => ({ id: id2, item, x, y })),
+            chests: this.chestList()
           }
         },
         { to: { except: id }, msg: { t: "joined", player } }
@@ -3166,10 +3265,35 @@ var Room = class {
       return [];
     }
     if (m.t === "action") {
-      if (!applyAction(this.world, m.a)) return [{ to: id, msg: { t: "rejected", seq: m.seq } }];
+      const a = m.a;
+      const breaking = a.kind === "break" ? this.world.breakTargetId(a.x, a.y) : null;
+      const chestLoot = a.kind === "break" ? (this.world.chestAt(a.x, a.y) ?? []).filter((c) => c !== null).map((c) => ({ item: c.item, count: c.count })) : [];
+      const wasChest = a.kind === "break" && this.world.getObject(a.x, a.y) === Block.CHEST;
+      if (!applyAction(this.world, a)) return [{ to: id, msg: { t: "rejected", seq: m.seq } }];
       this.dirty = true;
-      const applied = { by: id, action: m.a };
-      return [{ to: "all", msg: { t: "applied", ...applied } }];
+      const applied = { by: id, action: a };
+      const out = [{ to: "all", msg: { t: "applied", ...applied } }];
+      let loot = [];
+      if (a.kind === "break" && breaking !== null) {
+        loot = [...wasChest ? chestLoot : [], ...breakDrops(a.tool, breaking, this.world.profile.collectBlocks, this.rand)];
+      }
+      if (a.kind === "pick") loot = pickDrops(this.rand);
+      const list = this.spawnDrops(a.x + 0.5, a.y + 0.7, loot);
+      if (list.length) out.push({ to: "all", msg: { t: "drops", list } });
+      return out;
+    }
+    if (m.t === "take") {
+      const d = this.drops.get(m.id);
+      const s = p.state;
+      if (!d || !s || Math.hypot(s.x - d.x, s.y - d.y) > TAKE_REACH) return [];
+      this.drops.delete(m.id);
+      return [{ to: "all", msg: { t: "taken", id: m.id, by: id } }];
+    }
+    if (m.t === "chest") {
+      if (this.world.getObject(m.x, m.y) !== Block.CHEST || m.slots.length !== CHEST_SLOTS) return [];
+      this.world.chests.set(`${m.x},${m.y}`, m.slots.map((s) => s ? { ...s } : null));
+      this.dirty = true;
+      return [{ to: { except: id }, msg: { t: "chest", x: m.x, y: m.y, slots: m.slots } }];
     }
     return [];
   }
@@ -3179,6 +3303,8 @@ var Room = class {
    */
   tick(dt) {
     this.time = (this.time + dt / DAY_LENGTH_S) % 1;
+    this.clock += dt;
+    for (const [k, d] of this.drops) if (this.clock - d.born > DROP_LIFETIME) this.drops.delete(k);
     const cells = [];
     this.world.tick(dt, this.rand, true, (x, y, id) => cells.push([x, y, id]));
     if (cells.length) this.dirty = true;
@@ -3190,6 +3316,25 @@ var Room = class {
       out.push({ to: "all", msg: { t: "time", time: this.time } });
     }
     return this.players.size ? out : [];
+  }
+  /** Itens no chão: um por unidade, espalhados um pouco em volta de (x, y) (como `Drops.spawn` no jogo). */
+  spawnDrops(x, y, loot) {
+    const list = [];
+    for (const d of loot) {
+      for (let i = 0; i < d.count; i++) {
+        const drop = { id: this.nextDropId++, item: d.item, x: x + (this.rand() - 0.5) * 0.6, y: y + (this.rand() - 0.5) * 0.4 };
+        this.drops.set(drop.id, { ...drop, born: this.clock });
+        list.push(drop);
+      }
+    }
+    return list;
+  }
+  /** Baús da sala com conteúdo (os vazios nascem vazios em qualquer aparelho). */
+  chestList() {
+    return [...this.world.chests.entries()].map(([k, slots]) => {
+      const [x, y] = k.split(",").map(Number);
+      return { x, y, slots };
+    });
   }
   /** Mundo da sala como está: os chunks editados (o resto vem da seed). */
   chunks() {
@@ -3205,16 +3350,21 @@ var Room = class {
       time: this.time,
       savedAt: Date.now(),
       chunks: this.chunks(),
-      bags: Object.fromEntries(this.bags)
+      bags: Object.fromEntries(this.bags),
+      chests: Object.fromEntries(this.world.chests)
     };
   }
   /** Recarrega o que o servidor gravou (só se for desta sala e desta seed; senão, a sala começa do zero). */
   restore(s) {
-    if (!s || s.v !== ROOM_SNAPSHOT_VERSION || s.room !== this.id || s.seed !== this.seed) return false;
+    if (!s || s.v !== ROOM_SNAPSHOT_VERSION && s.v !== 1 || s.room !== this.id || s.seed !== this.seed) return false;
     for (const c of s.chunks) this.world.restoreChunk(c.cx, c.cy, fromB64(c.ground), c.levels.map(fromB64));
     this.world.settleWater();
     if (Number.isFinite(s.time)) this.time = (s.time % 1 + 1) % 1;
     for (const [k, bag] of Object.entries(s.bags ?? {})) this.bags.set(k, bag);
+    for (const [k, slots] of Object.entries(s.chests ?? {})) {
+      const [x, y] = k.split(",").map(Number);
+      if (this.world.getObject(x, y) === Block.CHEST && Array.isArray(slots) && slots.length === CHEST_SLOTS) this.world.chests.set(k, slots);
+    }
     this.dirty = false;
     return true;
   }
