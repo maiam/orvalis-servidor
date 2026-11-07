@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.73.0 (f3384a5) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.74.0 (e57637f) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -570,7 +570,13 @@ var Item = {
   SILK_CLOTH: "silk_cloth",
   /** Pratos do Cozinheiro (feitos no caldeirão; quanto enchem a fome: `FOOD` em progression). */
   BREAD: "bread",
-  PASTA_TOMATO: "pasta_tomato"
+  PASTA_TOMATO: "pasta_tomato",
+  /** Produtos dos animais (soltos ao serem alimentados: `ANIMAL_PRODUCE`). */
+  MILK: "milk",
+  EGG: "egg",
+  /** Pratos com os produtos dos animais. */
+  CHEESE: "cheese",
+  APPLE_PIE: "apple_pie"
 };
 var ITEMS = {
   // Alimento de cada animal (dono do produto, 2026-11-06): ovelha e vaca = trigo; galinha = semente; cavalo = cenoura.
@@ -587,8 +593,13 @@ var ITEMS = {
   carrot: { id: Item.CARROT, name: "Cenoura", plants: Block.CARROT_0, feeds: ["horse"] },
   silk_cloth: { id: Item.SILK_CLOTH, name: "Pano de Seda" },
   bread: { id: Item.BREAD, name: "P\xE3o" },
-  pasta_tomato: { id: Item.PASTA_TOMATO, name: "Macarr\xE3o ao Molho" }
+  pasta_tomato: { id: Item.PASTA_TOMATO, name: "Macarr\xE3o ao Molho" },
+  milk: { id: Item.MILK, name: "Leite" },
+  egg: { id: Item.EGG, name: "Ovo" },
+  cheese: { id: Item.CHEESE, name: "Queijo" },
+  apple_pie: { id: Item.APPLE_PIE, name: "Torta de Ma\xE7\xE3" }
 };
+var ANIMAL_PRODUCE = { cow: Item.MILK, chicken: Item.EGG };
 var VEGETABLES = [Item.POTATO, Item.TOMATO, Item.CARROT];
 var GRASS_VEGETABLE_CHANCE = 0.12;
 var LOOT_ITEMS = [Item.SILK, Item.FANG, Item.QUEEN_HEART];
@@ -854,6 +865,23 @@ var RECIPES = [
     station: Block.CAULDRON,
     inputs: [{ item: Item.WHEAT, count: 4 }, { item: Item.TOMATO, count: 2 }],
     output: { item: Item.PASTA_TOMATO, count: 1 }
+  },
+  // Com os produtos dos animais (dono do produto, 2026-11-07): queijo no Caldeirão; a torta assa no Forno de Pedra.
+  {
+    id: "cheese",
+    name: "Queijo",
+    profession: "cook",
+    station: Block.CAULDRON,
+    inputs: [{ item: Item.MILK, count: 1 }],
+    output: { item: Item.CHEESE, count: 1 }
+  },
+  {
+    id: "apple-pie",
+    name: "Torta de Ma\xE7\xE3",
+    profession: "cook",
+    station: Block.OVEN,
+    inputs: [{ item: Item.WHEAT, count: 2 }, { item: Item.MILK, count: 1 }, { item: Item.APPLE, count: 2 }, { item: Item.EGG, count: 1 }],
+    output: { item: Item.APPLE_PIE, count: 1 }
   }
 ];
 
@@ -1013,6 +1041,7 @@ var Wanderer = class extends Walker {
 var LOVE_SECONDS = 25;
 var BREED_COOLDOWN = 45;
 var COURTSHIP_SECONDS = 2.6;
+var FOLLOW_DISTANCE = 1.6;
 var Breeder = class extends Wanderer {
   constructor(species, breed, x, y, homeX, homeY, rand, baby, pace) {
     super(x, y, { ...baby ? breed.baby : breed.adult }, homeX, homeY, rand, pace);
@@ -1029,6 +1058,8 @@ var Breeder = class extends Wanderer {
   partner = null;
   /** Tempo restante do namoro (> 0 = namorando, parado). */
   courtship = 0;
+  /** Quem deu a comida: o animal o segue enquanto está apaixonado (sem par). */
+  leader = null;
   chaseStuck = 0;
   /** Desvio lateral temporário ao contornar obstáculo a caminho do par (−1, 0, 1). */
   sidestep = 0;
@@ -1044,10 +1075,11 @@ var Breeder = class extends Wanderer {
   eats(item) {
     return ITEMS[item].feeds?.includes(this.species) ?? false;
   }
-  /** Come: fica apaixonado. Retorna false se não puder comer. */
-  feed() {
+  /** Come: fica apaixonado e passa a seguir quem deu (`by`). Retorna false se não puder comer. */
+  feed(by = null) {
     if (!this.canEat) return false;
     this.love = LOVE_SECONDS;
+    this.leader = by;
     return true;
   }
   update(dt, world, blocked) {
@@ -1072,7 +1104,25 @@ var Breeder = class extends Wanderer {
       this.approachPartner(dt, world, blocked);
       return;
     }
+    if (this.leader) {
+      if (this.love > 0) {
+        this.followLeader(dt, world, blocked);
+        return;
+      }
+      this.leader = null;
+      this.homeX = this.x;
+      this.homeY = this.y;
+    }
     this.wander(dt, world, blocked);
+  }
+  /** Segue quem deu a comida, parando perto dele (sem empurrar). */
+  followLeader(dt, world, blocked) {
+    const l = this.leader;
+    if (Math.hypot(l.x - this.x, l.y - this.y) < FOLLOW_DISTANCE) {
+      this.move(dt, 0, 0, world, blocked);
+      return;
+    }
+    this.steerTo(dt, l.x, l.y, world, blocked);
   }
   /**
    * Anda até o par. Se travar, desvia para um lado por um instante (contorna
@@ -1080,13 +1130,22 @@ var Breeder = class extends Wanderer {
    */
   approachPartner(dt, world, blocked) {
     const p = this.partner;
-    let dx = p.x - this.x;
-    let dy = p.y - this.y;
-    const dist = Math.hypot(dx, dy);
-    if (dist < 0.9) {
+    if (Math.hypot(p.x - this.x, p.y - this.y) < 0.9) {
       this.move(dt, 0, 0, world, blocked);
       return;
     }
+    this.steerTo(dt, p.x, p.y, world, blocked);
+    if (this.chaseStuck > 4) {
+      this.chaseStuck = 0;
+      if (p.partner === this) p.partner = null;
+      this.partner = null;
+    }
+  }
+  /** Anda na direção de (tx, ty); travado, desvia para um lado por um instante (contorna obstáculos simples). */
+  steerTo(dt, tx, ty, world, blocked) {
+    let dx = tx - this.x;
+    let dy = ty - this.y;
+    const dist = Math.hypot(dx, dy) || 1;
     dx /= dist;
     dy /= dist;
     this.sidestepTimer -= dt;
@@ -1100,11 +1159,6 @@ var Breeder = class extends Wanderer {
     if (moved < 2e-3 && this.sidestep === 0 && this.chaseStuck > 0.35) {
       this.sidestep = this.rand() < 0.5 ? -1 : 1;
       this.sidestepTimer = 0.8;
-    }
-    if (this.chaseStuck > 4) {
-      this.chaseStuck = 0;
-      if (p.partner === this) p.partner = null;
-      this.partner = null;
     }
   }
 };
@@ -4431,7 +4485,7 @@ function fromB64(s) {
 }
 
 // src/net/protocol.ts
-var PROTOCOL_VERSION = 15;
+var PROTOCOL_VERSION = 16;
 var MAX_PLAYERS = 10;
 var ROOMS = [
   { id: 1, name: "Sala 1", seed: 20261106 }
@@ -4707,8 +4761,12 @@ var Room = class {
       if (!av || !(m.item in ITEMS)) return [];
       const item = m.item;
       const animal = this.entities.animals.find((a) => this.mobIds.get(a) === m.id);
-      if (!animal || Math.hypot(animal.x - av.x, animal.y - av.y) > FEED_REACH || !animal.eats(item) || !animal.feed()) return [];
-      return [{ to: id, msg: { t: "fed", id: m.id, item } }];
+      if (!animal || Math.hypot(animal.x - av.x, animal.y - av.y) > FEED_REACH || !animal.eats(item) || !animal.feed(av)) return [];
+      const out = [{ to: id, msg: { t: "fed", id: m.id, item } }];
+      const product = ANIMAL_PRODUCE[animal.species];
+      const list = product ? this.spawnDrops(animal.x, animal.y + 0.3, [{ item: product, count: 1 }]) : [];
+      if (list.length) out.push({ to: "all", msg: { t: "drops", list } });
+      return out;
     }
     if (m.t === "bag") {
       this.bags.set(bagKey(p.name), m.bag);
