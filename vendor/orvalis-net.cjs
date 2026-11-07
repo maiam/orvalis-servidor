@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.70.0 (9d62b19) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.71.0 (46e7b0d) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -4387,7 +4387,7 @@ function fromB64(s) {
 }
 
 // src/net/protocol.ts
-var PROTOCOL_VERSION = 13;
+var PROTOCOL_VERSION = 14;
 var MAX_PLAYERS = 10;
 var ROOMS = [
   { id: 1, name: "Sala 1", seed: 20261106 }
@@ -4477,7 +4477,7 @@ var PIECE_RE = /^[a-z0-9-]{1,40}$/;
 function parseAppearance(v) {
   if (!v || typeof v !== "object") return DEFAULT_APPEARANCE;
   const o = v;
-  const body = o.body === "hero" ? "hero" : "heroine";
+  const body = o.body === "hero" || o.body === "hood" ? o.body : "heroine";
   let look = null;
   if (o.look && typeof o.look === "object") {
     const entries = Object.entries(o.look);
