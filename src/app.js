@@ -18,6 +18,8 @@ const { createStore } = require('./store');
 const PACKAGE = readFileSync(join(__dirname, '..', 'vendor', 'orvalis-net.cjs'), 'utf8').split('\n', 1)[0].replace(/^\/\/\s*/, '');
 /** De quanto em quanto tempo as salas com mudanças vão para o disco (ms). */
 const SAVE_EVERY_MS = 15000;
+/** Passo do relógio das salas (ms): 10×/s, o ritmo dos bichos na tela de cada jogador. */
+const TICK_MS = 100;
 /** Mensagens por segundo por conexão: acima disso são ignoradas; muito acima, a conexão cai. */
 const MSG_PER_SEC = 40;
 const MSG_KICK = 200;
@@ -147,14 +149,15 @@ function startServer(port = Number(process.env.PORT) || 3000, options = {}) {
     });
   });
 
-  // Relógio das salas: 1×/s cada sala avança a hora e faz as plantas crescerem (com gente ou sem); mudanças vão a todos.
+  // Relógio das salas: ~10×/s cada sala avança a hora, faz as plantas crescerem (de segundo em segundo, com gente ou sem)
+  // e, com gente, move os bichos (Etapa 3) e manda a cada jogador os que estão perto dele.
   let last = Date.now();
   const clock = setInterval(() => {
     const now = Date.now();
     const dt = Math.min(5, (now - last) / 1000); // servidor pausado/atrasado: não pula dias de uma vez
     last = now;
     for (const entry of rooms.values()) route(entry, null, entry.room.tick(dt));
-  }, 1000);
+  }, TICK_MS);
   // Disco: grava as salas que mudaram de tempos em tempos e ao desligar.
   const saver = setInterval(() => saveAll(), SAVE_EVERY_MS);
   const onExit = () => { saveAll(); process.exit(0); };

@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.69.0 (f0f8052) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.70.0 (9d62b19) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -34,7 +34,10 @@ module.exports = __toCommonJS(index_exports);
 
 // src/config.ts
 var DAY_LENGTH_S = 480;
+var TILE = 32;
+var CUBE_FRONT = 18;
 var MAX_STACK = 3;
+var STEP_HEIGHT = 1;
 var CHUNK_SIZE = 16;
 var UNLOAD_MARGIN = 3;
 
@@ -502,6 +505,51 @@ function isOpen(id) {
   return id === Block.OAK_DOOR_OPEN || id === Block.FENCE_GATE_OPEN;
 }
 
+// src/world/random.ts
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = a + 1831565813 >>> 0;
+    let t = a;
+    t = Math.imul(t ^ t >>> 15, t | 1);
+    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function hash2(seed, x, y) {
+  let h = (seed ^ Math.imul(x | 0, 668265261) ^ Math.imul(y | 0, 374761393)) >>> 0;
+  h = Math.imul(h ^ h >>> 15, 2246822507);
+  h = Math.imul(h ^ h >>> 13, 3266489909);
+  h ^= h >>> 16;
+  return (h >>> 0) / 4294967296;
+}
+
+// src/world/progression.ts
+var BASE_STATS = { maxHp: 100, attack: 5, defense: 2 };
+function playerStats(_level = 1) {
+  return { ...BASE_STATS };
+}
+var WEAPON_POWER = { sword: 12, axe: 7 };
+function weaponPower(tool) {
+  return (tool && WEAPON_POWER[tool]) ?? 0;
+}
+var MONSTER_STATS = {
+  "spider-small": { hp: 20, attack: 8, defense: 0 },
+  "spider-big": { hp: 45, attack: 14, defense: 2 },
+  "spider-boss": { hp: 180, attack: 36, defense: 6 }
+};
+var DAMAGE_SPREAD = 0.1;
+var CRIT_CHANCE = 0.05;
+var CRIT_MULTIPLIER = 1.5;
+function rollDamage(attack, defense, rand) {
+  const base = Math.max(1, attack - defense);
+  const varied = base * (1 + (rand() * 2 - 1) * DAMAGE_SPREAD);
+  const crit = rand() < CRIT_CHANCE;
+  return { amount: Math.max(1, Math.round(varied * (crit ? CRIT_MULTIPLIER : 1))), crit };
+}
+var REGEN = { delay: 6, every: 1.5, fraction: 0.05 };
+var HUNGER = { max: 100, perSecond: 100 / 720, regenMin: 30, starveEvery: 4, starveDamage: 2 };
+
 // src/world/items.ts
 var Item = {
   WHEAT_SEED: "wheat_seed",
@@ -544,6 +592,19 @@ var ITEMS = {
 var VEGETABLES = [Item.POTATO, Item.TOMATO, Item.CARROT];
 var GRASS_VEGETABLE_CHANCE = 0.12;
 var LOOT_ITEMS = [Item.SILK, Item.FANG, Item.QUEEN_HEART];
+function monsterDrops(kind, rand = Math.random) {
+  if (kind === "spider-small") return rand() < 0.6 ? [{ item: Item.SILK, count: 1 }] : [];
+  if (kind === "spider-big") {
+    const out = [{ item: Item.SILK, count: 1 + (rand() < 0.5 ? 1 : 0) }];
+    if (rand() < 0.35) out.push({ item: Item.FANG, count: 1 });
+    return out;
+  }
+  return [
+    { item: Item.SILK, count: 5 + Math.floor(rand() * 3) },
+    { item: Item.FANG, count: 2 + (rand() < 0.5 ? 1 : 0) },
+    { item: Item.QUEEN_HEART, count: 1 }
+  ];
+}
 var blockStack = (id) => `block:${id}`;
 function dropsFor(id, rand = Math.random) {
   const tree = treeDrops(id, rand);
@@ -796,119 +857,384 @@ var RECIPES = [
   }
 ];
 
-// src/world/actions.ts
-var KINDS = /* @__PURE__ */ new Set(["break", "place", "till", "flatten", "plant", "pick", "door"]);
-var isInt = (v) => typeof v === "number" && Number.isInteger(v) && Math.abs(v) < 2 ** 30;
-function parseAction(v) {
-  if (!v || typeof v !== "object") return null;
-  const a = v;
-  if (!KINDS.has(a.kind) || !isInt(a.x) || !isInt(a.y)) return null;
-  const { x, y } = a;
-  switch (a.kind) {
-    case "break":
-      if (a.tool !== null && !(typeof a.tool === "string" && a.tool in TOOLS)) return null;
-      return { kind: "break", x, y, tool: a.tool };
-    case "place":
-      if (!isInt(a.block) || !blockDef(a.block).placeable) return null;
-      return { kind: "place", x, y, block: a.block };
-    case "plant":
-      if (a.block === void 0) return { kind: "plant", x, y };
-      return isInt(a.block) ? { kind: "plant", x, y, block: a.block } : null;
-    default:
-      return { kind: a.kind, x, y };
+// src/game/walker.ts
+var Z_SMOOTH = 14;
+var Walker = class {
+  /** Especificação física (mutável: o filhote cresce). */
+  constructor(x, y, spec) {
+    this.x = x;
+    this.y = y;
+    this.spec = spec;
   }
-}
-function applyAction(world, a) {
-  switch (a.kind) {
-    case "break": {
-      const id = world.breakTargetId(a.x, a.y);
-      if (id === null || !toolCanBreak(a.tool, id)) return false;
-      return world.breakBlock(a.x, a.y) !== null;
+  x;
+  y;
+  spec;
+  facing = "down";
+  moving = false;
+  /** Tempo acumulado de caminhada (dirige o quadro da animação). */
+  walkTime = 0;
+  /** Nível lógico (inteiro) e exibido (suavizado). */
+  z = 0;
+  visualZ = 0;
+  /**
+   * Anda na direção (ix, iy) em coordenadas de tela, magnitude 0..1.
+   * Retorna a distância efetivamente percorrida.
+   */
+  move(dt, ix, iy, world, blocked) {
+    this.visualZ += (this.z - this.visualZ) * (1 - Math.exp(-Z_SMOOTH * dt));
+    let len = Math.hypot(ix, iy);
+    if (len > 1) {
+      ix /= len;
+      iy /= len;
+      len = 1;
     }
-    case "place":
-      return world.placeBlock(a.x, a.y, a.block);
-    case "till":
-      return world.till(a.x, a.y);
-    case "flatten":
-      return world.flatten(a.x, a.y);
-    case "plant":
-      return world.plant(a.x, a.y, a.block);
-    case "pick":
-      return world.pick(a.x, a.y);
-    case "door":
-      return world.toggleDoor(a.x, a.y);
+    this.moving = len > 0.08;
+    if (!this.moving) {
+      this.walkTime = 0;
+      return 0;
+    }
+    const horizontal = this.facing === "left" || this.facing === "right";
+    const bias = horizontal ? 0.8 : 1.25;
+    if (Math.abs(ix) > Math.abs(iy) * bias) this.facing = ix < 0 ? "left" : "right";
+    else this.facing = iy < 0 ? "up" : "down";
+    const x0 = this.x;
+    const y0 = this.y;
+    const step = this.spec.speed * dt;
+    this.tryMove(this.x + ix * step, this.y, world, blocked);
+    this.tryMove(this.x, this.y + iy * step, world, blocked);
+    const moved = Math.hypot(this.x - x0, this.y - y0);
+    this.walkTime += dt * (0.55 + 0.45 * len);
+    return moved;
   }
-}
-
-// src/world/chunk.ts
-var Chunk = class {
-  constructor(cx, cy) {
-    this.cx = cx;
-    this.cy = cy;
+  /** Move se todas as células sob os pés forem alcançáveis; ajusta `z` à mais alta. */
+  tryMove(x, y, world, blocked) {
+    const h = this.supportHeight(x, y, world);
+    if (h === null || blocked?.(this, x, y)) return;
+    this.x = x;
+    this.y = y;
+    this.z = h;
   }
-  cx;
-  cy;
-  ground = new Uint8Array(CHUNK_SIZE * CHUNK_SIZE);
-  /** Um array por nível de pilha. */
-  levels = Array.from({ length: MAX_STACK }, () => new Uint8Array(CHUNK_SIZE * CHUNK_SIZE));
-  /** True se o jogador alterou algo (chunk não pode ser descartado). */
-  modified = false;
-  /** Incrementado a cada mudança visível (inclusive vizinhos na borda); invalida caches. */
-  version = 0;
-  /** Nível 0 (preenchido pelo gerador). */
-  get objects() {
-    return this.levels[0];
+  /** Altura de apoio na posição, ou null se bloqueado (degrau alto, água, buraco, árvore). */
+  supportHeight(x, y, world) {
+    const { halfW, halfD, stepHeight } = this.spec;
+    const x0 = Math.floor(x - halfW);
+    const x1 = Math.floor(x + halfW);
+    const y0 = Math.floor(y - halfD);
+    const y1 = Math.floor(y + halfD);
+    let top = 0;
+    for (let cy = y0; cy <= y1; cy++) {
+      for (let cx = x0; cx <= x1; cx++) {
+        const h = world.standHeight(cx, cy);
+        if (h === null || h > this.z + stepHeight) return null;
+        if (h > top) top = h;
+      }
+    }
+    return top;
   }
-  /** Nível 1 (preenchido pelo gerador: montanhas altas). */
-  get upper() {
-    return this.levels[1];
+  /** A posição atual está bloqueada pelo mapa (ex.: um objeto foi parar sob os pés)? */
+  isStuck(world) {
+    return this.supportHeight(this.x, this.y, world) === null;
   }
-  getGround(lx, ly) {
-    return this.ground[ly * CHUNK_SIZE + lx];
+  /** Recalcula o apoio no lugar (ex.: o bloco sob os pés foi quebrado). */
+  settle(world) {
+    const h = this.supportHeight(this.x, this.y, world);
+    if (h !== null) this.z = h;
   }
-  getObject(lx, ly) {
-    return this.levels[0][ly * CHUNK_SIZE + lx];
+  /** A caixa dos pés ocupa a célula? */
+  occupies(cx, cy) {
+    const { halfW, halfD } = this.spec;
+    return this.x + halfW > cx && this.x - halfW < cx + 1 && this.y + halfD > cy && this.y - halfD < cy + 1;
   }
-  getLevel(lx, ly, level) {
-    return this.levels[level][ly * CHUNK_SIZE + lx];
+  /** A caixa dos pés, posicionada em (x, y), sobrepõe a de `other`? */
+  overlapsAt(x, y, other) {
+    const a = this.spec;
+    const b = other.spec;
+    return Math.abs(x - other.x) < a.halfW + b.halfW && Math.abs(y - other.y) < a.halfD + b.halfD;
   }
-  /** Quantos níveis ocupados há na célula (contínuos a partir do 0). */
-  filledLevels(lx, ly) {
-    let n = 0;
-    while (n < MAX_STACK && this.levels[n][ly * CHUNK_SIZE + lx] !== 0) n++;
-    return n;
+  get cellX() {
+    return Math.floor(this.x);
   }
-  /** Define o chão (buraco ao quebrar, ou cubo usado como piso). */
-  setGround(lx, ly, id) {
-    this.ground[ly * CHUNK_SIZE + lx] = id;
-    this.modified = true;
-    this.version++;
-  }
-  /** Define o bloco de um nível da célula. */
-  setLevel(lx, ly, level, id) {
-    this.levels[level][ly * CHUNK_SIZE + lx] = id;
-    this.modified = true;
-    this.version++;
+  get cellY() {
+    return Math.floor(this.y);
   }
 };
 
-// src/world/random.ts
-function mulberry32(seed) {
-  let a = seed >>> 0;
-  return () => {
-    a = a + 1831565813 >>> 0;
-    let t = a;
-    t = Math.imul(t ^ t >>> 15, t | 1);
-    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
-    return ((t ^ t >>> 14) >>> 0) / 4294967296;
-  };
+// src/game/wanderer.ts
+var DEFAULT_PACE = { idle: [1.5, 5], walk: [1, 3.5], leash: 7 };
+var Wanderer = class extends Walker {
+  constructor(x, y, spec, homeX, homeY, rand, pace = DEFAULT_PACE) {
+    super(x, y, spec);
+    this.homeX = homeX;
+    this.homeY = homeY;
+    this.rand = rand;
+    this.pace = pace;
+    this.state = { kind: "idle", timer: 0.5 + rand() * 3 };
+    this.facing = ["down", "left", "right", "up"][Math.floor(rand() * 4)];
+  }
+  homeX;
+  homeY;
+  rand;
+  pace;
+  state;
+  wander(dt, world, blocked) {
+    const s = this.state;
+    s.timer -= dt;
+    if (s.kind === "idle") {
+      this.move(dt, 0, 0, world, blocked);
+      if (s.timer <= 0) this.startWalk();
+      return;
+    }
+    const ease = Math.min(1, 0.25 + s.timer * 2);
+    const moved = this.move(dt, s.dx * ease, s.dy * ease, world, blocked);
+    s.stuck = moved < 2e-3 ? s.stuck + dt : 0;
+    if (s.timer <= 0 || s.stuck > 0.3) {
+      const [a, b] = this.pace.idle;
+      this.state = { kind: "idle", timer: a + this.rand() * (b - a) };
+    }
+  }
+  startWalk() {
+    let angle = this.rand() * Math.PI * 2;
+    const hx = this.homeX - this.x;
+    const hy = this.homeY - this.y;
+    if (Math.hypot(hx, hy) > this.pace.leash) angle = Math.atan2(hy, hx) + (this.rand() - 0.5) * 0.8;
+    const pace = 0.6 + this.rand() * 0.4;
+    const [a, b] = this.pace.walk;
+    this.state = {
+      kind: "walk",
+      timer: a + this.rand() * (b - a),
+      dx: Math.cos(angle) * pace,
+      dy: Math.sin(angle) * pace,
+      stuck: 0
+    };
+  }
+};
+
+// src/game/breeder.ts
+var LOVE_SECONDS = 25;
+var BREED_COOLDOWN = 45;
+var COURTSHIP_SECONDS = 2.6;
+var Breeder = class extends Wanderer {
+  constructor(species, breed, x, y, homeX, homeY, rand, baby, pace) {
+    super(x, y, { ...baby ? breed.baby : breed.adult }, homeX, homeY, rand, pace);
+    this.species = species;
+    this.breed = breed;
+    this.baby = baby;
+  }
+  species;
+  breed;
+  baby;
+  age = 0;
+  love = 0;
+  cooldown = 0;
+  partner = null;
+  /** Tempo restante do namoro (> 0 = namorando, parado). */
+  courtship = 0;
+  chaseStuck = 0;
+  /** Desvio lateral temporário ao contornar obstáculo a caminho do par (−1, 0, 1). */
+  sidestep = 0;
+  sidestepTimer = 0;
+  get inLove() {
+    return this.love > 0;
+  }
+  /** Pode comer agora? (adulto, sem estar apaixonado nem em espera). */
+  get canEat() {
+    return !this.baby && this.love <= 0 && this.cooldown <= 0 && this.courtship <= 0;
+  }
+  /** Este item é o alimento da espécie? */
+  eats(item) {
+    return ITEMS[item].feeds?.includes(this.species) ?? false;
+  }
+  /** Come: fica apaixonado. Retorna false se não puder comer. */
+  feed() {
+    if (!this.canEat) return false;
+    this.love = LOVE_SECONDS;
+    return true;
+  }
+  update(dt, world, blocked) {
+    this.cooldown = Math.max(0, this.cooldown - dt);
+    if (this.baby) {
+      this.age += dt;
+      if (this.age >= this.breed.growUpSeconds) {
+        this.baby = false;
+        Object.assign(this.spec, this.breed.adult);
+      }
+    }
+    if (this.courtship > 0) {
+      this.courtship = Math.max(0, this.courtship - dt);
+      this.move(dt, 0, 0, world, blocked);
+      return;
+    }
+    if (this.love > 0) {
+      this.love = Math.max(0, this.love - dt);
+      if (this.love === 0) this.partner = null;
+    }
+    if (this.partner) {
+      this.approachPartner(dt, world, blocked);
+      return;
+    }
+    this.wander(dt, world, blocked);
+  }
+  /**
+   * Anda até o par. Se travar, desvia para um lado por um instante (contorna
+   * obstáculos simples); se continuar travado por muito tempo, desiste do par.
+   */
+  approachPartner(dt, world, blocked) {
+    const p = this.partner;
+    let dx = p.x - this.x;
+    let dy = p.y - this.y;
+    const dist = Math.hypot(dx, dy);
+    if (dist < 0.9) {
+      this.move(dt, 0, 0, world, blocked);
+      return;
+    }
+    dx /= dist;
+    dy /= dist;
+    this.sidestepTimer -= dt;
+    if (this.sidestepTimer <= 0) this.sidestep = 0;
+    if (this.sidestep !== 0) {
+      const a = this.sidestep * 1.2;
+      [dx, dy] = [dx * Math.cos(a) - dy * Math.sin(a), dx * Math.sin(a) + dy * Math.cos(a)];
+    }
+    const moved = this.move(dt, dx * 0.9, dy * 0.9, world, blocked);
+    this.chaseStuck = moved < 2e-3 ? this.chaseStuck + dt : Math.max(0, this.chaseStuck - dt * 0.5);
+    if (moved < 2e-3 && this.sidestep === 0 && this.chaseStuck > 0.35) {
+      this.sidestep = this.rand() < 0.5 ? -1 : 1;
+      this.sidestepTimer = 0.8;
+    }
+    if (this.chaseStuck > 4) {
+      this.chaseStuck = 0;
+      if (p.partner === this) p.partner = null;
+      this.partner = null;
+    }
+  }
+};
+
+// src/game/sheep.ts
+var GROW_UP_SECONDS = 120;
+var SHEEP = {
+  adult: { speed: 1.3, halfW: 0.3, halfD: 0.17, stepHeight: 0 },
+  baby: { speed: 1.6, halfW: 0.22, halfD: 0.13, stepHeight: 0 },
+  growUpSeconds: GROW_UP_SECONDS
+};
+var Sheep = class extends Breeder {
+  constructor(x, y, homeX = x, homeY = y, rand = Math.random, baby = false) {
+    super("sheep", SHEEP, x, y, homeX, homeY, rand, baby);
+  }
+};
+
+// src/game/horse.ts
+var FARM_GROW_UP_SECONDS = 3 * DAY_LENGTH_S;
+var BABY_KIND = { horse: "foal", cow: "calf", chicken: "chick" };
+var FARM = {
+  horse: {
+    adult: { speed: 1.8, halfW: 0.4, halfD: 0.2, stepHeight: 0 },
+    baby: { speed: 1.9, halfW: 0.28, halfD: 0.15, stepHeight: 0 },
+    idle: [2, 6],
+    walk: [1.5, 4],
+    leash: 10
+  },
+  cow: {
+    adult: { speed: 0.9, halfW: 0.38, halfD: 0.2, stepHeight: 0 },
+    baby: { speed: 1.1, halfW: 0.27, halfD: 0.15, stepHeight: 0 },
+    idle: [3, 8],
+    walk: [1.5, 3.5],
+    leash: 8
+  },
+  chicken: {
+    adult: { speed: 1.3, halfW: 0.22, halfD: 0.14, stepHeight: 0 },
+    baby: { speed: 1.4, halfW: 0.16, halfD: 0.1, stepHeight: 0 },
+    idle: [1, 4],
+    walk: [0.6, 2],
+    leash: 6
+  }
+};
+var FarmAnimal = class extends Breeder {
+  constructor(kind, x, y, rand = Math.random, baby = false, homeX = x, homeY = y) {
+    const f = FARM[kind];
+    super(
+      kind,
+      { adult: f.adult, baby: f.baby, growUpSeconds: FARM_GROW_UP_SECONDS },
+      x,
+      y,
+      homeX,
+      homeY,
+      rand,
+      baby,
+      { idle: f.idle, walk: f.walk, leash: f.leash }
+    );
+    this.kind = kind;
+  }
+  kind;
+};
+
+// src/game/villager.ts
+var VILLAGER_BASES = ["blond", "brown", "black", "silver", "red"];
+var CASUAL_OUTFITS = ["denim", "varsity", "farmer", "vest", "hoodie"];
+var OUTFITS = [...CASUAL_OUTFITS, "smith"];
+var RESTING = ["calm", "happy", "smile", "content", "smug", "neutral", "shy"];
+var TALKING = ["laugh", "excited", "wink", "guffaw"];
+var TALK_SECONDS = 3;
+var ROLE_NAME = { smith: "Ferreiro" };
+var ROLE_LOOK = {
+  smith: { base: "black", outfit: "smith", expression: "smile" }
+};
+var TOWNSFOLK_BASES = VILLAGER_BASES.filter((b) => !Object.values(ROLE_LOOK).some((l) => l.base === b));
+var ROLE_LINE = {
+  smith: "Bem-vinda \xE0 Ferraria! Logo vou forjar ferramentas e armas para voc\xEA."
+};
+var VILLAGER_LINES = [
+  "Bem-vinda \xE0 Cidade do Despertar! Aqui dentro da muralha nada se quebra.",
+  "Dizem que h\xE1 aranhas numa caverna l\xE1 fora. Leve a espada!",
+  "O ferreiro trabalha dentro da Ferraria. Entre pela porta.",
+  "Uma tenda armada l\xE1 fora vira seu ponto de renascer."
+];
+var Villager = class extends Wanderer {
+  constructor(x, y, base, outfit, onStreet, rand = Math.random, role = null, resting = "calm") {
+    super(x, y, { speed: 1.4, halfW: 0.26, halfD: 0.14, stepHeight: 0 }, x, y, rand, { idle: [2, 7], walk: [1, 3], leash: role ? 3 : 6 });
+    this.base = base;
+    this.outfit = outfit;
+    this.onStreet = onStreet;
+    this.role = role;
+    this.resting = resting;
+  }
+  base;
+  outfit;
+  onStreet;
+  role;
+  resting;
+  /** Expressão de agora: a de repouso, ou a da conversa por alguns segundos depois de falar. */
+  talking = null;
+  talkTimer = 0;
+  get expression() {
+    return this.talking ?? this.resting;
+  }
+  /** O que diz ao ser tocado: ofício tem fala própria; moradores revezam dicas (na ordem). Reage com o rosto. */
+  said = 0;
+  speak() {
+    this.talking = TALKING[(this.said + VILLAGER_BASES.indexOf(this.base)) % TALKING.length];
+    this.talkTimer = TALK_SECONDS;
+    if (this.role) return `${ROLE_NAME[this.role]}: \u201C${ROLE_LINE[this.role]}\u201D`;
+    const line = VILLAGER_LINES[(this.said++ + VILLAGER_BASES.indexOf(this.base)) % VILLAGER_LINES.length];
+    return `Morador: \u201C${line}\u201D`;
+  }
+  /** A caixa dos pés inteira fica em rua/praça? */
+  allowedAt(x, y) {
+    const { halfW, halfD } = this.spec;
+    for (let cy = Math.floor(y - halfD); cy <= Math.floor(y + halfD); cy++) {
+      for (let cx = Math.floor(x - halfW); cx <= Math.floor(x + halfW); cx++) if (!this.onStreet(cx, cy)) return false;
+    }
+    return true;
+  }
+  update(dt, world, blocked) {
+    if (this.talking && (this.talkTimer -= dt) <= 0) this.talking = null;
+    this.wander(dt, world, (self, x, y) => !this.allowedAt(x, y) || !!blocked?.(self, x, y));
+  }
+};
+function villagerOutfit(seed, i) {
+  return CASUAL_OUTFITS[Math.floor(hash2(seed, i, 913) * CASUAL_OUTFITS.length)];
 }
-function hash2(seed, x, y) {
-  let h = (seed ^ Math.imul(x | 0, 668265261) ^ Math.imul(y | 0, 374761393)) >>> 0;
-  h = Math.imul(h ^ h >>> 15, 2246822507);
-  h = Math.imul(h ^ h >>> 13, 3266489909);
-  h ^= h >>> 16;
-  return (h >>> 0) / 4294967296;
+function villagerExpression(seed, i) {
+  return RESTING[Math.floor(hash2(seed, i, 917) * RESTING.length)];
 }
 
 // src/world/dungeon.ts
@@ -1342,6 +1668,1116 @@ var DungeonTerrain = class {
         upper[i] = cell.upper;
       }
     }
+  }
+};
+
+// src/world/interiors.ts
+var SMITHY_INTERIOR = {
+  id: "smithy",
+  name: "Ferraria",
+  building: Block.SMITHY,
+  map: [
+    "#########",
+    // 0  moldura
+    "#########",
+    // 1  parede do fundo
+    "#########",
+    // 2
+    "#########",
+    // 3
+    "#########",
+    // 4  estante, bigorna, forja
+    "#########",
+    // 5  barris, base da forja
+    "####.####",
+    // 6  mesa de projetos | armeiro
+    "####.####",
+    // 7
+    "####.####",
+    // 8  banquinho
+    "##....###",
+    // 9  barril | tapete | planta, caixotes
+    "###...###",
+    // 10 estante de armaduras
+    "###.....#",
+    // 11 atrás do balcão (passagem pelo lado dos caixotes)
+    "#######.#",
+    // 12 balcão
+    "#######.#",
+    // 13
+    "#.......#",
+    // 14
+    "#.......#",
+    // 15
+    "#.......#",
+    // 16
+    "####E####"
+    // 17 capacho
+  ],
+  keeper: { at: [4, 11], rows: [9, 11] }
+};
+var TENT_INTERIOR = {
+  id: "tent",
+  name: "Tenda",
+  map: [
+    "#######",
+    // 0  parede do fundo (cortina)
+    "#######",
+    // 1  pé da cortina do fundo, lampião, cabeceira do colchão
+    "##..###",
+    // 2  lampião | colchão
+    "#...###",
+    // 3
+    "#...###",
+    // 4
+    "#...###",
+    // 5  pé do colchão
+    "###E###"
+    // 6  capacho entre os postes
+  ]
+};
+var INTERIOR_DEFS = [SMITHY_INTERIOR];
+var INTERIOR_ORIGIN = [0, -1e5];
+var INTERIOR_SPACING = 64;
+var INTERIOR_MARGIN = 2;
+function layoutFor(def, k, outside) {
+  const w = def.map[0].length;
+  const h = def.map.length;
+  const x0 = INTERIOR_ORIGIN[0] + k * INTERIOR_SPACING;
+  const y0 = INTERIOR_ORIGIN[1];
+  const row = def.map.findIndex((r) => r.includes("E"));
+  const exit = [x0 + def.map[row].indexOf("E"), y0 + row];
+  const area = { x0, y0, x1: x0 + w - 1, y1: y0 + h - 1 };
+  return {
+    def,
+    w,
+    h,
+    area,
+    guard: { x0: x0 - INTERIOR_MARGIN, y0: y0 - INTERIOR_MARGIN, x1: area.x1 + INTERIOR_MARGIN, y1: area.y1 + INTERIOR_MARGIN },
+    entry: [exit[0], exit[1] - 1],
+    exit,
+    outside,
+    keeper: def.keeper ? { at: [x0 + def.keeper.at[0], y0 + def.keeper.at[1]], rows: [y0 + def.keeper.rows[0], y0 + def.keeper.rows[1]] } : null
+  };
+}
+function interiorLayouts(town) {
+  const out = [];
+  INTERIOR_DEFS.forEach((def, k) => {
+    const b = town.buildings.find((x) => x.id === def.building && x.door);
+    if (b) out.push(layoutFor(def, k, b.door));
+  });
+  return out;
+}
+function tentLayout() {
+  return layoutFor(TENT_INTERIOR, INTERIOR_DEFS.length, null);
+}
+function interiorFloor(l, x, y) {
+  if (!inRect(l.area, x, y)) return false;
+  return l.def.map[y - l.area.y0][x - l.area.x0] !== "#";
+}
+var InteriorTerrain = class {
+  constructor(base, layouts) {
+    this.base = base;
+    this.layouts = layouts;
+  }
+  base;
+  layouts;
+  get seed() {
+    return this.base.seed;
+  }
+  at(x, y) {
+    return this.layouts.find((l) => inRect(l.guard, x, y));
+  }
+  cellAt(x, y) {
+    const l = this.at(x, y);
+    if (!l) return this.base.cellAt(x, y);
+    return interiorFloor(l, x, y) ? { ground: Block.STONE_SMOOTH, object: Block.AIR, upper: Block.AIR } : { ground: Block.STONE_SMOOTH, object: Block.TOWN_PART, upper: Block.AIR };
+  }
+  groundAt(x, y) {
+    return this.cellAt(x, y).ground;
+  }
+  objectAt(x, y) {
+    return this.cellAt(x, y).object;
+  }
+  upperAt(x, y) {
+    return this.cellAt(x, y).upper;
+  }
+  biomeAt(x, y) {
+    return this.base.biomeAt(x, y);
+  }
+  generateChunk(cx, cy, ground2, objects, upper) {
+    this.base.generateChunk(cx, cy, ground2, objects, upper);
+    const S = Math.round(Math.sqrt(ground2.length));
+    const x0 = cx * S;
+    const y0 = cy * S;
+    for (const l of this.layouts) {
+      const g = l.guard;
+      if (x0 > g.x1 || x0 + S - 1 < g.x0 || y0 > g.y1 || y0 + S - 1 < g.y0) continue;
+      for (let ly = 0; ly < S; ly++) {
+        for (let lx = 0; lx < S; lx++) {
+          const x = x0 + lx;
+          const y = y0 + ly;
+          if (!inRect(g, x, y)) continue;
+          const c = this.cellAt(x, y);
+          const i = ly * S + lx;
+          ground2[i] = c.ground;
+          objects[i] = c.object;
+          upper[i] = c.upper;
+        }
+      }
+    }
+  }
+};
+
+// src/game/monster.ts
+var MONSTERS = {
+  "spider-small": { spec: { speed: 2.1, halfW: 0.3, halfD: 0.18, stepHeight: 0 }, sight: 6, leash: 5, biteEvery: 1, respawn: 40, deathSeconds: 0.7 },
+  "spider-big": { spec: { speed: 1.6, halfW: 0.42, halfD: 0.24, stepHeight: 0 }, sight: 7, leash: 5, biteEvery: 1.2, respawn: 60, deathSeconds: 0.9 },
+  "spider-boss": { spec: { speed: 1.15, halfW: 0.9, halfD: 0.45, stepHeight: 0 }, sight: 9, leash: 4, biteEvery: 1.6, respawn: 300, deathSeconds: 1.6 }
+};
+var HURT_SECONDS = 0.35;
+var Monster = class extends Walker {
+  constructor(kind, x, y, bounds, rand = Math.random, homeX = x, homeY = y) {
+    super(x, y, { ...MONSTERS[kind].spec });
+    this.kind = kind;
+    this.bounds = bounds;
+    this.rand = rand;
+    this.homeX = homeX;
+    this.homeY = homeY;
+    this.hp = this.maxHp = MONSTER_STATS[kind].hp;
+    this.state = { kind: "idle", timer: 0.5 + rand() * 2 };
+  }
+  kind;
+  bounds;
+  rand;
+  homeX;
+  homeY;
+  hp;
+  maxHp;
+  hurt = 0;
+  /** Espera até poder morder de novo (s). */
+  biteCd = 0;
+  state;
+  get dead() {
+    return this.hp <= 0;
+  }
+  /** A caixa dos pés em (x, y) fica toda dentro do interior? */
+  insideAt(x, y) {
+    const { halfW, halfD } = this.spec;
+    const b = this.bounds;
+    return x - halfW >= b.x0 && x + halfW <= b.x1 + 1 && y - halfD >= b.y0 && y + halfD <= b.y1 + 1;
+  }
+  /** Leva um golpe de `damage` pontos: perde vida, pisca e é empurrado para longe de (fromX, fromY). */
+  takeHit(damage, fromX, fromY, world, blocked) {
+    this.hp -= damage;
+    this.hurt = HURT_SECONDS;
+    const d = Math.hypot(this.x - fromX, this.y - fromY) || 1;
+    const facing = this.facing;
+    this.move(0.25, (this.x - fromX) / d, (this.y - fromY) / d, world, this.confine(blocked));
+    this.facing = facing;
+  }
+  /** Bloqueio entre entidades + limite do interior. */
+  confine(blocked) {
+    return (self, x, y) => !this.insideAt(x, y) || !!blocked?.(self, x, y);
+  }
+  /** Distância de mordida (centro a centro). */
+  get reach() {
+    return 0.7 + this.spec.halfW;
+  }
+  /** Encostado na personagem e pronto para morder? Se sim, consome a espera e devolve true. */
+  tryBite(target) {
+    if (this.dead || this.biteCd > 0 || this.hurt > 0) return false;
+    if (Math.hypot(target.x - this.x, target.y - this.y) > this.reach + 0.15) return false;
+    this.biteCd = MONSTERS[this.kind].biteEvery;
+    return true;
+  }
+  /**
+   * Passeia; com a personagem dentro do seu limite e perto (pelo caminho, se houver `flow`), persegue.
+   * Com `flow` (mapa de distâncias da dungeon) segue os corredores: anda para a célula vizinha mais próxima
+   * da personagem; encostado, vai direto e pára a `reach`.
+   */
+  update(dt, world, target, blocked, flow) {
+    this.hurt = Math.max(0, this.hurt - dt);
+    this.biteCd = Math.max(0, this.biteCd - dt);
+    const def = MONSTERS[this.kind];
+    const fence = this.confine(blocked);
+    const tx = target.x - this.x;
+    const ty = target.y - this.y;
+    const dist = Math.hypot(tx, ty);
+    const targetInside = inRect(this.bounds, Math.floor(target.x), Math.floor(target.y));
+    const cx = Math.floor(this.x);
+    const cy = Math.floor(this.y);
+    const steps = flow ? flow(cx, cy) : -1;
+    const chasing = targetInside && (flow ? steps >= 0 && steps <= def.sight * 1.6 : dist < def.sight);
+    if (chasing) {
+      const reach = this.reach;
+      if (dist <= reach) {
+        this.move(dt, 0, 0, world, fence);
+        this.facing = Math.abs(tx) > Math.abs(ty) ? tx < 0 ? "left" : "right" : ty < 0 ? "up" : "down";
+        return;
+      }
+      let dx = tx / dist;
+      let dy = ty / dist;
+      if (flow && steps > 1) {
+        let best = steps;
+        let nx = cx;
+        let ny = cy;
+        for (const [ox, oy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          const d = flow(cx + ox, cy + oy);
+          if (d >= 0 && d < best) {
+            best = d;
+            nx = cx + ox;
+            ny = cy + oy;
+          }
+        }
+        const gx = nx + 0.5 - this.x;
+        const gy = ny + 0.5 - this.y;
+        const gl = Math.hypot(gx, gy) || 1;
+        dx = gx / gl;
+        dy = gy / gl;
+      }
+      this.move(dt, dx, dy, world, fence);
+      return;
+    }
+    const s = this.state;
+    s.timer -= dt;
+    if (s.kind === "idle") {
+      this.move(dt, 0, 0, world, fence);
+      if (s.timer <= 0) {
+        const hx = this.homeX - this.x;
+        const hy = this.homeY - this.y;
+        const far = Math.hypot(hx, hy) > def.leash;
+        const a = far ? Math.atan2(hy, hx) : this.rand() * Math.PI * 2;
+        this.state = { kind: "walk", timer: 0.8 + this.rand() * 1.8, dx: Math.cos(a), dy: Math.sin(a) };
+      }
+      return;
+    }
+    const moved = this.move(dt, s.dx * 0.6, s.dy * 0.6, world, fence);
+    if (s.timer <= 0 || moved < 1e-4) this.state = { kind: "idle", timer: 0.6 + this.rand() * 2.2 };
+  }
+};
+
+// src/game/entities.ts
+var FLOW_EVERY = 0.25;
+var RESPAWN_CLEARANCE = 10;
+var FLOCK_SIZE = 4;
+var SWORD_REACH = 1.45;
+var SWORD_ARC_COS = 0.3;
+var FACING_VEC = { down: [0, 1], up: [0, -1], left: [-1, 0], right: [1, 0] };
+var PICK_BOX = {
+  sheep: [[1.15, 0.45], [0.85, 0.35]],
+  horse: [[1.5, 0.55], [1.05, 0.4]],
+  cow: [[1.25, 0.5], [0.95, 0.4]],
+  chicken: [[0.8, 0.3], [0.65, 0.26]]
+};
+var LOVE_FRAMES = 16;
+var LOVE_SCALE = { sheep: 1, cow: 1.05, chicken: 0.7, horse: 1.25 };
+var PAIR_RANGE = 6;
+var COURT_DISTANCE = 1.5;
+var MAX_SHEEP = 16;
+var MAX_PER_SPECIES = { sheep: MAX_SHEEP, horse: 6, cow: 10, chicken: 12 };
+var NOBODY = { x: 1e9, y: 1e9 };
+var Entities = class {
+  constructor(player, rand = Math.random, character = "heroine") {
+    this.player = player;
+    this.rand = rand;
+    this.character = character;
+  }
+  player;
+  rand;
+  character;
+  npcs = [];
+  /** Cavalos do campo (passeiam; golpe os tira do mundo, como as ovelhas). */
+  /** Cavalo, vacas e galinhas (passeiam pelo campo). */
+  horses = [];
+  /** Moradores da cidade (só andam por ruas e praças; o golpe não os atinge). */
+  villagers = [];
+  /** Monstros da dungeon (presos no interior dela). */
+  monsters = [];
+  /** Monstros derrotados tocando a animação de morte. */
+  dying = [];
+  /** Renascimentos agendados (todos os tipos, inclusive a Rainha, cada um no seu tempo). */
+  respawns = [];
+  /** Chamado quando um monstro é derrotado (o Game solta os espólios). */
+  onMonsterKilled = null;
+  /** Dano que entrou (para os números na tela): onde, quanto, se foi crítico e em quem ('enemy' ou 'player'). */
+  onDamage = null;
+  /** Mapa de distâncias (passos) até a personagem dentro da dungeon; null fora dela. */
+  flow = null;
+  flowArea = null;
+  flowTimer = 0;
+  /** Jogadores da sala (servidor): alvos dos monstros e origem dos golpes; bloqueiam como a personagem. */
+  avatars = [];
+  /** Mordida num jogador da sala (servidor): quem decide é a sala, o dano é calculado no aparelho dele. */
+  onBite = null;
+  /** Aparelho na sala: animais e monstros vêm da sala (sem simulação local deles). */
+  remote = false;
+  /** Atores extras desenhados com os demais (espelho da sala: coraçõezinhos do namoro). */
+  extra = [];
+  /** Aparência modular em teste (`?personagem=chibi`); null = personagem pronto (`body`). */
+  look = null;
+  /** Personagem pronto quando não há `look`: Heroína ou Herói (escolhido na tela de personagem; salvo). */
+  body = "heroine";
+  /** Rebanho inicial perto de (x, y): posições pela seed, em grama andável a 2–8 células. */
+  spawnFlock(world, x, y) {
+    const grass = /* @__PURE__ */ new Set([Block.GRASS]);
+    for (let i = 0; i < 400 && this.npcs.length < FLOCK_SIZE; i++) {
+      const a = hash2(world.seed, i, 71) * Math.PI * 2;
+      const r = 2 + hash2(world.seed, i, 72) * 6;
+      const cx = Math.floor(x + Math.cos(a) * r);
+      const cy = Math.floor(y + Math.sin(a) * r);
+      if (!world.isWalkable(cx, cy) || !grass.has(world.getGround(cx, cy))) continue;
+      const sheep = new Sheep(cx + 0.5, cy + 0.5);
+      if (this.all().some((w) => sheep.overlapsAt(sheep.x, sheep.y, w))) continue;
+      this.npcs.push(sheep);
+    }
+  }
+  /** Um cavalo perto de (x, y): posição pela seed, em grama andável a 3–9 células. */
+  spawnHorse(world, x, y) {
+    this.spawnAnimals(world, "horse", x, y, 1, 81);
+  }
+  /** `count` animais de um tipo perto de (x, y): posições pela seed (`salt` separa os tipos), em grama andável. */
+  spawnAnimals(world, kind, x, y, count, salt) {
+    let placed = 0;
+    for (let i = 0; i < 400 && placed < count; i++) {
+      const a = hash2(world.seed, i, salt) * Math.PI * 2;
+      const r = 3 + hash2(world.seed, i, salt + 1) * 6;
+      const cx = Math.floor(x + Math.cos(a) * r);
+      const cy = Math.floor(y + Math.sin(a) * r);
+      if (!world.isWalkable(cx, cy) || world.getGround(cx, cy) !== Block.GRASS) continue;
+      const animal = new FarmAnimal(kind, cx + 0.5, cy + 0.5, this.rand);
+      if (this.all().some((w) => animal.overlapsAt(animal.x, animal.y, w))) continue;
+      this.horses.push(animal);
+      placed++;
+    }
+  }
+  /**
+   * Moradores da cidade: um de cada personagem-base livre (`TOWNSFOLK_BASES`, sem os reservados aos ofícios), em pontos
+   * fixos (praça inicial, caminho até o castelo, pátio do castelo), cada um com uma roupa casual sorteada pela seed, e o
+   * **ferreiro** com o visual único do ofício (`ROLE_LOOK`) dentro da Ferraria. Os comuns só andam por ruas/praças dentro
+   * da muralha (nunca pelo portão).
+   */
+  spawnVillagers(world) {
+    const t = world.town;
+    if (!t) return;
+    const a = t.area;
+    const onStreet = (cx, cy) => cx > a.x0 && cx < a.x1 && cy > a.y0 && cy < t.gate.y0 && t.street[(cy - a.y0) * t.w + (cx - a.x0)] === 1;
+    const [sx, sy] = t.start;
+    const [kx, ky] = t.castleDoor;
+    const homes = [[sx - 5, sy - 1], [sx + 5, sy - 3], [Math.round((sx + kx) / 2), Math.round((sy + ky) / 2)], [kx + 3, ky + 2]];
+    const people = TOWNSFOLK_BASES.map((base, i) => ({ at: homes[i % homes.length], base, outfit: villagerOutfit(world.seed, i), expression: villagerExpression(world.seed, i), walk: onStreet }));
+    const smithLook = ROLE_LOOK.smith;
+    const forge = world.interiors.find((l) => l.def.building === Block.SMITHY);
+    const smithy = t.buildings.find((b) => b.id === Block.SMITHY);
+    if (forge?.keeper) {
+      const k = forge.keeper;
+      const walk = (cx, cy) => cy >= k.rows[0] && cy <= k.rows[1] && interiorFloor(forge, cx, cy);
+      people.push({ at: k.at, ...smithLook, walk, role: "smith" });
+    } else if (smithy?.door) {
+      people.push({ at: smithy.door, ...smithLook, walk: onStreet, role: "smith" });
+    }
+    people.forEach(({ at: [hx, hy], base, outfit, expression, walk, role }) => {
+      for (let r = 0; r <= 12; r++) {
+        for (let dy = -r; dy <= r; dy++) {
+          for (let dx = -r; dx <= r; dx++) {
+            if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+            const cx = hx + dx;
+            const cy = hy + dy;
+            if (!walk(cx, cy) || !world.isWalkable(cx, cy)) continue;
+            const v = new Villager(cx + 0.5, cy + 0.5, base, outfit, walk, this.rand, role, expression);
+            if (this.all().some((w) => v.overlapsAt(v.x, v.y, w))) continue;
+            this.villagers.push(v);
+            return;
+          }
+        }
+      }
+    });
+  }
+  /**
+   * Bichos do mundo (os mesmos em qualquer aparelho e na sala, pela seed): rebanho, cavalo, vacas e galinhas no campo
+   * diante do portão (mundos com animais) e os monstros da dungeon.
+   */
+  spawnWildlife(world) {
+    if (world.profile.sheep) {
+      const [gx, gy] = world.outsideGate();
+      const town = !!world.town;
+      this.spawnFlock(world, gx, gy + (town ? 8 : 0));
+      this.spawnHorse(world, gx + 9, gy + (town ? 10 : 2));
+      this.spawnAnimals(world, "cow", gx - 9, gy + (town ? 10 : 2), 2, 91);
+      this.spawnAnimals(world, "chicken", gx - 6, gy + (town ? 6 : 1), 4, 97);
+    }
+    this.spawnMonsters(world);
+  }
+  /** Monstros nos pontos da dungeon (posições pela seed; o sorteio do passeio usa `rand`). */
+  spawnMonsters(world) {
+    const d = world.dungeon;
+    if (!d) return;
+    for (const s of d.spawns) this.monsters.push(new Monster(s.kind, s.x, s.y, s.kind === "spider-boss" ? d.bossRoom : d.interior, this.rand));
+  }
+  /** Quem os monstros perseguem e mordem: a personagem (aparelho) ou os jogadores da sala (servidor). */
+  hunters() {
+    return this.player ? [this.player, ...this.avatars] : this.avatars;
+  }
+  all() {
+    return [...this.hunters(), ...this.npcs, ...this.horses, ...this.villagers, ...this.monsters];
+  }
+  /** Alvo de um monstro: o jogador mais perto dentro do limite dele (senão o mais perto de todos). */
+  targetOf(m) {
+    let best = null;
+    let bestD = Infinity;
+    let bestInside = false;
+    for (const h of this.hunters()) {
+      if (h.dead) continue;
+      const inside = inRect(m.bounds, Math.floor(h.x), Math.floor(h.y));
+      const d = Math.hypot(h.x - m.x, h.y - m.y);
+      if (inside && !bestInside || inside === bestInside && d < bestD) {
+        best = h;
+        bestD = d;
+        bestInside = inside;
+      }
+    }
+    return best ?? NOBODY;
+  }
+  /** Bloqueio entre entidades; se já estavam sobrepostas, deixa se afastar. */
+  blocker = (self, x, y) => {
+    for (const other of this.all()) {
+      if (other === self) continue;
+      if (self instanceof Breeder && self.partner === other) continue;
+      if (self.overlapsAt(x, y, other) && !self.overlapsAt(self.x, self.y, other)) return true;
+    }
+    return false;
+  };
+  update(dt, world) {
+    for (const v of this.villagers) v.update(dt, world, this.blocker);
+    if (!this.remote) this.updateCreatures(dt, world);
+    for (let i = this.dying.length - 1; i >= 0; i--) {
+      this.dying[i].t += dt / MONSTERS[this.dying[i].kind].deathSeconds;
+      if (this.dying[i].t >= 1) this.dying.splice(i, 1);
+    }
+    if (this.remote) return;
+    this.updateRespawns(dt);
+    this.finishCourtships(world);
+    this.formPairs();
+    this.startCourtships();
+  }
+  /** Animais passeiam; monstros perseguem o jogador mais perto e mordem quem estiver encostado. */
+  updateCreatures(dt, world) {
+    for (const s of this.npcs) s.update(dt, world, this.blocker);
+    for (const h of this.horses) h.update(dt, world, this.blocker);
+    this.updateFlow(dt, world);
+    const flow = this.flow ? this.flowAt : void 0;
+    for (const m of this.monsters) m.update(dt, world, this.targetOf(m), this.blocker, flow);
+    for (const m of this.monsters) {
+      for (const h of this.hunters()) {
+        if (h.dead || !m.tryBite(h)) continue;
+        if (h === this.player) this.biteFrom(m.kind, m.x, m.y, world);
+        else this.onBite?.(h, m);
+        break;
+      }
+    }
+  }
+  /**
+   * Mordida de um monstro `kind` vindo de (x, y) na personagem deste aparelho: dano pela fórmula (ataque do monstro −
+   * defesa dela). No jogo sozinho vem do `update`; na sala, da mensagem `bite` (a sala decide quando morde).
+   */
+  biteFrom(kind, x, y, world) {
+    const p = this.player;
+    if (!p || p.dead) return;
+    const hit = rollDamage(MONSTER_STATS[kind].attack, p.stats.defense, this.rand);
+    if (p.hurt(hit.amount, x, y, world, this.blocker)) this.onDamage?.(p.x, p.y, hit, "player");
+  }
+  /** Animais que se reproduzem (ovelhas + animais do campo). */
+  breeders() {
+    return [...this.npcs, ...this.horses];
+  }
+  /** Animais que comem e se reproduzem (para alimentar à frente da personagem). */
+  get animals() {
+    return this.breeders();
+  }
+  /** Quantos animais da espécie existem (filhotes contam). */
+  count(species) {
+    return this.breeders().filter((b) => b.species === species).length;
+  }
+  /** Apaixonados e livres procuram o mais próximo da mesma espécie na mesma situação. */
+  formPairs() {
+    const all = this.breeders();
+    for (const a of all) {
+      if (!a.inLove || a.partner || a.baby || a.courtship > 0) continue;
+      if (this.count(a.species) >= MAX_PER_SPECIES[a.species]) continue;
+      let best = null;
+      let bestD = PAIR_RANGE;
+      for (const b of all) {
+        if (b === a || b.species !== a.species || !b.inLove || b.partner || b.baby || b.courtship > 0) continue;
+        const d = Math.hypot(a.x - b.x, a.y - b.y);
+        if (d < bestD) {
+          best = b;
+          bestD = d;
+        }
+      }
+      if (best) {
+        a.partner = best;
+        best.partner = a;
+      }
+    }
+  }
+  /** Par próximo o bastante: param, se viram um para o outro e namoram. */
+  startCourtships() {
+    for (const a of this.breeders()) {
+      const b = a.partner;
+      if (!b || a.courtship > 0 || b.partner !== a || this.courting.has(a) || this.courting.has(b)) continue;
+      if (Math.hypot(a.x - b.x, a.y - b.y) > COURT_DISTANCE) continue;
+      a.courtship = b.courtship = COURTSHIP_SECONDS;
+      this.courting.add(a);
+      const aLeft = a.x <= b.x;
+      a.facing = aLeft ? "right" : "left";
+      b.facing = aLeft ? "left" : "right";
+    }
+  }
+  /** Pares que começaram a namorar (o filhote nasce quando o namoro termina). */
+  courting = /* @__PURE__ */ new Set();
+  /** Fim do namoro: nasce um filhote entre os dois; ambos entram em espera. */
+  finishCourtships(world) {
+    for (const a of [...this.courting]) {
+      const b = a.partner;
+      if (!b || b.partner !== a) {
+        this.courting.delete(a);
+        continue;
+      }
+      if (a.courtship > 0 || b.courtship > 0) continue;
+      this.courting.delete(a);
+      this.spawnBaby(world, (a.x + b.x) / 2, (a.y + b.y) / 2, a);
+      for (const s of [a, b]) {
+        s.love = 0;
+        s.cooldown = BREED_COOLDOWN;
+        s.partner = null;
+      }
+    }
+  }
+  /** Filhote da espécie do pai/mãe na célula andável mais perto do casal (até 2 células). */
+  spawnBaby(world, x, y, parent) {
+    const cx = Math.floor(x);
+    const cy = Math.floor(y);
+    for (let r = 0; r <= 2; r++) {
+      for (let dy = -r; dy <= r; dy++) {
+        for (let dx = -r; dx <= r; dx++) {
+          if (!world.isWalkable(cx + dx, cy + dy)) continue;
+          const bx = cx + dx + 0.5;
+          const by = cy + dy + 0.5;
+          if (parent instanceof FarmAnimal) this.horses.push(new FarmAnimal(parent.kind, bx, by, this.rand, true, parent.homeX, parent.homeY));
+          else this.npcs.push(new Sheep(bx, by, parent.homeX, parent.homeY, this.rand, true));
+          return;
+        }
+      }
+    }
+  }
+  /**
+   * Entidades (exceto a personagem) dentro do arco do golpe (espada ou machado): à frente, até SWORD_REACH
+   * da borda do corpo (monstro grande é atingido de mais longe).
+   */
+  strikeTargets(facing, from = this.player) {
+    const [fx, fy] = FACING_VEC[facing];
+    const p = from;
+    if (!p) return [];
+    return [...this.npcs, ...this.horses, ...this.monsters].filter((s) => {
+      const dx = s.x - p.x;
+      const dy = s.y - p.y;
+      const d = Math.hypot(dx, dy);
+      const body = s instanceof Monster ? s.spec.halfW : 0;
+      if (d - body > SWORD_REACH) return false;
+      return d < 0.35 + body || (dx * fx + dy * fy) / d >= SWORD_ARC_COS;
+    });
+  }
+  /**
+   * Golpe (espada ou machado): aplica o acerto a cada alvo no arco e retorna quantos foram atingidos.
+   * Animais somem (sem animação de morte ainda). Monstros levam o dano da fórmula (ataque + poder da arma − defesa,
+   * com variação e crítico — `world/progression.ts`), piscam e recuam; sem vida, somem.
+   */
+  strike(facing, world, tool = this.player?.attackTool ?? this.player?.equipped ?? null) {
+    const p = this.player;
+    if (!p) return 0;
+    return this.strikeFrom(p, facing, p.stats.attack + weaponPower(tool), world);
+  }
+  /** Golpe de quem está em `from` com força `attack` (ataque + poder da arma): a personagem ou um jogador da sala. */
+  strikeFrom(from, facing, attack, world) {
+    const hit = this.strikeTargets(facing, from);
+    for (const s of hit) {
+      if (!(s instanceof Monster)) {
+        this.removeAnimal(s);
+        continue;
+      }
+      const dmg = rollDamage(attack, MONSTER_STATS[s.kind].defense, this.rand);
+      if (world) s.takeHit(dmg.amount, from.x, from.y, world, this.blocker);
+      else s.hp -= dmg.amount;
+      this.onDamage?.(s.x, s.y, dmg, "enemy");
+      if (s.dead) this.killMonster(s);
+    }
+    return hit.length;
+  }
+  /** Monstro derrotado: sai do jogo, toca a animação de morte, solta espólios e agenda o renascimento. */
+  killMonster(m) {
+    const i = this.monsters.indexOf(m);
+    if (i < 0) return;
+    this.monsters.splice(i, 1);
+    this.dying.push({ kind: m.kind, x: m.x, y: m.y, facing: m.facing, t: 0 });
+    this.respawns.push({ kind: m.kind, x: m.homeX, y: m.homeY, bounds: m.bounds, timer: MONSTERS[m.kind].respawn });
+    this.onMonsterKilled?.(m);
+  }
+  /** Renasce quando o tempo passou e a personagem está longe do ponto (senão tenta de novo em 5 s). */
+  updateRespawns(dt) {
+    for (let i = this.respawns.length - 1; i >= 0; i--) {
+      const r = this.respawns[i];
+      r.timer -= dt;
+      if (r.timer > 0) continue;
+      const m = new Monster(r.kind, r.x, r.y, r.bounds, this.rand);
+      const near = this.hunters().some((p) => Math.hypot(p.x - r.x, p.y - r.y) < RESPAWN_CLEARANCE);
+      if (near || this.all().some((w) => m.overlapsAt(m.x, m.y, w))) {
+        r.timer = 5;
+        continue;
+      }
+      this.respawns.splice(i, 1);
+      this.monsters.push(m);
+    }
+  }
+  /** Mapa de distâncias pelo chão da dungeon até o jogador mais perto (BFS a partir de todos lá dentro). */
+  updateFlow(dt, world) {
+    const d = world.dungeon;
+    const inside = d ? this.hunters().filter((p) => !p.dead && inRect(d.area, Math.floor(p.x), Math.floor(p.y))) : [];
+    if (!d || inside.length === 0) {
+      this.flow = null;
+      return;
+    }
+    this.flowTimer -= dt;
+    if (this.flow && this.flowTimer > 0) return;
+    this.flowTimer = FLOW_EVERY;
+    const a = d.area;
+    const w = a.x1 - a.x0 + 1;
+    const h = a.y1 - a.y0 + 1;
+    const dist = this.flow && this.flow.length === w * h ? this.flow.fill(-1) : new Int32Array(w * h).fill(-1);
+    const q = new Int32Array(w * h);
+    let head = 0;
+    let tail = 0;
+    for (const p of inside) {
+      const start = (Math.floor(p.y) - a.y0) * w + (Math.floor(p.x) - a.x0);
+      if (dist[start] === 0) continue;
+      dist[start] = 0;
+      q[tail++] = start;
+    }
+    while (head < tail) {
+      const i = q[head++];
+      const x = i % w;
+      const y = (i - x) / w;
+      for (let k = 0; k < 4; k++) {
+        const nx = x + (k === 0 ? 1 : k === 1 ? -1 : 0);
+        const ny = y + (k === 2 ? 1 : k === 3 ? -1 : 0);
+        if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+        const j = ny * w + nx;
+        if (dist[j] >= 0 || world.standHeight(a.x0 + nx, a.y0 + ny) !== 0) continue;
+        dist[j] = dist[i] + 1;
+        q[tail++] = j;
+      }
+    }
+    this.flow = dist;
+    this.flowArea = a;
+  }
+  flowAt = (x, y) => {
+    const a = this.flowArea;
+    if (!this.flow || !a || x < a.x0 || y < a.y0 || x > a.x1 || y > a.y1) return -1;
+    return this.flow[(y - a.y0) * (a.x1 - a.x0 + 1) + (x - a.x0)];
+  };
+  /** Remove um animal e desfaz vínculos (par, namoro) de quem dependia dele. */
+  removeAnimal(s) {
+    const list = s instanceof FarmAnimal ? this.horses : this.npcs;
+    const i = list.indexOf(s);
+    if (i < 0) return;
+    list.splice(i, 1);
+    this.courting.delete(s);
+    for (const o of this.breeders()) {
+      if (o.partner === s) {
+        o.partner = null;
+        o.courtship = 0;
+        this.courting.delete(o);
+      }
+    }
+  }
+  /** Animal sob o ponto (em células), considerando a altura do sprite; o mais à frente vence. */
+  animalAt(wx, wy) {
+    let hit = null;
+    for (const s of this.breeders()) {
+      const [h, half] = PICK_BOX[s.species][s.baby ? 1 : 0];
+      const lift = s.visualZ * CUBE_FRONT / TILE;
+      if (Math.abs(wx - s.x) < half && wy > s.y - lift - h && wy < s.y - lift + 0.2) {
+        if (!hit || s.y > hit.y) hit = s;
+      }
+    }
+    return hit;
+  }
+  /** Morador sob o ponto (em células), pela altura do sprite; o mais à frente vence. */
+  villagerAt(wx, wy) {
+    let hit = null;
+    for (const v of this.villagers) {
+      const lift = v.visualZ * CUBE_FRONT / TILE;
+      if (Math.abs(wx - v.x) < 0.45 && wy > v.y - lift - 2.1 && wy < v.y - lift + 0.2 && (!hit || v.y > hit.y)) hit = v;
+    }
+    return hit;
+  }
+  /**
+   * Morador logo à frente da personagem (no arco para onde ela olha), para conversar: até 1,8 célula; quem tem ofício
+   * atende do outro lado do balcão (até 3,2).
+   */
+  villagerInFront() {
+    const p = this.player;
+    if (!p) return null;
+    const [fx, fy] = FACING_VEC[p.facing];
+    let best = null;
+    let bestD = Infinity;
+    for (const v of this.villagers) {
+      const dx = v.x - p.x;
+      const dy = v.y - p.y;
+      const d = Math.hypot(dx, dy);
+      if (d > (v.role ? 3.2 : 1.8) || d >= bestD) continue;
+      if (d < 0.4 || (dx * fx + dy * fy) / d >= 0.3) {
+        best = v;
+        bestD = d;
+      }
+    }
+    return best;
+  }
+  /** Alguma entidade ocupa a célula? (não se coloca bloco nem se cava sob elas). */
+  occupies(cx, cy) {
+    return this.all().some((w) => w.occupies(cx, cy));
+  }
+  settleAll(world) {
+    for (const w of this.all()) w.settle(world);
+  }
+  get actors() {
+    const out = [...this.extra];
+    const p = this.player;
+    if (p) {
+      const b = this.body;
+      const kind = this.character === "goddess" ? "goddess" : p.attacking && p.attackTool && TOOLS[p.attackTool].swings ? `${b}-${p.attackTool}-attack` : p.equipped ? `${b}-${p.equipped}` : b;
+      out.unshift({
+        kind,
+        x: p.x,
+        y: p.y,
+        visualZ: p.visualZ,
+        facing: p.facing,
+        moving: p.moving,
+        walkTime: p.walkTime,
+        frame: p.attacking ? p.attackFrame : void 0,
+        hurt: p.invuln > 0,
+        look: this.character === "heroine" && this.look ? this.look : void 0
+      });
+    }
+    for (const s of this.npcs) {
+      out.push({
+        kind: s.baby ? "lamb" : "sheep",
+        x: s.x,
+        y: s.y,
+        visualZ: s.visualZ,
+        facing: s.facing,
+        moving: s.moving,
+        walkTime: s.walkTime,
+        inLove: s.inLove && s.courtship <= 0
+      });
+    }
+    for (const h of this.horses) {
+      out.push({
+        kind: h.baby ? BABY_KIND[h.kind] : h.kind,
+        x: h.x,
+        y: h.y,
+        visualZ: h.visualZ,
+        facing: h.facing,
+        moving: h.moving,
+        walkTime: h.walkTime,
+        inLove: h.inLove && h.courtship <= 0
+      });
+    }
+    for (const a of this.courting) {
+      const b = a.partner;
+      if (!b || a.courtship <= 0) continue;
+      const progress = 1 - a.courtship / COURTSHIP_SECONDS;
+      out.push({
+        kind: "love-hearts",
+        x: (a.x + b.x) / 2,
+        y: Math.max(a.y, b.y) + 0.05,
+        // à frente do casal
+        visualZ: Math.max(a.visualZ, b.visualZ),
+        facing: "down",
+        moving: false,
+        walkTime: 0,
+        frame: Math.min(LOVE_FRAMES - 1, Math.floor(progress * LOVE_FRAMES)),
+        scale: LOVE_SCALE[a.species]
+      });
+    }
+    for (const v of this.villagers) {
+      out.push({
+        kind: `villager-${v.base}`,
+        x: v.x,
+        y: v.y,
+        visualZ: v.visualZ,
+        facing: v.facing,
+        moving: v.moving,
+        walkTime: v.walkTime,
+        outfit: v.outfit,
+        expression: v.expression
+      });
+    }
+    for (const m of this.monsters) {
+      out.push({
+        kind: m.kind,
+        x: m.x,
+        y: m.y,
+        visualZ: m.visualZ,
+        facing: m.facing,
+        moving: m.moving,
+        walkTime: m.walkTime,
+        hurt: m.hurt > 0,
+        hp: m.hp < m.maxHp ? m.hp / m.maxHp : void 0
+      });
+    }
+    for (const d of this.dying) {
+      out.push({ kind: d.kind, x: d.x, y: d.y, visualZ: 0, facing: d.facing, moving: false, walkTime: 0, dying: d.t });
+    }
+    return out;
+  }
+};
+
+// src/game/player.ts
+var ATTACK_SECONDS = 0.36;
+var ATTACK_HIT_AT = 0.45;
+var ATTACK_FRAMES = 4;
+var HURT_INVULN_S = 0.9;
+var RESPAWN_INVULN_S = 2;
+var Player = class extends Walker {
+  /** Ferramenta em mãos (muda o sprite); null = mãos livres. */
+  equipped = null;
+  /** Tempo restante do golpe em andamento (0 = sem golpe). */
+  attackTime = 0;
+  /** Ferramenta do golpe em andamento (define a folha de animação). */
+  attackTool = null;
+  hitDone = true;
+  /** Atributos atuais (vida máxima, ataque, defesa — `world/progression.ts`). */
+  stats = playerStats(1);
+  /** Vida em pontos (0 = derrotada; o Game a faz renascer). */
+  hp = this.stats.maxHp;
+  /** Invencibilidade restante (pisca na tela). */
+  invuln = 0;
+  /** Tempo desde o último dano (regeneração). */
+  sinceHurt = Infinity;
+  regen = 0;
+  /** Fome ligada neste mundo (perfil com cultivo); desligada, a barra fica cheia e nada muda. */
+  hungerOn = false;
+  /** Barra de fome (cheia = satisfeita), `HUNGER` em world/progression. */
+  hunger = HUNGER.max;
+  starve = 0;
+  constructor(x, y) {
+    super(x, y, { speed: 4.2, halfW: 0.27, halfD: 0.15, stepHeight: STEP_HEIGHT });
+  }
+  get attacking() {
+    return this.attackTime > 0;
+  }
+  /** Quadro atual do golpe (0..ATTACK_FRAMES-1). */
+  get attackFrame() {
+    const p = 1 - this.attackTime / ATTACK_SECONDS;
+    return Math.min(ATTACK_FRAMES - 1, Math.floor(p * ATTACK_FRAMES));
+  }
+  /** Começa um golpe (se não houver outro em andamento). */
+  startAttack(tool = this.equipped) {
+    if (this.attacking) return false;
+    this.attackTool = tool;
+    this.attackTime = ATTACK_SECONDS;
+    this.hitDone = false;
+    return true;
+  }
+  /** true uma única vez por golpe, quando a lâmina chega ao ponto de acerto. */
+  consumeHit() {
+    if (this.hitDone || !this.attacking) return false;
+    if (1 - this.attackTime / ATTACK_SECONDS < ATTACK_HIT_AT) return false;
+    this.hitDone = true;
+    return true;
+  }
+  get dead() {
+    return this.hp <= 0;
+  }
+  get maxHp() {
+    return this.stats.maxHp;
+  }
+  /**
+   * Leva dano de (fromX, fromY): perde `damage` pontos de vida, fica invencível por um instante e recua.
+   * Ignorado se invencível ou já derrotada. Retorna true se o dano entrou.
+   */
+  hurt(damage, fromX, fromY, world, blocked) {
+    if (this.invuln > 0 || this.dead) return false;
+    this.hp = Math.max(0, this.hp - damage);
+    this.invuln = HURT_INVULN_S;
+    this.sinceHurt = 0;
+    this.regen = 0;
+    const d = Math.hypot(this.x - fromX, this.y - fromY) || 1;
+    const facing = this.facing;
+    this.move(0.12, (this.x - fromX) / d, (this.y - fromY) / d, world, blocked);
+    this.facing = facing;
+    return true;
+  }
+  /** Renasce em (x, y) com vida cheia (itens ficam com ela). */
+  respawn(x, y) {
+    this.x = x;
+    this.y = y;
+    this.z = this.visualZ = 0;
+    this.hp = this.maxHp;
+    this.hunger = HUNGER.max;
+    this.invuln = RESPAWN_INVULN_S;
+    this.sinceHurt = Infinity;
+    this.attackTime = 0;
+    this.hitDone = true;
+  }
+  /** Come: a fome sobe `points` (até cheia). false = sem fome (barra cheia) ou fome desligada. */
+  eat(points) {
+    if (!this.hungerOn || points <= 0 || this.hunger >= HUNGER.max - 0.5) return false;
+    this.hunger = Math.min(HUNGER.max, this.hunger + points);
+    this.starve = 0;
+    return true;
+  }
+  /** Fome esvaziando; vazia, tira vida aos poucos (para em 1 — a fome sozinha não derruba). */
+  tickHunger(dt) {
+    if (!this.hungerOn || this.hp <= 0) return;
+    this.hunger = Math.max(0, this.hunger - dt * HUNGER.perSecond);
+    if (this.hunger > 0) {
+      this.starve = 0;
+      return;
+    }
+    this.starve += dt;
+    if (this.starve < HUNGER.starveEvery) return;
+    this.starve = 0;
+    if (this.hp > 1) this.hp = Math.max(1, this.hp - HUNGER.starveDamage);
+  }
+  /** Invencibilidade e regeneração fora de combate (com fome abaixo de `HUNGER.regenMin`, não regenera). */
+  tickHealth(dt) {
+    this.invuln = Math.max(0, this.invuln - dt);
+    this.sinceHurt += dt;
+    this.tickHunger(dt);
+    if (this.hungerOn && this.hunger < HUNGER.regenMin) return;
+    if (this.hp <= 0 || this.hp >= this.maxHp || this.sinceHurt < REGEN.delay) return;
+    this.regen += dt;
+    if (this.regen >= REGEN.every) {
+      this.regen = 0;
+      this.hp = Math.min(this.maxHp, this.hp + Math.max(1, Math.round(this.maxHp * REGEN.fraction)));
+    }
+  }
+  update(dt, ix, iy, world, blocked) {
+    this.tickHealth(dt);
+    const facing = this.facing;
+    this.move(dt, ix, iy, world, blocked);
+    if (this.attacking) {
+      this.facing = facing;
+      this.attackTime = Math.max(0, this.attackTime - dt);
+    }
+  }
+};
+
+// src/world/actions.ts
+var KINDS = /* @__PURE__ */ new Set(["break", "place", "till", "flatten", "plant", "pick", "door"]);
+var isInt = (v) => typeof v === "number" && Number.isInteger(v) && Math.abs(v) < 2 ** 30;
+function parseAction(v) {
+  if (!v || typeof v !== "object") return null;
+  const a = v;
+  if (!KINDS.has(a.kind) || !isInt(a.x) || !isInt(a.y)) return null;
+  const { x, y } = a;
+  switch (a.kind) {
+    case "break":
+      if (a.tool !== null && !(typeof a.tool === "string" && a.tool in TOOLS)) return null;
+      return { kind: "break", x, y, tool: a.tool };
+    case "place":
+      if (!isInt(a.block) || !blockDef(a.block).placeable) return null;
+      return { kind: "place", x, y, block: a.block };
+    case "plant":
+      if (a.block === void 0) return { kind: "plant", x, y };
+      return isInt(a.block) ? { kind: "plant", x, y, block: a.block } : null;
+    default:
+      return { kind: a.kind, x, y };
+  }
+}
+function applyAction(world, a) {
+  switch (a.kind) {
+    case "break": {
+      const id = world.breakTargetId(a.x, a.y);
+      if (id === null || !toolCanBreak(a.tool, id)) return false;
+      return world.breakBlock(a.x, a.y) !== null;
+    }
+    case "place":
+      return world.placeBlock(a.x, a.y, a.block);
+    case "till":
+      return world.till(a.x, a.y);
+    case "flatten":
+      return world.flatten(a.x, a.y);
+    case "plant":
+      return world.plant(a.x, a.y, a.block);
+    case "pick":
+      return world.pick(a.x, a.y);
+    case "door":
+      return world.toggleDoor(a.x, a.y);
+  }
+}
+
+// src/world/coords.ts
+function toChunk(v) {
+  return Math.floor(v / CHUNK_SIZE);
+}
+function toLocal(v) {
+  return (v % CHUNK_SIZE + CHUNK_SIZE) % CHUNK_SIZE;
+}
+function chunkKey(cx, cy) {
+  return `${cx},${cy}`;
+}
+
+// src/world/chunk.ts
+var Chunk = class {
+  constructor(cx, cy) {
+    this.cx = cx;
+    this.cy = cy;
+  }
+  cx;
+  cy;
+  ground = new Uint8Array(CHUNK_SIZE * CHUNK_SIZE);
+  /** Um array por nível de pilha. */
+  levels = Array.from({ length: MAX_STACK }, () => new Uint8Array(CHUNK_SIZE * CHUNK_SIZE));
+  /** True se o jogador alterou algo (chunk não pode ser descartado). */
+  modified = false;
+  /** Incrementado a cada mudança visível (inclusive vizinhos na borda); invalida caches. */
+  version = 0;
+  /** Nível 0 (preenchido pelo gerador). */
+  get objects() {
+    return this.levels[0];
+  }
+  /** Nível 1 (preenchido pelo gerador: montanhas altas). */
+  get upper() {
+    return this.levels[1];
+  }
+  getGround(lx, ly) {
+    return this.ground[ly * CHUNK_SIZE + lx];
+  }
+  getObject(lx, ly) {
+    return this.levels[0][ly * CHUNK_SIZE + lx];
+  }
+  getLevel(lx, ly, level) {
+    return this.levels[level][ly * CHUNK_SIZE + lx];
+  }
+  /** Quantos níveis ocupados há na célula (contínuos a partir do 0). */
+  filledLevels(lx, ly) {
+    let n = 0;
+    while (n < MAX_STACK && this.levels[n][ly * CHUNK_SIZE + lx] !== 0) n++;
+    return n;
+  }
+  /** Define o chão (buraco ao quebrar, ou cubo usado como piso). */
+  setGround(lx, ly, id) {
+    this.ground[ly * CHUNK_SIZE + lx] = id;
+    this.modified = true;
+    this.version++;
+  }
+  /** Define o bloco de um nível da célula. */
+  setLevel(lx, ly, level, id) {
+    this.levels[level][ly * CHUNK_SIZE + lx] = id;
+    this.modified = true;
+    this.version++;
   }
 };
 
@@ -1926,175 +3362,6 @@ var TownTerrain = class {
         ground2[i] = c.ground;
         objects[i] = c.object;
         upper[i] = c.upper;
-      }
-    }
-  }
-};
-
-// src/world/coords.ts
-function toChunk(v) {
-  return Math.floor(v / CHUNK_SIZE);
-}
-function toLocal(v) {
-  return (v % CHUNK_SIZE + CHUNK_SIZE) % CHUNK_SIZE;
-}
-function chunkKey(cx, cy) {
-  return `${cx},${cy}`;
-}
-
-// src/world/interiors.ts
-var SMITHY_INTERIOR = {
-  id: "smithy",
-  name: "Ferraria",
-  building: Block.SMITHY,
-  map: [
-    "#########",
-    // 0  moldura
-    "#########",
-    // 1  parede do fundo
-    "#########",
-    // 2
-    "#########",
-    // 3
-    "#########",
-    // 4  estante, bigorna, forja
-    "#########",
-    // 5  barris, base da forja
-    "####.####",
-    // 6  mesa de projetos | armeiro
-    "####.####",
-    // 7
-    "####.####",
-    // 8  banquinho
-    "##....###",
-    // 9  barril | tapete | planta, caixotes
-    "###...###",
-    // 10 estante de armaduras
-    "###.....#",
-    // 11 atrás do balcão (passagem pelo lado dos caixotes)
-    "#######.#",
-    // 12 balcão
-    "#######.#",
-    // 13
-    "#.......#",
-    // 14
-    "#.......#",
-    // 15
-    "#.......#",
-    // 16
-    "####E####"
-    // 17 capacho
-  ],
-  keeper: { at: [4, 11], rows: [9, 11] }
-};
-var TENT_INTERIOR = {
-  id: "tent",
-  name: "Tenda",
-  map: [
-    "#######",
-    // 0  parede do fundo (cortina)
-    "#######",
-    // 1  pé da cortina do fundo, lampião, cabeceira do colchão
-    "##..###",
-    // 2  lampião | colchão
-    "#...###",
-    // 3
-    "#...###",
-    // 4
-    "#...###",
-    // 5  pé do colchão
-    "###E###"
-    // 6  capacho entre os postes
-  ]
-};
-var INTERIOR_DEFS = [SMITHY_INTERIOR];
-var INTERIOR_ORIGIN = [0, -1e5];
-var INTERIOR_SPACING = 64;
-var INTERIOR_MARGIN = 2;
-function layoutFor(def, k, outside) {
-  const w = def.map[0].length;
-  const h = def.map.length;
-  const x0 = INTERIOR_ORIGIN[0] + k * INTERIOR_SPACING;
-  const y0 = INTERIOR_ORIGIN[1];
-  const row = def.map.findIndex((r) => r.includes("E"));
-  const exit = [x0 + def.map[row].indexOf("E"), y0 + row];
-  const area = { x0, y0, x1: x0 + w - 1, y1: y0 + h - 1 };
-  return {
-    def,
-    w,
-    h,
-    area,
-    guard: { x0: x0 - INTERIOR_MARGIN, y0: y0 - INTERIOR_MARGIN, x1: area.x1 + INTERIOR_MARGIN, y1: area.y1 + INTERIOR_MARGIN },
-    entry: [exit[0], exit[1] - 1],
-    exit,
-    outside,
-    keeper: def.keeper ? { at: [x0 + def.keeper.at[0], y0 + def.keeper.at[1]], rows: [y0 + def.keeper.rows[0], y0 + def.keeper.rows[1]] } : null
-  };
-}
-function interiorLayouts(town) {
-  const out = [];
-  INTERIOR_DEFS.forEach((def, k) => {
-    const b = town.buildings.find((x) => x.id === def.building && x.door);
-    if (b) out.push(layoutFor(def, k, b.door));
-  });
-  return out;
-}
-function tentLayout() {
-  return layoutFor(TENT_INTERIOR, INTERIOR_DEFS.length, null);
-}
-function interiorFloor(l, x, y) {
-  if (!inRect(l.area, x, y)) return false;
-  return l.def.map[y - l.area.y0][x - l.area.x0] !== "#";
-}
-var InteriorTerrain = class {
-  constructor(base, layouts) {
-    this.base = base;
-    this.layouts = layouts;
-  }
-  base;
-  layouts;
-  get seed() {
-    return this.base.seed;
-  }
-  at(x, y) {
-    return this.layouts.find((l) => inRect(l.guard, x, y));
-  }
-  cellAt(x, y) {
-    const l = this.at(x, y);
-    if (!l) return this.base.cellAt(x, y);
-    return interiorFloor(l, x, y) ? { ground: Block.STONE_SMOOTH, object: Block.AIR, upper: Block.AIR } : { ground: Block.STONE_SMOOTH, object: Block.TOWN_PART, upper: Block.AIR };
-  }
-  groundAt(x, y) {
-    return this.cellAt(x, y).ground;
-  }
-  objectAt(x, y) {
-    return this.cellAt(x, y).object;
-  }
-  upperAt(x, y) {
-    return this.cellAt(x, y).upper;
-  }
-  biomeAt(x, y) {
-    return this.base.biomeAt(x, y);
-  }
-  generateChunk(cx, cy, ground2, objects, upper) {
-    this.base.generateChunk(cx, cy, ground2, objects, upper);
-    const S = Math.round(Math.sqrt(ground2.length));
-    const x0 = cx * S;
-    const y0 = cy * S;
-    for (const l of this.layouts) {
-      const g = l.guard;
-      if (x0 > g.x1 || x0 + S - 1 < g.x0 || y0 > g.y1 || y0 + S - 1 < g.y0) continue;
-      for (let ly = 0; ly < S; ly++) {
-        for (let lx = 0; lx < S; lx++) {
-          const x = x0 + lx;
-          const y = y0 + ly;
-          if (!inRect(g, x, y)) continue;
-          const c = this.cellAt(x, y);
-          const i = ly * S + lx;
-          ground2[i] = c.ground;
-          objects[i] = c.object;
-          upper[i] = c.upper;
-        }
       }
     }
   }
@@ -3120,7 +4387,7 @@ function fromB64(s) {
 }
 
 // src/net/protocol.ts
-var PROTOCOL_VERSION = 12;
+var PROTOCOL_VERSION = 13;
 var MAX_PLAYERS = 10;
 var ROOMS = [
   { id: 1, name: "Sala 1", seed: 20261106 }
@@ -3136,6 +4403,7 @@ function sanitizeName(text) {
   return /^[\p{L}\p{N} _-]+$/u.test(n) ? n : null;
 }
 var DEFAULT_APPEARANCE = { body: "heroine", look: null };
+var FACING_ORDER = ["down", "left", "right", "up"];
 var FACINGS = /* @__PURE__ */ new Set(["down", "left", "right", "up"]);
 var finite = (v) => typeof v === "number" && Number.isFinite(v) && Math.abs(v) < 2 ** 30;
 function parseState(v) {
@@ -3171,6 +4439,11 @@ function parseClientMessage(text) {
       const s = parseState(o.s);
       return s ? { t: "state", s } : null;
     }
+    case "strike":
+      if (!FACINGS.has(o.facing) || !finite(o.attack) || o.attack < 0 || o.attack > 1e3) return null;
+      return { t: "strike", facing: o.facing, attack: o.attack };
+    case "feed":
+      return Number.isInteger(o.id) && typeof o.item === "string" && /^[a-z_]{1,32}$/.test(o.item) ? { t: "feed", id: o.id, item: o.item } : null;
     case "action": {
       const a = parseAction(o.a);
       return a && Number.isInteger(o.seq) ? { t: "action", seq: o.seq, a } : null;
@@ -3236,6 +4509,12 @@ var TIME_SYNC_SECONDS = 30;
 var ROOM_SNAPSHOT_VERSION = 2;
 var DROP_LIFETIME = 300;
 var TAKE_REACH = 3;
+var MOBS_EVERY = 0.1;
+var MOBS_RADIUS = 22;
+var CREATURE_STEP = 0.1;
+var LOAD_RADIUS = 28;
+var FEED_REACH = 3;
+var round2 = (v) => Math.round(v * 100) / 100;
 var bagKey = (name) => name.toLocaleLowerCase("pt-BR");
 var Room = class {
   constructor(id, name, seed, rand = Math.random) {
@@ -3244,6 +4523,25 @@ var Room = class {
     this.seed = seed;
     this.rand = rand;
     this.world = new World(seed);
+    this.entities = new Entities(null, rand);
+    const e = this.entities;
+    e.onMonsterKilled = (m) => {
+      const list = this.spawnDrops(m.x, m.y + 0.2, monsterDrops(m.kind, rand));
+      if (list.length) this.pending.push({ to: "all", msg: { t: "drops", list } });
+    };
+    e.onDamage = (x, y, hit, target) => {
+      if (target === "enemy") this.hits.push([round2(x), round2(y), hit.amount, hit.crit ? 1 : 0]);
+    };
+    e.onBite = (target, m) => {
+      for (const [pid, av] of this.avatars) {
+        if (av === target) this.pending.push({ to: pid, msg: { t: "bite", k: m.kind, x: round2(m.x), y: round2(m.y) } });
+      }
+    };
+    const [gx, gy] = this.world.outsideGate();
+    this.loadAround(gx, gy + 6, 24);
+    const d = this.world.dungeon;
+    if (d) this.loadRect(d.area.x0, d.area.y0, d.area.x1, d.area.y1);
+    e.spawnWildlife(this.world);
   }
   id;
   name;
@@ -3263,6 +4561,28 @@ var Room = class {
   clock = 0;
   /** Algo mudou desde o último `snapshot` (o servidor só grava quando há o que gravar). */
   dirty = false;
+  /**
+   * Bichos da sala (Etapa 3): as mesmas `Entities` do jogo, sem personagem; cada jogador é um avatar na posição que
+   * manda. Os animais e monstros nascem pela seed; não vão para o disco (renascem se o servidor reiniciar).
+   */
+  entities;
+  avatars = /* @__PURE__ */ new Map();
+  mobIds = /* @__PURE__ */ new WeakMap();
+  nextMobId = 1;
+  mobTimer = 0;
+  growTimer = 0;
+  /** Mensagens geradas pela simulação dos bichos (mordidas, números de dano, espólios), entregues no próximo retorno. */
+  pending = [];
+  hits = [];
+  /** Carrega (gera) os chunks em volta de (x, y). */
+  loadAround(x, y, r) {
+    this.loadRect(x - r, y - r, x + r, y + r);
+  }
+  loadRect(x0, y0, x1, y1) {
+    for (let cy = toChunk(Math.floor(y0)); cy <= toChunk(Math.floor(y1)); cy++) {
+      for (let cx = toChunk(Math.floor(x0)); cx <= toChunk(Math.floor(x1)); cx++) if (!this.world.getChunk(cx, cy)) this.world.loadChunk(cx, cy);
+    }
+  }
   get size() {
     return this.players.size;
   }
@@ -3303,6 +4623,11 @@ var Room = class {
   }
   leave(id) {
     if (!this.players.delete(id)) return [];
+    const av = this.avatars.get(id);
+    if (av) {
+      this.avatars.delete(id);
+      this.entities.avatars.splice(this.entities.avatars.indexOf(av), 1);
+    }
     return [{ to: "all", msg: { t: "left", id } }];
   }
   /** Mensagem de um jogador já na sala. Ações passam pelas regras do `World`; recusadas voltam só para quem mandou. */
@@ -3311,7 +4636,32 @@ var Room = class {
     if (!p) return [];
     if (m.t === "state") {
       p.state = m.s;
+      let av = this.avatars.get(id);
+      if (!av) {
+        av = new Player(m.s.x, m.s.y);
+        this.avatars.set(id, av);
+        this.entities.avatars.push(av);
+      }
+      av.x = m.s.x;
+      av.y = m.s.y;
+      av.facing = m.s.facing;
+      av.moving = m.s.moving;
       return [{ to: { except: id }, msg: { t: "state", id, s: m.s } }];
+    }
+    if (m.t === "strike") {
+      const av = this.avatars.get(id);
+      if (!av) return [];
+      av.facing = m.facing;
+      this.entities.strikeFrom(av, m.facing, m.attack, this.world);
+      return this.flush();
+    }
+    if (m.t === "feed") {
+      const av = this.avatars.get(id);
+      if (!av || !(m.item in ITEMS)) return [];
+      const item = m.item;
+      const animal = this.entities.animals.find((a) => this.mobIds.get(a) === m.id);
+      if (!animal || Math.hypot(animal.x - av.x, animal.y - av.y) > FEED_REACH || !animal.eats(item) || !animal.feed()) return [];
+      return [{ to: id, msg: { t: "fed", id: m.id, item } }];
     }
     if (m.t === "bag") {
       this.bags.set(bagKey(p.name), m.bag);
@@ -3359,17 +4709,81 @@ var Room = class {
     this.time = (this.time + dt / DAY_LENGTH_S) % 1;
     this.clock += dt;
     for (const [k, d] of this.drops) if (this.clock - d.born > DROP_LIFETIME) this.drops.delete(k);
-    const cells = [];
-    this.world.tick(dt, this.rand, true, (x, y, id) => cells.push([x, y, id]));
-    if (cells.length) this.dirty = true;
     const out = [];
-    if (cells.length) out.push({ to: "all", msg: { t: "grow", cells } });
+    this.growTimer += dt;
+    if (this.growTimer >= 1) {
+      const cells = [];
+      this.world.tick(this.growTimer, this.rand, true, (x, y, id) => cells.push([x, y, id]));
+      this.growTimer = 0;
+      if (cells.length) {
+        this.dirty = true;
+        out.push({ to: "all", msg: { t: "grow", cells } });
+      }
+    }
+    if (this.players.size) {
+      for (const av of this.avatars.values()) this.loadAround(av.x, av.y, LOAD_RADIUS);
+      for (let left = dt; left > 1e-6; left -= CREATURE_STEP) this.entities.update(Math.min(CREATURE_STEP, left), this.world);
+      out.push(...this.flush());
+      this.mobTimer -= dt;
+      if (this.mobTimer <= 0) {
+        this.mobTimer = MOBS_EVERY;
+        for (const [pid, av] of this.avatars) out.push({ to: pid, msg: { t: "mobs", list: this.mobsNear(av.x, av.y) } });
+      }
+    }
     this.syncTimer -= dt;
     if (this.syncTimer <= 0) {
       this.syncTimer = TIME_SYNC_SECONDS;
       out.push({ to: "all", msg: { t: "time", time: this.time } });
     }
     return this.players.size ? out : [];
+  }
+  /** Mensagens que a simulação dos bichos gerou (mordidas, espólios e números de dano). */
+  flush() {
+    const out = this.pending;
+    this.pending = [];
+    if (this.hits.length) {
+      out.push({ to: "all", msg: { t: "hits", list: this.hits } });
+      this.hits = [];
+    }
+    return out;
+  }
+  mobId(o) {
+    let id = this.mobIds.get(o);
+    if (id === void 0) {
+      id = this.nextMobId++;
+      this.mobIds.set(o, id);
+    }
+    return id;
+  }
+  /** Bichos (e efeitos: mortes e coraçõezinhos) a até `MOBS_RADIUS` de (x, y), no formato curto da rede. */
+  mobsNear(x, y) {
+    const near = (o) => Math.abs(o.x - x) <= MOBS_RADIUS && Math.abs(o.y - y) <= MOBS_RADIUS;
+    const list = [];
+    const e = this.entities;
+    for (const a of e.animals) {
+      if (!near(a)) continue;
+      const s = { i: this.mobId(a), k: a instanceof Sheep ? "sheep" : a.species, x: round2(a.x), y: round2(a.y), f: FACING_ORDER.indexOf(a.facing) };
+      if (a.moving) s.m = 1;
+      if (a.baby) s.b = 1;
+      if (a.inLove && a.courtship <= 0) s.l = 1;
+      if (a.canEat) s.e = 1;
+      list.push(s);
+    }
+    for (const m of e.monsters) {
+      if (!near(m)) continue;
+      const s = { i: this.mobId(m), k: m.kind, x: round2(m.x), y: round2(m.y), f: FACING_ORDER.indexOf(m.facing) };
+      if (m.moving) s.m = 1;
+      if (m.hp < m.maxHp) s.p = round2(Math.max(0, m.hp / m.maxHp));
+      if (m.hurt > 0) s.h = 1;
+      list.push(s);
+    }
+    for (const d of e.dying) {
+      if (near(d)) list.push({ i: 0, k: d.kind, x: round2(d.x), y: round2(d.y), f: FACING_ORDER.indexOf(d.facing), d: round2(d.t) });
+    }
+    for (const a of e.actors) {
+      if (a.kind === "love-hearts" && near(a)) list.push({ i: 0, k: a.kind, x: round2(a.x), y: round2(a.y), f: 0, r: a.frame, s: a.scale });
+    }
+    return list;
   }
   /** Itens no chão: um por unidade, espalhados um pouco em volta de (x, y) (como `Drops.spawn` no jogo). */
   spawnDrops(x, y, loot) {

@@ -1,6 +1,6 @@
 {
   "name": "orvalis-servidor",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "private": true,
   "description": "Servidor do Orvalis (multiplayer co-op com código de convite).",
   "main": "server.js",
