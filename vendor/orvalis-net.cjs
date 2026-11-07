@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.72.0 (05af3ed) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.73.0 (f3384a5) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -1980,6 +1980,8 @@ function heroActorKind(body, equipped, attackTool, attacking) {
   if (attacking && attackTool && TOOLS[attackTool].swings) return `${body}-${attackTool}-attack`;
   return equipped ? `${body}-${equipped}` : body;
 }
+var ANIMAL_KINDS = /* @__PURE__ */ new Set(["sheep", "horse", "cow", "chicken"]);
+var finiteNum = (v) => typeof v === "number" && Number.isFinite(v) && Math.abs(v) < 2 ** 30;
 var NOBODY = { x: 1e9, y: 1e9 };
 var Entities = class {
   constructor(player, rand = Math.random, character = "heroine") {
@@ -2197,6 +2199,41 @@ var Entities = class {
   /** Animais que comem e se reproduzem (para alimentar à frente da personagem). */
   get animals() {
     return this.breeders();
+  }
+  /** Animais como estão (para guardar): os filhotes nascidos e quem já cresceu continuam ao voltar. */
+  saveAnimals() {
+    return this.breeders().map((a) => ({
+      k: a.species,
+      x: Math.round(a.x * 100) / 100,
+      y: Math.round(a.y * 100) / 100,
+      baby: a.baby,
+      age: Math.round(a.age),
+      hx: Math.round(a.homeX * 100) / 100,
+      hy: Math.round(a.homeY * 100) / 100
+    }));
+  }
+  /**
+   * Troca os animais pelos guardados (lista malformada é ignorada item a item; o limite por espécie vale). Quem cai
+   * em célula onde não se anda (o mundo mudou) vai para a andável mais perto. Retorna quantos voltaram.
+   */
+  restoreAnimals(list, world) {
+    if (!Array.isArray(list)) return 0;
+    this.npcs.length = 0;
+    this.horses.length = 0;
+    this.courting.clear();
+    for (const a of list) {
+      if (!a || !ANIMAL_KINDS.has(a.k) || !finiteNum(a.x) || !finiteNum(a.y) || !finiteNum(a.hx) || !finiteNum(a.hy)) continue;
+      const k = a.k;
+      if (this.count(k) >= MAX_PER_SPECIES[k]) continue;
+      let [x, y] = [a.x, a.y];
+      if (!world.isWalkable(Math.floor(x), Math.floor(y))) [x, y] = world.nearestWalkable(Math.floor(x), Math.floor(y)).map((v) => v + 0.5);
+      const baby = a.baby === true;
+      const animal = k === "sheep" ? new Sheep(x, y, a.hx, a.hy, this.rand, baby) : new FarmAnimal(k, x, y, this.rand, baby, a.hx, a.hy);
+      animal.age = finiteNum(a.age) ? Math.max(0, a.age) : 0;
+      if (animal instanceof Sheep) this.npcs.push(animal);
+      else this.horses.push(animal);
+    }
+    return this.breeders().length;
   }
   /** Quantos animais da espécie existem (filhotes contam). */
   count(species) {
@@ -4516,7 +4553,7 @@ function parseChestSlots(v, size = 27) {
 // src/net/room.ts
 var ROOM_START_TIME = 0.31;
 var TIME_SYNC_SECONDS = 30;
-var ROOM_SNAPSHOT_VERSION = 2;
+var ROOM_SNAPSHOT_VERSION = 3;
 var DROP_LIFETIME = 300;
 var TAKE_REACH = 3;
 var MOBS_EVERY = 0.1;
@@ -4731,6 +4768,7 @@ var Room = class {
       }
     }
     if (this.players.size) {
+      this.dirty = true;
       for (const av of this.avatars.values()) this.loadAround(av.x, av.y, LOAD_RADIUS);
       for (let left = dt; left > 1e-6; left -= CREATURE_STEP) this.entities.update(Math.min(CREATURE_STEP, left), this.world);
       out.push(...this.flush());
@@ -4829,12 +4867,13 @@ var Room = class {
       savedAt: Date.now(),
       chunks: this.chunks(),
       bags: Object.fromEntries(this.bags),
-      chests: Object.fromEntries(this.world.chests)
+      chests: Object.fromEntries(this.world.chests),
+      animals: this.entities.saveAnimals()
     };
   }
   /** Recarrega o que o servidor gravou (só se for desta sala e desta seed; senão, a sala começa do zero). */
   restore(s) {
-    if (!s || s.v !== ROOM_SNAPSHOT_VERSION && s.v !== 1 || s.room !== this.id || s.seed !== this.seed) return false;
+    if (!s || ![1, 2, ROOM_SNAPSHOT_VERSION].includes(s.v) || s.room !== this.id || s.seed !== this.seed) return false;
     for (const c of s.chunks) this.world.restoreChunk(c.cx, c.cy, fromB64(c.ground), c.levels.map(fromB64));
     this.world.settleWater();
     if (Number.isFinite(s.time)) this.time = (s.time % 1 + 1) % 1;
@@ -4842,6 +4881,10 @@ var Room = class {
     for (const [k, slots] of Object.entries(s.chests ?? {})) {
       const [x, y] = k.split(",").map(Number);
       if (this.world.getObject(x, y) === Block.CHEST && Array.isArray(slots) && slots.length === CHEST_SLOTS) this.world.chests.set(k, slots);
+    }
+    if (Array.isArray(s.animals)) {
+      for (const a of s.animals) if (Number.isFinite(a?.x) && Number.isFinite(a?.y) && Math.abs(a.x) + Math.abs(a.y) < 2 ** 30) this.loadAround(a.x, a.y, 4);
+      this.entities.restoreAnimals(s.animals, this.world);
     }
     this.dirty = false;
     return true;
