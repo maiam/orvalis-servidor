@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.68.0 (b30f56c) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.69.0 (f0f8052) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -87,8 +87,8 @@ var Block = {
   FENCE_GATE: 49,
   /** Portão aberto: passável. Só existe no mundo (a bolsa coloca o fechado). */
   FENCE_GATE_OPEN: 76,
-  // --- paredes de pedra (por receita): 8 consecutivas, uma por pedra (ordem de `WALL_STONES`) ---
-  /** Primeira parede (Pedra Bruta); as outras seguem `WALL_STONES` (210 … 217). */
+  // --- paredes (por receita): 16 consecutivas, uma por material (ordem de `WALL_MATERIALS`) ---
+  /** Primeira parede (Pedra Bruta); as outras seguem `WALL_MATERIALS` (210 … 225). */
   WALL_0: 210,
   // --- variações de pedra (prancha de pedras; por receita ou, no futuro, em construções prontas) ---
   STONE_COBBLE: 34,
@@ -247,7 +247,7 @@ var object = (id, name, extra = {}) => ({
   stone: false,
   ...extra
 });
-var WALL_STONES = [
+var WALL_MATERIALS = [
   Block.STONE,
   Block.STONE_COBBLE,
   Block.STONE_BRICK,
@@ -255,10 +255,35 @@ var WALL_STONES = [
   Block.STONE_SMOOTH,
   Block.STONE_POLISHED,
   Block.STONE_CRACKED,
-  Block.STONE_BRICK_CRACKED
+  Block.STONE_BRICK_CRACKED,
+  Block.DIRT,
+  Block.GRASS,
+  Block.TILLED,
+  Block.PATH,
+  Block.SAND,
+  Block.STONE,
+  Block.OAK_LOG,
+  Block.OAK_PLANKS
 ];
-var WALL_NAMES = ["Pedra Bruta", "Pedra Irregular", "Tijolo", "Lajotas", "Pedra Lisa", "Pedra Polida", "Pedra Rachada", "Tijolo Rachado"];
-var WALLS = WALL_STONES.map((_, i) => Block.WALL_0 + i);
+var WALL_NAMES = [
+  "Pedra Bruta",
+  "Pedra Irregular",
+  "Tijolo",
+  "Lajotas",
+  "Pedra Lisa",
+  "Pedra Polida",
+  "Pedra Rachada",
+  "Tijolo Rachado",
+  "Terra",
+  "Grama",
+  "Terra Arada",
+  "Terra Batida",
+  "Areia",
+  "Pedra com Musgo",
+  "Tronco",
+  "T\xE1buas"
+];
+var WALLS = WALL_MATERIALS.map((_, i) => Block.WALL_0 + i);
 var defs = [
   { ...object(Block.AIR, "Vazio"), shape: "flat", solid: false, breakable: false, placeable: false },
   ground(Block.WATER, "\xC1gua", { liquid: true, standable: false, breakable: false }),
@@ -299,7 +324,6 @@ var defs = [
   object(Block.FENCE_GATE, "Port\xE3o de Madeira", { shape: "fence", organic: "wood" }),
   object(Block.FENCE_GATE_OPEN, "Port\xE3o de Madeira (aberto)", { shape: "fence", solid: false, placeable: false, organic: "wood" }),
   // Paredes de pedra: altas (3), não se sobe nem se empilha nada nelas; a picareta desmonta.
-  ...WALL_STONES.map((_, i) => object(Block.WALL_0 + i, `Parede de ${WALL_NAMES[i]}`, { shape: "wall" })),
   object(Block.CACTUS, "Cacto", { placeable: false, organic: "plant" }),
   object(Block.OAK_TREE, "Carvalho", { shape: "tree", placeable: false, organic: "wood" }),
   object(Block.SAKURA_TREE, "Cerejeira", { shape: "tree", placeable: false, organic: "wood" }),
@@ -381,6 +405,10 @@ var defs = [
     organic: "plant"
   })))
 ];
+WALL_MATERIALS.forEach((m, i) => {
+  const { organic, soft } = defs.find((d) => d.id === m);
+  defs.push(object(Block.WALL_0 + i, `Parede de ${WALL_NAMES[i]}`, { shape: "wall", organic, soft }));
+});
 var BLOCKS = (() => {
   const table = [];
   for (const d of defs) table[d.id] = d;
@@ -697,12 +725,12 @@ var RECIPES = [
     inputs: [{ item: blockStack(Block.OAK_PLANKS), count: 2 }],
     output: { item: blockStack(Block.FENCE), count: 4 }
   },
-  // Paredes de pedra (dono do produto, 2026-11-07): 3 blocos da pedra → 1 parede da mesma pedra.
-  ...WALL_STONES.map((stone, i) => ({
+  // Paredes (dono do produto, 2026-11-07): 3 blocos do material → 1 parede do mesmo material.
+  ...WALL_MATERIALS.map((material, i) => ({
     id: `wall-${i}`,
     name: blockDef(WALLS[i]).name,
     profession: "builder",
-    inputs: [{ item: blockStack(stone), count: 3 }],
+    inputs: [{ item: blockStack(material), count: 3 }],
     output: { item: blockStack(WALLS[i]), count: 1 }
   })),
   {
@@ -3092,7 +3120,7 @@ function fromB64(s) {
 }
 
 // src/net/protocol.ts
-var PROTOCOL_VERSION = 11;
+var PROTOCOL_VERSION = 12;
 var MAX_PLAYERS = 10;
 var ROOMS = [
   { id: 1, name: "Sala 1", seed: 20261106 }
