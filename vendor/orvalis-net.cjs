@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.77.0 (368f1b8) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.79.0 (e567d89) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -315,7 +315,7 @@ var defs = [
   object(Block.TENT_PART, "Tenda", { shape: "rock", placeable: false, organic: "wood" }),
   object(Block.CHEST, "Ba\xFA de Carvalho", { shape: "rock", organic: "wood" }),
   object(Block.ROCK_BOULDER, "Pedregulho", { shape: "rock", placeable: false }),
-  object(Block.CHAIR, "Cadeira de Madeira", { shape: "rock", organic: "wood" }),
+  object(Block.CHAIR, "Cadeira de Madeira", { shape: "rock", organic: "wood", seat: true }),
   // madeira: o machado desmonta
   object(Block.CAMPFIRE, "Fogueira", { shape: "rock", organic: "wood", glow: true }),
   // madeira: o machado desmonta
@@ -373,7 +373,12 @@ var defs = [
     [Block.STALL, "Barraca"],
     [Block.BENCH, "Banco"],
     [Block.BENCH_LONG, "Banco"]
-  ].map(([id, name]) => object(id, name, { shape: "building", breakable: false, placeable: false })),
+  ].map(([id, name]) => object(id, name, {
+    shape: "building",
+    breakable: false,
+    placeable: false,
+    seat: id === Block.BENCH || id === Block.BENCH_LONG
+  })),
   ...[
     [Block.LAMP, "Poste de Luz"],
     [Block.BARREL, "Barril"],
@@ -409,8 +414,8 @@ var defs = [
   })))
 ];
 WALL_MATERIALS.forEach((m, i) => {
-  const { organic, soft } = defs.find((d) => d.id === m);
-  defs.push(object(Block.WALL_0 + i, `Parede de ${WALL_NAMES[i]}`, { shape: "wall", organic, soft }));
+  const { organic, soft, stone } = defs.find((d) => d.id === m);
+  defs.push(object(Block.WALL_0 + i, `Parede de ${WALL_NAMES[i]}`, { shape: "wall", organic, soft, stone }));
 });
 var BLOCKS = (() => {
   const table = [];
@@ -885,7 +890,7 @@ function applyAction(world, a) {
 }
 
 // src/net/protocol.ts
-var PROTOCOL_VERSION = 17;
+var PROTOCOL_VERSION = 18;
 var MAX_PLAYERS = 10;
 var ROOMS = [
   { id: 1, name: "Sala 1", seed: 20261106 }
@@ -912,6 +917,7 @@ function parseState(v) {
   const out = { x: s.x, y: s.y, facing: s.facing, moving: s.moving };
   if (typeof s.tool === "string" && s.tool in TOOLS) out.tool = s.tool;
   if (Number.isInteger(s.swing) && s.swing >= 0 && s.swing < 2 ** 31) out.swing = s.swing;
+  if (Number.isInteger(s.sit) && s.sit >= 0 && s.sit < 16) out.sit = s.sit;
   return out;
 }
 function parseClientMessage(text) {
@@ -2177,6 +2183,10 @@ var Monster = class extends Walker {
 };
 
 // src/game/entities.ts
+var SIT_BODIES = ["gino"];
+function canSit(body) {
+  return SIT_BODIES.includes(body);
+}
 var FLOW_EVERY = 0.25;
 var RESPAWN_CLEARANCE = 10;
 var FLOCK_SIZE = 4;
@@ -2702,6 +2712,10 @@ var Entities = class {
     }
     return best;
   }
+  /** Outra entidade (não a personagem deste aparelho) ocupa a célula? (assento já tomado). */
+  occupiesOther(cx, cy) {
+    return this.all().some((w) => w !== this.player && w.occupies(cx, cy));
+  }
   /** Alguma entidade ocupa a célula? (não se coloca bloco nem se cava sob elas). */
   occupies(cx, cy) {
     return this.all().some((w) => w.occupies(cx, cy));
@@ -2714,7 +2728,8 @@ var Entities = class {
     const p = this.player;
     if (p) {
       const b = this.body;
-      const kind = this.character === "goddess" ? "goddess" : heroActorKind(b, p.equipped, p.attackTool, p.attacking);
+      const sitting = p.seat && canSit(b);
+      const kind = this.character === "goddess" ? "goddess" : sitting ? `${b}-sit` : heroActorKind(b, p.equipped, p.attackTool, p.attacking);
       out.unshift({
         kind,
         x: p.x,
@@ -2723,7 +2738,7 @@ var Entities = class {
         facing: p.facing,
         moving: p.moving,
         walkTime: p.walkTime,
-        frame: p.attacking ? p.attackFrame : void 0,
+        frame: sitting ? p.sitFrame : p.attacking ? p.attackFrame : void 0,
         hurt: p.invuln > 0,
         look: this.character === "heroine" && this.look ? this.look : void 0
       });
@@ -2808,6 +2823,8 @@ var ATTACK_HIT_AT = 0.45;
 var ATTACK_FRAMES = 4;
 var HURT_INVULN_S = 0.9;
 var RESPAWN_INVULN_S = 2;
+var SIT_SECONDS = 0.5;
+var SEATED_FPS = 3;
 var Player = class extends Walker {
   /** Ferramenta em mãos (muda o sprite); null = mãos livres. */
   equipped = null;
@@ -2832,6 +2849,8 @@ var Player = class extends Walker {
   /** Barra de fome (cheia = satisfeita), `HUNGER` em world/progression. */
   hunger = HUNGER.max;
   starve = 0;
+  /** Sentado num assento (cadeira, banco); null = de pé. */
+  seat = null;
   constructor(x, y) {
     super(x, y, { speed: 4.2, halfW: 0.27, halfD: 0.15, stepHeight: STEP_HEIGHT });
   }
@@ -2871,6 +2890,11 @@ var Player = class extends Walker {
    */
   hurt(damage, fromX, fromY, world, blocked) {
     if (this.invuln > 0 || this.dead) return false;
+    if (this.seat) {
+      this.x = this.seat.fromX;
+      this.y = this.seat.fromY;
+      this.seat = null;
+    }
     this.hp = Math.max(0, this.hp - damage);
     this.invuln = HURT_INVULN_S;
     this.sinceHurt = 0;
@@ -2883,6 +2907,7 @@ var Player = class extends Walker {
   }
   /** Renasce em (x, y) com vida cheia (itens ficam com ela). */
   respawn(x, y) {
+    this.seat = null;
     this.x = x;
     this.y = y;
     this.z = this.visualZ = 0;
@@ -2926,8 +2951,57 @@ var Player = class extends Walker {
       this.hp = Math.min(this.maxHp, this.hp + Math.max(1, Math.round(this.maxHp * REGEN.fraction)));
     }
   }
+  /**
+   * Senta no assento da célula (x, y): vai para o meio dele, de frente, e toca a animação de sentar. Ao levantar
+   * (andar ou tocar de novo — `standUp`), volta para onde estava.
+   */
+  sitOn(x, y) {
+    if (this.seat || this.dead || this.attacking) return false;
+    this.seat = { x: x + 0.5, y: y + 0.55, fromX: this.x, fromY: this.y, phase: "down", t: 0 };
+    this.x = this.seat.x;
+    this.y = this.seat.y;
+    this.facing = "down";
+    this.moving = false;
+    return true;
+  }
+  /** Começa a levantar (se estiver sentado). */
+  standUp() {
+    if (this.seat && this.seat.phase !== "up") this.seat = { ...this.seat, phase: "up", t: 0 };
+  }
+  get sitting() {
+    return this.seat !== null;
+  }
+  /** Quadro da folha de sentar (0–15): 0–3 sentando, 4–11 sentado (laço), 3→0 levantando. */
+  get sitFrame() {
+    const s = this.seat;
+    if (!s) return 0;
+    if (s.phase === "seated") return 4 + Math.floor(s.t * SEATED_FPS) % 8;
+    const k = Math.min(3, Math.floor(s.t / SIT_SECONDS * 4));
+    return s.phase === "down" ? k : 3 - k;
+  }
+  /** Sentado: só o tempo passa; mexer o controle levanta; terminado o levantar, volta para onde estava. */
+  updateSeat(dt, ix, iy) {
+    const s = this.seat;
+    s.t += dt;
+    this.moving = false;
+    this.walkTime = 0;
+    if (s.phase === "down" && s.t >= SIT_SECONDS) {
+      s.phase = "seated";
+      s.t = 0;
+    }
+    if (s.phase === "seated" && Math.hypot(ix, iy) > 0.3) this.standUp();
+    if (this.seat.phase === "up" && this.seat.t >= SIT_SECONDS) {
+      this.x = s.fromX;
+      this.y = s.fromY;
+      this.seat = null;
+    }
+  }
   update(dt, ix, iy, world, blocked) {
     this.tickHealth(dt);
+    if (this.seat) {
+      this.updateSeat(dt, ix, iy);
+      return;
+    }
     const facing = this.facing;
     this.move(dt, ix, iy, world, blocked);
     if (this.attacking) {
@@ -3061,6 +3135,7 @@ function buildTown() {
   const idx = (x, y) => y * W + x;
   const inside = (x, y) => x >= 0 && y >= 0 && x < W && y < H;
   const ground2 = new Uint8Array(W * H).fill(Block.GRASS);
+  const FLOOR = Block.STONE_BRICK;
   const objects = new Uint8Array(W * H);
   const upper = new Uint8Array(W * H);
   const use = new Uint8Array(W * H);
@@ -3075,7 +3150,7 @@ function buildTown() {
     for (let x = 0; x < W; x++) {
       if (x >= WALL && y >= WALL && x < W - WALL && y < H - WALL) continue;
       const i = idx(x, y);
-      ground2[i] = Block.STONE_COBBLE;
+      ground2[i] = FLOOR;
       if (y >= H - WALL && x >= GX0 && x <= GX1) {
         use[i] = STREET;
         continue;
@@ -3139,12 +3214,12 @@ function buildTown() {
   });
   const MID = 70;
   const START_Y = H - 12;
-  plaza(CX0 + 2, CY1, CX0 + 23, COURT_Y1, Block.STONE_POLISHED);
-  plaza(W / 2 - 9, MID - 6, W / 2 + 9, MID + 6, Block.STONE_FLOOR);
-  plaza(W / 2 - 9, H - 17, W / 2 + 8, H - TD - 1, Block.STONE_FLOOR);
+  plaza(CX0 + 2, CY1, CX0 + 23, COURT_Y1, FLOOR);
+  plaza(W / 2 - 9, MID - 6, W / 2 + 9, MID + 6, FLOOR);
+  plaza(W / 2 - 9, H - 17, W / 2 + 8, H - TD - 1, FLOOR);
   rect(GX0, H - TD, GX1, H - 1, (_x, _y, i) => {
     use[i] = STREET;
-    ground2[i] = Block.STONE_COBBLE;
+    ground2[i] = FLOOR;
   });
   const required = [
     place(Block.GUILD, W / 2 - 28, MID - 8, "Guilda dos Aventureiros", true),
@@ -3366,8 +3441,8 @@ function buildTown() {
   rect(0, 0, W - 1, H - 1, (_x, _y, i) => {
     if (use[i] === RESERVED && i > idx(0, COURT_Y1)) use[i] = FREE;
   });
-  rect(0, 0, W - 1, H - 1, (x, y, i) => {
-    if (use[i] === STREET) ground2[i] = h(x, y, 3) < 0.3 ? Block.STONE_CRACKED : Block.STONE_COBBLE;
+  rect(0, 0, W - 1, H - 1, (_x, _y, i) => {
+    if (use[i] === STREET) ground2[i] = FLOOR;
   });
   const isFree = (x, y) => inside(x, y) && use[idx(x, y)] === FREE && !keepOff[idx(x, y)];
   const isWalk = (x, y) => inside(x, y) && (use[idx(x, y)] === STREET || use[idx(x, y)] === PLAZA);
@@ -3443,7 +3518,7 @@ function buildTown() {
       for (let k = 0; k < path; k++) {
         const i = idx(dx, y + d + k);
         use[i] = WALKWAY;
-        ground2[i] = Block.STONE_COBBLE;
+        ground2[i] = FLOOR;
       }
       place(id, x, y, "Casa", true);
     }
@@ -4273,10 +4348,24 @@ var World = class {
     }
   }
   // ---- Portas ----
-  /** Cubo de madeira (Tora ou Tábua de Carvalho) ou de Pedra no nível 0 — serve de batente para a porta. */
+  /**
+   * Batente da porta: qualquer bloco (cubo) ou parede de madeira ou de pedra no nível 0 (dono do produto, 07/11: a porta
+   * vai entre quaisquer blocos de madeira ou pedra, inclusive as paredes).
+   */
   isDoorJamb(x, y) {
     const d = blockDef(this.getObject(x, y));
-    return d.shape === "cube" && (d.organic === "wood" || d.stone);
+    return (d.shape === "cube" || d.shape === "wall") && (d.organic === "wood" || d.stone);
+  }
+  // ---- Assentos ----
+  /**
+   * Assento em (x, y) para quem está em (px, py): a cadeira, ou a célula do banco da cidade mais perto de quem senta.
+   * Retorna a célula onde se senta, ou null se ali não há assento.
+   */
+  seatAt(x, y, px, py) {
+    const b = this.townBuildingAt(x, y);
+    if (b) return blockDef(b.id).seat ? [Math.max(b.x, Math.min(b.x + b.w - 1, Math.floor(px))), b.y] : null;
+    void py;
+    return blockDef(this.getObject(x, y)).seat ? [x, y] : null;
   }
   /** A porta só vai entre dois batentes (qualquer bloco de madeira ou de pedra, podem misturar): células da esquerda e da direita. */
   hasDoorFrame(x, y) {
