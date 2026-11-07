@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.64.0 (4527ca8) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.66.0 (a7fa929) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -2996,7 +2996,7 @@ function fromB64(s) {
 }
 
 // src/net/protocol.ts
-var PROTOCOL_VERSION = 8;
+var PROTOCOL_VERSION = 9;
 var MAX_PLAYERS = 10;
 var ROOMS = [
   { id: 1, name: "Sala 1", seed: 20261106 }
@@ -3011,6 +3011,7 @@ function sanitizeName(text) {
   if (n.length < NAME_MIN || n.length > NAME_MAX) return null;
   return /^[\p{L}\p{N} _-]+$/u.test(n) ? n : null;
 }
+var DEFAULT_APPEARANCE = { body: "heroine", look: null };
 var FACINGS = /* @__PURE__ */ new Set(["down", "left", "right", "up"]);
 var finite = (v) => typeof v === "number" && Number.isFinite(v) && Math.abs(v) < 2 ** 30;
 function parseState(v) {
@@ -3031,7 +3032,7 @@ function parseClientMessage(text) {
   switch (o.t) {
     case "hello":
       if (!Number.isInteger(o.v) || typeof o.name !== "string" || !Number.isInteger(o.room)) return null;
-      return { t: "hello", v: o.v, name: o.name, room: o.room };
+      return { t: "hello", v: o.v, name: o.name, room: o.room, appearance: parseAppearance(o.appearance) };
     case "bag": {
       const bag = parseBag(o.bag);
       return bag ? { t: "bag", bag } : null;
@@ -3068,6 +3069,20 @@ function parseBag(v) {
     hotbar = o.hotbar;
   }
   return { inventory, hotbar, x: o.x, y: o.y };
+}
+var PIECE_RE = /^[a-z0-9-]{1,40}$/;
+function parseAppearance(v) {
+  if (!v || typeof v !== "object") return DEFAULT_APPEARANCE;
+  const o = v;
+  const body = o.body === "hero" ? "hero" : "heroine";
+  let look = null;
+  if (o.look && typeof o.look === "object") {
+    const entries = Object.entries(o.look);
+    if (entries.length <= 12 && entries.every(([k, val]) => PIECE_RE.test(k) && typeof val === "string" && PIECE_RE.test(val))) {
+      look = Object.fromEntries(entries);
+    }
+  }
+  return { body, look };
 }
 
 // src/net/room.ts
@@ -3109,7 +3124,7 @@ var Room = class {
     if (this.players.size >= MAX_PLAYERS) return fail("full", `${this.name} cheia (m\xE1ximo ${MAX_PLAYERS} jogadores). Tente daqui a pouco.`);
     if ([...this.players.values()].some((p) => bagKey(p.name) === bagKey(name))) return fail("name", `J\xE1 tem algu\xE9m com o nome ${name} na sala: escolha outro.`);
     const id = this.nextId++;
-    const player = { id, name, state: null };
+    const player = { id, name, state: null, appearance: hello.appearance ?? DEFAULT_APPEARANCE };
     const others = [...this.players.values()];
     this.players.set(id, player);
     return {
