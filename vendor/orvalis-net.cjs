@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.67.0 (177d65f) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.68.0 (b30f56c) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -87,6 +87,9 @@ var Block = {
   FENCE_GATE: 49,
   /** Portão aberto: passável. Só existe no mundo (a bolsa coloca o fechado). */
   FENCE_GATE_OPEN: 76,
+  // --- paredes de pedra (por receita): 8 consecutivas, uma por pedra (ordem de `WALL_STONES`) ---
+  /** Primeira parede (Pedra Bruta); as outras seguem `WALL_STONES` (210 … 217). */
+  WALL_0: 210,
   // --- variações de pedra (prancha de pedras; por receita ou, no futuro, em construções prontas) ---
   STONE_COBBLE: 34,
   STONE_BRICK: 35,
@@ -244,6 +247,18 @@ var object = (id, name, extra = {}) => ({
   stone: false,
   ...extra
 });
+var WALL_STONES = [
+  Block.STONE,
+  Block.STONE_COBBLE,
+  Block.STONE_BRICK,
+  Block.STONE_FLOOR,
+  Block.STONE_SMOOTH,
+  Block.STONE_POLISHED,
+  Block.STONE_CRACKED,
+  Block.STONE_BRICK_CRACKED
+];
+var WALL_NAMES = ["Pedra Bruta", "Pedra Irregular", "Tijolo", "Lajotas", "Pedra Lisa", "Pedra Polida", "Pedra Rachada", "Tijolo Rachado"];
+var WALLS = WALL_STONES.map((_, i) => Block.WALL_0 + i);
 var defs = [
   { ...object(Block.AIR, "Vazio"), shape: "flat", solid: false, breakable: false, placeable: false },
   ground(Block.WATER, "\xC1gua", { liquid: true, standable: false, breakable: false }),
@@ -283,6 +298,8 @@ var defs = [
   object(Block.FENCE, "Cerca de Madeira", { shape: "fence", organic: "wood" }),
   object(Block.FENCE_GATE, "Port\xE3o de Madeira", { shape: "fence", organic: "wood" }),
   object(Block.FENCE_GATE_OPEN, "Port\xE3o de Madeira (aberto)", { shape: "fence", solid: false, placeable: false, organic: "wood" }),
+  // Paredes de pedra: altas (3), não se sobe nem se empilha nada nelas; a picareta desmonta.
+  ...WALL_STONES.map((_, i) => object(Block.WALL_0 + i, `Parede de ${WALL_NAMES[i]}`, { shape: "wall" })),
   object(Block.CACTUS, "Cacto", { placeable: false, organic: "plant" }),
   object(Block.OAK_TREE, "Carvalho", { shape: "tree", placeable: false, organic: "wood" }),
   object(Block.SAKURA_TREE, "Cerejeira", { shape: "tree", placeable: false, organic: "wood" }),
@@ -421,7 +438,8 @@ var HOTBAR_BLOCKS = [
   Block.OVEN,
   Block.CHAIR,
   Block.FENCE,
-  Block.FENCE_GATE
+  Block.FENCE_GATE,
+  ...WALLS
 ];
 var TREE_NEXT = {
   [Block.OAK_SAPLING]: Block.OAK_YOUNG,
@@ -617,7 +635,7 @@ function toolDrops(tool, id, rand = Math.random) {
   return dropsFor(id, rand);
 }
 var TOOL_ORDER = [Tool.SWORD, Tool.HOE, Tool.PICKAXE, Tool.SHOVEL, Tool.AXE];
-var COLLECTABLE = /* @__PURE__ */ new Set([...MATERIALS, Block.OAK_DOOR, Block.TENT, Block.CHEST, Block.CAMPFIRE, Block.CAULDRON, Block.OVEN, Block.CHAIR, Block.FENCE]);
+var COLLECTABLE = /* @__PURE__ */ new Set([...MATERIALS, Block.OAK_DOOR, Block.TENT, Block.CHEST, Block.CAMPFIRE, Block.CAULDRON, Block.OVEN, Block.CHAIR, Block.FENCE, ...WALLS]);
 var ADULT_TREES = /* @__PURE__ */ new Set([Block.OAK_TREE, Block.SAKURA_TREE, Block.APPLE_TREE, Block.APPLE_TREE_BARE]);
 function blockDrops(id, rand = Math.random) {
   if (ADULT_TREES.has(id)) return [{ item: blockStack(Block.OAK_LOG), count: 2 + (rand() < 0.5 ? 1 : 0) }];
@@ -679,6 +697,14 @@ var RECIPES = [
     inputs: [{ item: blockStack(Block.OAK_PLANKS), count: 2 }],
     output: { item: blockStack(Block.FENCE), count: 4 }
   },
+  // Paredes de pedra (dono do produto, 2026-11-07): 3 blocos da pedra → 1 parede da mesma pedra.
+  ...WALL_STONES.map((stone, i) => ({
+    id: `wall-${i}`,
+    name: blockDef(WALLS[i]).name,
+    profession: "builder",
+    inputs: [{ item: blockStack(stone), count: 3 }],
+    output: { item: blockStack(WALLS[i]), count: 1 }
+  })),
   {
     id: "fence-gate",
     name: "Port\xE3o de Madeira",
@@ -3066,7 +3092,7 @@ function fromB64(s) {
 }
 
 // src/net/protocol.ts
-var PROTOCOL_VERSION = 10;
+var PROTOCOL_VERSION = 11;
 var MAX_PLAYERS = 10;
 var ROOMS = [
   { id: 1, name: "Sala 1", seed: 20261106 }
