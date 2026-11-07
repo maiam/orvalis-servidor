@@ -5,7 +5,8 @@ Servidor do **Orvalis** (multiplayer co-op; depois contas e nuvem). O jogo fica 
 
 **Etapa atual: salas fixas (protocolo 8).** Salas por número (`ROOMS` do jogo; hoje só a Sala 1), até 10 jogadores ao
 mesmo tempo, entrada só com nome, sem combate entre jogadores. Cada sala é um mundo compartilhado **salvo em disco**:
-o que se faz nela e a bolsa de cada jogador (pelo nome) ficam guardados para a próxima entrada. O servidor é autoritativo: as regras são as do jogo, vindas de `vendor/orvalis-net.cjs`
+o que se faz nela, os baús e a bolsa de cada jogador (pelo nome) ficam guardados para a próxima entrada; os itens no
+chão são da sala (quem pega primeiro leva). O servidor é autoritativo: as regras são as do jogo, vindas de `vendor/orvalis-net.cjs`
 (a classe `Room` do jogo, empacotada — **nunca edite à mão**; atualize com `npm run sync-net`).
 
 | Rota | O que faz |
