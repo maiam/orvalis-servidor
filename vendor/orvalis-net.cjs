@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.89.0 (4e0283c) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.90.0 (26fa973) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -3578,7 +3578,7 @@ function buildTown() {
     }
     const roomy = [-1, 0, 1].every((oy) => [-1, 0, 1].every((ox) => inside(x + ox, y + oy) && use[idx(x + ox, y + oy)] === FREE));
     if (roomy && r < 0.2 && y > 3) {
-      objects[i] = h(x, y, 6) < 0.3 ? Block.SAKURA_TREE : Block.OAK_TREE;
+      objects[i] = h(x, y, 6) < 0.3 ? Block.SAKURA_TREE : h(x, y, 7) < 0.4 ? Block.BIRCH_TREE : Block.OAK_TREE;
       use[i] = DECOR;
       rect(x - 1, y - 1, x + 1, y + 1, (_x, _y, j) => {
         if (use[j] === FREE) use[j] = RESERVED;
@@ -3698,7 +3698,7 @@ var BIOMES = {
     ground: Block.GRASS,
     tree: Block.OAK_TREE,
     treeDensity: 0.22,
-    altTrees: [{ id: Block.APPLE_TREE, share: 1 / 6 }, { id: Block.BIRCH_TREE, share: 1 / 5 }],
+    altTrees: [{ id: Block.APPLE_TREE, share: 1 / 6 }, { id: Block.BIRCH_TREE, share: 1 / 5 }, { id: Block.SAKURA_TREE, share: 1 / 4 }],
     decorations: [Block.TALL_GRASS, Block.TALL_GRASS, Block.FLOWER],
     decoChance: 0.12
   },
@@ -3708,6 +3708,7 @@ var BIOMES = {
     ground: Block.GRASS,
     tree: Block.SAKURA_TREE,
     treeDensity: 0.3,
+    altTrees: [{ id: Block.APPLE_TREE, share: 1 / 6 }, { id: Block.BIRCH_TREE, share: 1 / 5 }, { id: Block.OAK_TREE, share: 1 / 4 }],
     decorations: [Block.FLOWER, Block.FLOWER, Block.TALL_GRASS],
     decoChance: 0.12
   },
