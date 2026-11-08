@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.79.0 (e567d89) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.85.0 (5610c30) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -90,9 +90,6 @@ var Block = {
   FENCE_GATE: 49,
   /** Portão aberto: passável. Só existe no mundo (a bolsa coloca o fechado). */
   FENCE_GATE_OPEN: 76,
-  // --- paredes (por receita): 16 consecutivas, uma por material (ordem de `WALL_MATERIALS`) ---
-  /** Primeira parede (Pedra Bruta); as outras seguem `WALL_MATERIALS` (210 … 225). */
-  WALL_0: 210,
   // --- variações de pedra (prancha de pedras; por receita ou, no futuro, em construções prontas) ---
   STONE_COBBLE: 34,
   STONE_BRICK: 35,
@@ -250,43 +247,15 @@ var object = (id, name, extra = {}) => ({
   stone: false,
   ...extra
 });
-var WALL_MATERIALS = [
-  Block.STONE,
-  Block.STONE_COBBLE,
-  Block.STONE_BRICK,
-  Block.STONE_FLOOR,
-  Block.STONE_SMOOTH,
-  Block.STONE_POLISHED,
-  Block.STONE_CRACKED,
-  Block.STONE_BRICK_CRACKED,
-  Block.DIRT,
-  Block.GRASS,
-  Block.TILLED,
-  Block.PATH,
-  Block.SAND,
-  Block.STONE,
-  Block.OAK_LOG,
-  Block.OAK_PLANKS
-];
-var WALL_NAMES = [
-  "Pedra Bruta",
-  "Pedra Irregular",
-  "Tijolo",
-  "Lajotas",
-  "Pedra Lisa",
-  "Pedra Polida",
-  "Pedra Rachada",
-  "Tijolo Rachado",
-  "Terra",
-  "Grama",
-  "Terra Arada",
-  "Terra Batida",
-  "Areia",
-  "Pedra com Musgo",
-  "Tronco",
-  "T\xE1buas"
-];
-var WALLS = WALL_MATERIALS.map((_, i) => Block.WALL_0 + i);
+var REMOVED_BLOCK_FIRST = 210;
+var REMOVED_BLOCK_LAST = 225;
+function isRemovedBlock(id) {
+  return id >= REMOVED_BLOCK_FIRST && id <= REMOVED_BLOCK_LAST;
+}
+function isRemovedStack(stack) {
+  const m = /^block:(\d+)$/.exec(stack);
+  return m !== null && isRemovedBlock(Number(m[1]));
+}
 var defs = [
   { ...object(Block.AIR, "Vazio"), shape: "flat", solid: false, breakable: false, placeable: false },
   ground(Block.WATER, "\xC1gua", { liquid: true, standable: false, breakable: false }),
@@ -326,7 +295,6 @@ var defs = [
   object(Block.FENCE, "Cerca de Madeira", { shape: "fence", organic: "wood" }),
   object(Block.FENCE_GATE, "Port\xE3o de Madeira", { shape: "fence", organic: "wood" }),
   object(Block.FENCE_GATE_OPEN, "Port\xE3o de Madeira (aberto)", { shape: "fence", solid: false, placeable: false, organic: "wood" }),
-  // Paredes de pedra: altas (3), não se sobe nem se empilha nada nelas; a picareta desmonta.
   object(Block.CACTUS, "Cacto", { placeable: false, organic: "plant" }),
   object(Block.OAK_TREE, "Carvalho", { shape: "tree", placeable: false, organic: "wood" }),
   object(Block.SAKURA_TREE, "Cerejeira", { shape: "tree", placeable: false, organic: "wood" }),
@@ -413,10 +381,6 @@ var defs = [
     organic: "plant"
   })))
 ];
-WALL_MATERIALS.forEach((m, i) => {
-  const { organic, soft, stone } = defs.find((d) => d.id === m);
-  defs.push(object(Block.WALL_0 + i, `Parede de ${WALL_NAMES[i]}`, { shape: "wall", organic, soft, stone }));
-});
 var BLOCKS = (() => {
   const table = [];
   for (const d of defs) table[d.id] = d;
@@ -426,6 +390,7 @@ function blockDef(id) {
   return BLOCKS[id] ?? BLOCKS[Block.AIR];
 }
 var ALL_BLOCK_IDS = defs.map((d) => d.id);
+var RETIRED_STONES = [Block.STONE_COBBLE, Block.STONE_CRACKED, Block.STONE_BRICK_CRACKED];
 var MATERIALS = [
   Block.DIRT,
   Block.GRASS,
@@ -474,8 +439,7 @@ var HOTBAR_BLOCKS = [
   Block.OVEN,
   Block.CHAIR,
   Block.FENCE,
-  Block.FENCE_GATE,
-  ...WALLS
+  Block.FENCE_GATE
 ];
 var TREE_NEXT = {
   [Block.OAK_SAPLING]: Block.OAK_YOUNG,
@@ -695,7 +659,7 @@ function toolDrops(tool, id, rand = Math.random) {
   return dropsFor(id, rand);
 }
 var TOOL_ORDER = [Tool.SWORD, Tool.HOE, Tool.PICKAXE, Tool.SHOVEL, Tool.AXE];
-var COLLECTABLE = /* @__PURE__ */ new Set([...MATERIALS, Block.OAK_DOOR, Block.TENT, Block.CHEST, Block.CAMPFIRE, Block.CAULDRON, Block.OVEN, Block.CHAIR, Block.FENCE, ...WALLS]);
+var COLLECTABLE = /* @__PURE__ */ new Set([...MATERIALS, Block.OAK_DOOR, Block.TENT, Block.CHEST, Block.CAMPFIRE, Block.CAULDRON, Block.OVEN, Block.CHAIR, Block.FENCE]);
 var ADULT_TREES = /* @__PURE__ */ new Set([Block.OAK_TREE, Block.SAKURA_TREE, Block.APPLE_TREE, Block.APPLE_TREE_BARE]);
 function blockDrops(id, rand = Math.random) {
   if (ADULT_TREES.has(id)) return [{ item: blockStack(Block.OAK_LOG), count: 2 + (rand() < 0.5 ? 1 : 0) }];
@@ -724,7 +688,6 @@ var RECIPES = [
     output: { item: blockStack(Block.OAK_DOOR), count: 1 }
   },
   ...[
-    ["stone-cobble", "Pedra Irregular", Block.STONE_COBBLE],
     ["stone-brick", "Tijolo de Pedra", Block.STONE_BRICK],
     ["stone-floor", "Ch\xE3o de Pedra", Block.STONE_FLOOR]
   ].map(([id, name, out]) => ({
@@ -757,14 +720,6 @@ var RECIPES = [
     inputs: [{ item: blockStack(Block.OAK_PLANKS), count: 2 }],
     output: { item: blockStack(Block.FENCE), count: 4 }
   },
-  // Paredes (dono do produto, 2026-11-07): 3 blocos do material → 1 parede do mesmo material.
-  ...WALL_MATERIALS.map((material, i) => ({
-    id: `wall-${i}`,
-    name: blockDef(WALLS[i]).name,
-    profession: "builder",
-    inputs: [{ item: blockStack(material), count: 3 }],
-    output: { item: blockStack(WALLS[i]), count: 1 }
-  })),
   {
     id: "fence-gate",
     name: "Port\xE3o de Madeira",
@@ -971,13 +926,14 @@ function parseBag(v) {
   if (entries.length > MAX_BAG_ENTRIES) return null;
   for (const [k, n] of entries) {
     if (!STACK_RE.test(k) || !Number.isInteger(n) || n < 0 || n > 99999) return null;
+    if (isRemovedStack(k)) continue;
     inventory[k] = n;
   }
   let hotbar = null;
   if (o.hotbar !== null && o.hotbar !== void 0) {
     if (!Array.isArray(o.hotbar) || o.hotbar.length > 64) return null;
     if (!o.hotbar.every((s) => s === null || typeof s === "string" && STACK_RE.test(s))) return null;
-    hotbar = o.hotbar;
+    hotbar = o.hotbar.map((s) => s !== null && isRemovedStack(s) ? null : s);
   }
   return { inventory, hotbar, x: o.x, y: o.y };
 }
@@ -1006,7 +962,7 @@ function parseChestSlots(v, size = 27) {
     if (!s || typeof s !== "object") return null;
     const o = s;
     if (typeof o.item !== "string" || !STACK_RE.test(o.item) || !Number.isInteger(o.count) || o.count < 1 || o.count > 99999) return null;
-    out.push({ item: o.item, count: o.count });
+    out.push(isRemovedStack(o.item) ? null : { item: o.item, count: o.count });
   }
   return out;
 }
@@ -2183,7 +2139,7 @@ var Monster = class extends Walker {
 };
 
 // src/game/entities.ts
-var SIT_BODIES = ["gino"];
+var SIT_BODIES = ["heroine", "hero", "hood", "gino"];
 function canSit(body) {
   return SIT_BODIES.includes(body);
 }
@@ -2728,7 +2684,7 @@ var Entities = class {
     const p = this.player;
     if (p) {
       const b = this.body;
-      const sitting = p.seat && canSit(b);
+      const sitting = p.sitting && canSit(b);
       const kind = this.character === "goddess" ? "goddess" : sitting ? `${b}-sit` : heroActorKind(b, p.equipped, p.attackTool, p.attacking);
       out.unshift({
         kind,
@@ -2824,7 +2780,9 @@ var ATTACK_FRAMES = 4;
 var HURT_INVULN_S = 0.9;
 var RESPAWN_INVULN_S = 2;
 var SIT_SECONDS = 0.5;
-var SEATED_FPS = 3;
+var SEATED_FRAME = 3;
+var SEAT_FEET = 1.05;
+var SEAT_WALK = 3;
 var Player = class extends Walker {
   /** Ferramenta em mãos (muda o sprite); null = mãos livres. */
   equipped = null;
@@ -2957,43 +2915,81 @@ var Player = class extends Walker {
    */
   sitOn(x, y) {
     if (this.seat || this.dead || this.attacking) return false;
-    this.seat = { x: x + 0.5, y: y + 0.55, fromX: this.x, fromY: this.y, phase: "down", t: 0 };
-    this.x = this.seat.x;
-    this.y = this.seat.y;
-    this.facing = "down";
-    this.moving = false;
+    this.seat = { x: x + 0.5, y: y + SEAT_FEET, fromX: this.x, fromY: this.y, phase: "go", t: 0 };
     return true;
   }
-  /** Começa a levantar (se estiver sentado). */
+  /** Começa a levantar (se estiver sentado ou sentando). */
   standUp() {
-    if (this.seat && this.seat.phase !== "up") this.seat = { ...this.seat, phase: "up", t: 0 };
+    const s = this.seat;
+    if (s && (s.phase === "seated" || s.phase === "down")) {
+      s.phase = "up";
+      s.t = 0;
+    }
   }
+  /** Na pose de sentar (sentando, sentado ou levantando) — andando até o assento ou de volta não conta. */
   get sitting() {
-    return this.seat !== null;
+    const p = this.seat?.phase;
+    return p === "down" || p === "seated" || p === "up";
   }
-  /** Quadro da folha de sentar (0–15): 0–3 sentando, 4–11 sentado (laço), 3→0 levantando. */
+  /** Quadro da folha de sentar: 0–3 sentando, `SEATED_FRAME` parado, 3→0 levantando. */
   get sitFrame() {
     const s = this.seat;
     if (!s) return 0;
-    if (s.phase === "seated") return 4 + Math.floor(s.t * SEATED_FPS) % 8;
+    if (s.phase === "seated") return SEATED_FRAME;
     const k = Math.min(3, Math.floor(s.t / SIT_SECONDS * 4));
-    return s.phase === "down" ? k : 3 - k;
+    return s.phase === "up" ? 3 - k : k;
   }
-  /** Sentado: só o tempo passa; mexer o controle levanta; terminado o levantar, volta para onde estava. */
+  /** Anda (desenho de caminhada) em linha reta até (tx, ty), atravessando o assento; true = chegou. */
+  walkTo(dt, tx, ty) {
+    const dx = tx - this.x;
+    const dy = ty - this.y;
+    const d = Math.hypot(dx, dy);
+    const step = SEAT_WALK * dt;
+    if (Math.abs(dx) > Math.abs(dy)) this.facing = dx < 0 ? "left" : "right";
+    else if (d > 0.01) this.facing = dy < 0 ? "up" : "down";
+    if (d <= step) {
+      this.x = tx;
+      this.y = ty;
+      this.moving = false;
+      this.walkTime = 0;
+      return true;
+    }
+    this.x += dx / d * step;
+    this.y += dy / d * step;
+    this.moving = true;
+    this.walkTime += dt;
+    return false;
+  }
+  /**
+   * Sentado: anda até o assento, vira de frente e senta no lugar (o corpo desce); fica parado; mexer o controle (ou
+   * tocar) levanta no lugar e ele anda de volta para onde estava.
+   */
   updateSeat(dt, ix, iy) {
     const s = this.seat;
     s.t += dt;
+    if (s.phase === "go") {
+      if (this.walkTo(dt, s.x, s.y)) {
+        s.phase = "down";
+        s.t = 0;
+        this.facing = "down";
+      }
+      return;
+    }
+    if (s.phase === "back") {
+      if (this.walkTo(dt, s.fromX, s.fromY)) this.seat = null;
+      return;
+    }
     this.moving = false;
     this.walkTime = 0;
+    this.facing = "down";
     if (s.phase === "down" && s.t >= SIT_SECONDS) {
       s.phase = "seated";
       s.t = 0;
     }
     if (s.phase === "seated" && Math.hypot(ix, iy) > 0.3) this.standUp();
-    if (this.seat.phase === "up" && this.seat.t >= SIT_SECONDS) {
-      this.x = s.fromX;
-      this.y = s.fromY;
-      this.seat = null;
+    if (s.phase === "up" && s.t >= SIT_SECONDS) {
+      s.phase = "back";
+      s.t = 0;
     }
   }
   update(dt, ix, iy, world, blocked) {
@@ -3156,8 +3152,8 @@ function buildTown() {
         continue;
       }
       use[i] = WALLED;
-      objects[i] = h(x, y, 1) < 0.22 ? Block.STONE_BRICK_CRACKED : Block.STONE_BRICK;
-      upper[i] = h(x, y, 2) < 0.22 ? Block.STONE_BRICK_CRACKED : Block.STONE_BRICK;
+      objects[i] = Block.STONE_BRICK;
+      upper[i] = Block.STONE_BRICK;
     }
   }
   const place = (id, x, y, name, door) => {
@@ -4195,6 +4191,7 @@ var World = class {
     const lx = toLocal(x);
     const ly = toLocal(y);
     const chunk = this.loadChunk(cx, cy);
+    if (isRemovedBlock(id)) id = Block.AIR;
     if (level === "ground") chunk.setGround(lx, ly, id);
     else chunk.setLevel(lx, ly, level, id);
     if (level === 0) {
@@ -4207,6 +4204,9 @@ var World = class {
     if (lx === CHUNK_SIZE - 1) this.touch(cx + 1, cy);
     if (ly === 0) this.touch(cx, cy - 1);
     if (ly === CHUNK_SIZE - 1) this.touch(cx, cy + 1);
+    const dx = lx === 0 ? -1 : lx === CHUNK_SIZE - 1 ? 1 : 0;
+    const dy = ly === 0 ? -1 : ly === CHUNK_SIZE - 1 ? 1 : 0;
+    if (dx !== 0 && dy !== 0) this.touch(cx + dx, cy + dy);
   }
   touch(cx, cy) {
     const c = this.getChunk(cx, cy);
@@ -4349,12 +4349,12 @@ var World = class {
   }
   // ---- Portas ----
   /**
-   * Batente da porta: qualquer bloco (cubo) ou parede de madeira ou de pedra no nível 0 (dono do produto, 07/11: a porta
-   * vai entre quaisquer blocos de madeira ou pedra, inclusive as paredes).
+   * Batente da porta: qualquer bloco (cubo) de madeira ou de pedra no nível 0 (dono do produto, 07/11: a porta vai entre
+   * quaisquer blocos de madeira ou pedra).
    */
   isDoorJamb(x, y) {
     const d = blockDef(this.getObject(x, y));
-    return (d.shape === "cube" || d.shape === "wall") && (d.organic === "wood" || d.stone);
+    return d.shape === "cube" && (d.organic === "wood" || d.stone);
   }
   // ---- Assentos ----
   /**
@@ -4658,6 +4658,7 @@ var World = class {
     levels.forEach((l, i) => {
       if (i < c.levels.length) c.levels[i].set(l.subarray(0, c.levels[i].length));
     });
+    for (const l of c.levels) for (let i = 0; i < l.length; i++) if (isRemovedBlock(l[i])) l[i] = Block.AIR;
     for (let ly = 0; ly < CHUNK_SIZE; ly++) {
       for (let lx = 0; lx < CHUNK_SIZE; lx++) {
         const x = cx * CHUNK_SIZE + lx;
