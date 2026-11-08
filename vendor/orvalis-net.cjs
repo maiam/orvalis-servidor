@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.88.0 (fe3d9fa) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.89.0 (4e0283c) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -63,6 +63,9 @@ var Block = {
   /** Madeira de cerejeira (v0.88.0): tora (da Cerejeira derrubada) e tábuas (da tora). */
   CHERRY_LOG: 230,
   CHERRY_PLANKS: 231,
+  /** Madeira de bétula (v0.89.0): tora (da Bétula derrubada) e tábuas (da tora). */
+  BIRCH_LOG: 232,
+  BIRCH_PLANKS: 233,
   // --- porta (objeto de 3 níveis de altura; o id guarda o estado) ---
   OAK_DOOR: 28,
   /** Porta aberta: mesma porta, passável. Só existe no mundo (a hotbar coloca a fechada). */
@@ -104,6 +107,8 @@ var Block = {
   // --- árvores (objeto alto) ---
   OAK_TREE: 40,
   SAKURA_TREE: 41,
+  /** Bétula (v0.89.0): mistura-se aos carvalhos dos Campos. */
+  BIRCH_TREE: 59,
   // --- estágios de crescimento APOSENTADOS (v0.88.0: as árvores só aparecem adultas): ids reservados, ver `GROWTH_STAGE_ADULT` ---
   OAK_SAPLING: 52,
   OAK_YOUNG: 53,
@@ -283,6 +288,8 @@ var defs = [
   object(Block.OAK_PLANKS, "T\xE1bua de Carvalho", { organic: "wood" }),
   object(Block.CHERRY_LOG, "Tora de Cerejeira", { organic: "wood" }),
   object(Block.CHERRY_PLANKS, "T\xE1bua de Cerejeira", { organic: "wood" }),
+  object(Block.BIRCH_LOG, "Tora de B\xE9tula", { organic: "wood" }),
+  object(Block.BIRCH_PLANKS, "T\xE1bua de B\xE9tula", { organic: "wood" }),
   // Porta: ocupa a célula inteira (nada empilha em cima); fechada bloqueia, aberta deixa passar.
   object(Block.OAK_DOOR, "Porta de Carvalho", { shape: "door", organic: "wood" }),
   object(Block.TENT, "Tenda", { shape: "rock", organic: "wood" }),
@@ -304,6 +311,7 @@ var defs = [
   object(Block.CACTUS, "Cacto", { placeable: false, organic: "plant" }),
   object(Block.OAK_TREE, "Carvalho", { shape: "tree", placeable: false, organic: "wood" }),
   object(Block.SAKURA_TREE, "Cerejeira", { shape: "tree", placeable: false, organic: "wood" }),
+  object(Block.BIRCH_TREE, "B\xE9tula", { shape: "tree", placeable: false, organic: "wood" }),
   // Mudas são plantas (a enxada arranca); dali em diante, madeira.
   object(Block.OAK_SAPLING, "Muda de Carvalho", { shape: "tree", placeable: false, organic: "plant" }),
   object(Block.OAK_YOUNG, "Carvalho Jovem", { shape: "tree", placeable: false, organic: "wood" }),
@@ -414,9 +422,11 @@ var MATERIALS = [
   Block.STONE_POLISHED,
   Block.STONE_CRACKED,
   Block.STONE_BRICK_CRACKED,
-  // Madeira de cerejeira (v0.88.0): só no V2 (não há coluna no atlas antigo, que termina nas pedras).
+  // Madeira de cerejeira (v0.88.0) e de bétula (v0.89.0): só no V2 (não há coluna no atlas antigo, que termina nas pedras).
   Block.CHERRY_LOG,
-  Block.CHERRY_PLANKS
+  Block.CHERRY_PLANKS,
+  Block.BIRCH_LOG,
+  Block.BIRCH_PLANKS
 ];
 var CELESTIAL_BLOCKS = [
   Block.CLOUD_SOLID,
@@ -579,6 +589,7 @@ function treeDrops(id, rand) {
       return pickDrops(rand);
     case Block.OAK_TREE:
     case Block.SAKURA_TREE:
+    case Block.BIRCH_TREE:
     case Block.APPLE_TREE_BARE:
       return [];
     default:
@@ -670,6 +681,7 @@ var ADULT_TREES = /* @__PURE__ */ new Set([Block.OAK_TREE, Block.APPLE_TREE, Blo
 function blockDrops(id, rand = Math.random) {
   if (ADULT_TREES.has(id)) return [{ item: blockStack(Block.OAK_LOG), count: 2 + (rand() < 0.5 ? 1 : 0) }];
   if (id === Block.SAKURA_TREE) return [{ item: blockStack(Block.CHERRY_LOG), count: 2 + (rand() < 0.5 ? 1 : 0) }];
+  if (id === Block.BIRCH_TREE) return [{ item: blockStack(Block.BIRCH_LOG), count: 2 + (rand() < 0.5 ? 1 : 0) }];
   if (isDoor(id)) return [{ item: blockStack(Block.OAK_DOOR), count: 1 }];
   if (isGate(id)) return [{ item: blockStack(Block.FENCE_GATE), count: 1 }];
   if (id === Block.ROCK_BOULDER) return [{ item: blockStack(Block.STONE), count: 1 + Math.floor(rand() * 3) }];
@@ -685,6 +697,13 @@ var RECIPES = [
     profession: "builder",
     inputs: [{ item: blockStack(Block.OAK_LOG), count: 1 }],
     output: { item: blockStack(Block.OAK_PLANKS), count: 2 }
+  },
+  {
+    id: "birch-planks",
+    name: "T\xE1bua de B\xE9tula",
+    profession: "builder",
+    inputs: [{ item: blockStack(Block.BIRCH_LOG), count: 1 }],
+    output: { item: blockStack(Block.BIRCH_PLANKS), count: 2 }
   },
   {
     id: "cherry-planks",
@@ -3679,7 +3698,7 @@ var BIOMES = {
     ground: Block.GRASS,
     tree: Block.OAK_TREE,
     treeDensity: 0.22,
-    altTree: { id: Block.APPLE_TREE, share: 1 / 6 },
+    altTrees: [{ id: Block.APPLE_TREE, share: 1 / 6 }, { id: Block.BIRCH_TREE, share: 1 / 5 }],
     decorations: [Block.TALL_GRASS, Block.TALL_GRASS, Block.FLOWER],
     decoChance: 0.12
   },
@@ -3906,8 +3925,14 @@ var WorldGenerator = class {
     const density = biome.treeDensity * (forest > 0.05 ? 1 : 0.12);
     let object2 = Block.AIR;
     if (r < density) {
-      const alt = biome.altTree;
-      object2 = alt && hash2(this.seed, x + 4409, y - 2027) < alt.share ? alt.id : biome.tree;
+      object2 = biome.tree;
+      const alts = biome.altTrees ?? [];
+      for (let i = 0; i < alts.length; i++) {
+        if (hash2(this.seed, x + 4409 + i * 1013, y - 2027 + i * 389) < alts[i].share) {
+          object2 = alts[i].id;
+          break;
+        }
+      }
     } else if (r > 0.994) object2 = Block.ROCK_BOULDER;
     else if (hash2(this.seed, x, y + 7919) < biome.decoChance) {
       object2 = biome.decorations[Math.floor(hash2(this.seed, x - 31, y) * biome.decorations.length)];
@@ -3990,7 +4015,7 @@ function tentCells(x, y) {
   return [[x, y], [x + 1, y], [x, y - 1], [x + 1, y - 1]];
 }
 var CHEST_SLOTS = 27;
-var REPLACES_WATER = /* @__PURE__ */ new Set([Block.DIRT, Block.GRASS, Block.TILLED, Block.PATH, Block.STONE, Block.OAK_LOG, Block.OAK_PLANKS, Block.CHERRY_LOG, Block.CHERRY_PLANKS]);
+var REPLACES_WATER = /* @__PURE__ */ new Set([Block.DIRT, Block.GRASS, Block.TILLED, Block.PATH, Block.STONE, Block.OAK_LOG, Block.OAK_PLANKS, Block.CHERRY_LOG, Block.CHERRY_PLANKS, Block.BIRCH_LOG, Block.BIRCH_PLANKS]);
 var FLOW_SECONDS = 0.6;
 var FLOW_DIRS = [["west", -1, 0], ["east", 1, 0], ["north", 0, -1], ["south", 0, 1]];
 function numKey(cx, cy) {
