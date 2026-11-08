@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.91.0 (43eea7c) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.92.0 (2e74261) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -1347,7 +1347,7 @@ function applyAction(world, a) {
 }
 
 // src/net/protocol.ts
-var PROTOCOL_VERSION = 19;
+var PROTOCOL_VERSION = 20;
 var MAX_PLAYERS = 10;
 var ROOMS = [
   { id: 1, name: "Sala 1", seed: 20261106 }
@@ -1363,7 +1363,7 @@ function sanitizeName(text) {
   return /^[\p{L}\p{N} _-]+$/u.test(n) ? n : null;
 }
 var APPEARANCE_BODIES = ["heroine", "hero", "hood", "gino", "mila"];
-var DEFAULT_APPEARANCE = { body: "heroine", look: null };
+var DEFAULT_APPEARANCE = { body: "heroine" };
 var FACING_ORDER = ["down", "left", "right", "up"];
 var FACINGS = /* @__PURE__ */ new Set(["down", "left", "right", "up"]);
 var finite = (v) => typeof v === "number" && Number.isFinite(v) && Math.abs(v) < 2 ** 30;
@@ -1439,19 +1439,11 @@ function parseBag(v) {
   }
   return { inventory, hotbar, x: o.x, y: o.y };
 }
-var PIECE_RE = /^[a-z0-9-]{1,40}$/;
 function parseAppearance(v) {
   if (!v || typeof v !== "object") return DEFAULT_APPEARANCE;
   const o = v;
   const body = APPEARANCE_BODIES.includes(o.body) ? o.body : "heroine";
-  let look = null;
-  if (o.look && typeof o.look === "object") {
-    const entries = Object.entries(o.look);
-    if (entries.length <= 12 && entries.every(([k, val]) => PIECE_RE.test(k) && typeof val === "string" && PIECE_RE.test(val))) {
-      look = Object.fromEntries(entries);
-    }
-  }
-  return { body, look };
+  return { body };
 }
 function parseChestSlots(v, size = 27) {
   if (!Array.isArray(v) || v.length !== size) return null;
@@ -1835,55 +1827,199 @@ var FarmAnimal = class extends Breeder {
   kind;
 };
 
-// src/game/villager.ts
-var VILLAGER_BASES = ["blond", "brown", "black", "silver", "red"];
-var CASUAL_OUTFITS = ["denim", "varsity", "farmer", "vest", "hoodie"];
-var OUTFITS = [...CASUAL_OUTFITS, "smith"];
-var RESTING = ["calm", "happy", "smile", "content", "smug", "neutral", "shy"];
-var TALKING = ["laugh", "excited", "wink", "guffaw"];
-var TALK_SECONDS = 3;
-var ROLE_NAME = { smith: "Ferreiro" };
-var ROLE_LOOK = {
-  smith: { base: "black", outfit: "smith", expression: "smile" }
-};
-var TOWNSFOLK_BASES = VILLAGER_BASES.filter((b) => !Object.values(ROLE_LOOK).some((l) => l.base === b));
-var ROLE_LINE = {
-  smith: "Bem-vinda \xE0 Ferraria! Logo vou forjar ferramentas e armas para voc\xEA."
-};
-var VILLAGER_LINES = [
-  "Bem-vinda \xE0 Cidade do Despertar! Aqui dentro da muralha nada se quebra.",
-  "Dizem que h\xE1 aranhas numa caverna l\xE1 fora. Leve a espada!",
-  "O ferreiro trabalha dentro da Ferraria. Entre pela porta.",
-  "Uma tenda armada l\xE1 fora vira seu ponto de renascer."
+// src/game/npcs.ts
+var NPCS = [
+  {
+    id: "black",
+    name: "Black",
+    who: "Ferreiro (mora na Ferraria)",
+    role: "smith",
+    lines: [
+      "Bem-vinda \xE0 Ferraria! Logo vou forjar ferramentas e armas para voc\xEA. Por enquanto, traga o que tiver de bom e vamos conversando.",
+      "Ferro, pedra e bastante paci\xEAncia: \xE9 assim que nasce uma boa l\xE2mina. Volte quando as aranhas e os lobos derem trabalho."
+    ]
+  },
+  {
+    id: "dante",
+    name: "Dante",
+    who: "Arquivista da cidade (cabelo preto e branco)",
+    lines: [
+      "Guardo os registros da cidade. Dizem que aqui dentro da muralha nada se quebra e nada se constr\xF3i \u2014 e o ch\xE3o ao redor do muro tamb\xE9m \xE9 protegido.",
+      "Anotei uma coisa curiosa: ch\xE3o que voc\xEA quebra e deixa aberto por um dia inteiro volta a ser ch\xE3o sozinho, igual ao dos vizinhos."
+    ]
+  },
+  {
+    id: "silvano",
+    name: "Silvano",
+    who: "Herbalista (cabelo verde, bolsa de couro)",
+    lines: [
+      "Semente s\xF3 pega em terra arada. Use a enxada, vire a terra e plante: trigo, batata, tomate e cenoura.",
+      "Capim arrancado \xE0s vezes solta uma hortali\xE7a. Mexa nele antes de passar adiante!"
+    ]
+  },
+  {
+    id: "morgan",
+    name: "Morgan",
+    who: "Estudioso do castelo (casaco roxo)",
+    lines: [
+      "O castelo ao norte guarda a hist\xF3ria de Orvalis. Ainda n\xE3o recebo visitas, mas um dia a porta vai se abrir.",
+      "Cada mundo tem a sua cidade. O nosso \xE9 o Mundo da Cidade 1: s\xF3 florestas, rios, mar e praias."
+    ]
+  },
+  {
+    id: "aurelio",
+    name: "Aur\xE9lio",
+    who: "Cortes\xE3o sempre sorridente (casaco azul-marinho)",
+    lines: [
+      "Que dia lindo para um passeio! Veja s\xF3: a macieira d\xE1 ma\xE7\xE3s, e depois de colhidas elas voltam com o tempo.",
+      "Ma\xE7\xE3 se come para matar a fome. Fome vazia tira vida, ent\xE3o n\xE3o esque\xE7a de se alimentar!"
+    ]
+  },
+  {
+    id: "rubem",
+    name: "Rubem",
+    who: "Aventureiro (cabelo vermelho, jaqueta marrom)",
+    lines: [
+      "Os lobos andam em bandos de uma cor s\xF3, marrom, cinza ou branco. Eles s\xF3 atacam se voc\xEA chegar a tr\xEAs passos, ent\xE3o passe longe!",
+      "Se um lobo vier atr\xE1s de voc\xEA, corra: voc\xEA \xE9 mais r\xE1pida que ele. Espada e machado d\xE3o conta, mas leve vida cheia."
+    ]
+  },
+  {
+    id: "rosendo",
+    name: "Rosendo",
+    who: "Jardineiro (cabelo rosa, colete verde)",
+    lines: [
+      "Gosto de flor e de \xE1rvore. Carvalho, b\xE9tula, cerejeira e macieira crescem todas por aqui, misturadas.",
+      "Tora de cerejeira, de b\xE9tula ou de carvalho: cada \xE1rvore derrubada d\xE1 a sua madeira. D\xE1 para fazer t\xE1buas com elas!"
+    ]
+  },
+  {
+    id: "teodoro",
+    name: "Teodoro",
+    who: "Pescador alegre (camisa azul)",
+    lines: [
+      "Os rios e o mar t\xEAm margem de areia. A \xE1gua n\xE3o deixa ningu\xE9m quebr\xE1-la, mas buraco aberto perto dela se enche sozinho!",
+      "Quer atravessar um rio? Jogue terra, pedra ou madeira na \xE1gua: ela vira ch\xE3o firme."
+    ]
+  },
+  {
+    id: "bento",
+    name: "Bento",
+    who: "Padeiro (colete marrom)",
+    lines: [
+      "Trigo, ovos, leite e ma\xE7\xE3s: com isso se faz muita coisa boa no caldeir\xE3o e no forno. P\xE3o alimenta bem!",
+      "Ovelha e vaca gostam de trigo, galinha prefere semente e o cavalo adora cenoura. Alimente e veja os cora\xE7\xF5es!"
+    ]
+  },
+  {
+    id: "solano",
+    name: "Solano",
+    who: "Construtor (camisa laranja)",
+    lines: [
+      "Quer construir? Madeira de qualquer \xE1rvore, pedra, terra e areia servem de bloco. A porta vai entre dois batentes de madeira ou pedra.",
+      "Ba\xFA, porta, cadeira e cerca por enquanto s\xF3 saem de t\xE1bua de carvalho. Quem sabe um dia haja de outras madeiras!"
+    ]
+  },
+  {
+    id: "nilo",
+    name: "Nilo",
+    who: "Tratador de cavalos (cabelo castanho-escuro, olhos fechados)",
+    lines: [
+      "Os animais do campo ficam ao sul do port\xE3o: ovelhas, vacas, galinhas e um cavalo. Cuide bem deles.",
+      "D\xEA a comida certa e eles se apaixonam. Da\xED nasce um filhote, que cresce em alguns dias."
+    ]
+  },
+  {
+    id: "marlon",
+    name: "Marlon",
+    who: "Marinheiro (cabelo azul-petr\xF3leo, colete marinho)",
+    lines: [
+      "O mar \xE9 grande e cheio de segredos. Por enquanto s\xF3 d\xE1 para andar pela praia, mas quem sabe um dia haja barcos.",
+      "Nas margens a espuma \xE9 branquinha. Bonito de ver ao entardecer, n\xE3o acha?"
+    ]
+  },
+  {
+    id: "lavinio",
+    name: "Lav\xEDnio",
+    who: "Sonhador (cabelo lavanda)",
+    lines: [
+      "\xC0 noite o mundo fica silencioso. Uma tenda armada l\xE1 fora vira o seu ponto de renascer: durma tranquila!",
+      "Fico imaginando o que existe al\xE9m do mapa. Dizem que h\xE1 outros mundos ligados por portais."
+    ]
+  },
+  {
+    id: "caio",
+    name: "Caio",
+    who: "Ca\xE7ador (cabelo preto, t\xFAnica verde)",
+    lines: [
+      "H\xE1 uma caverna l\xE1 fora, cheia de aranhas, com uma Rainha l\xE1 no fundo. A espada \xE9 a sua melhor amiga.",
+      "Das aranhas saem seda e presas; dos lobos, pelagem e presas. Ainda n\xE3o sei fazer nada com isso, mas guarde!"
+    ]
+  },
+  {
+    id: "noel",
+    name: "Noel",
+    who: "Guarda da muralha (cabelo azul-marinho, colete vinho)",
+    lines: [
+      "Eu vigio a muralha. N\xE3o se constr\xF3i nem se quebra nada nela, nem no peda\xE7o de terra colado a ela.",
+      "O port\xE3o fica ao sul. L\xE1 fora a vida \xE9 mais selvagem: leve ferramentas e olhe os arredores antes de se afastar."
+    ]
+  },
+  {
+    id: "leandro",
+    name: "Leandro",
+    who: "Viajante (cabelo loiro, camisa azul)",
+    lines: [
+      "J\xE1 andei por muitos lugares! Cada pessoa que chega \xE0 cidade traz um jeito novo de explorar.",
+      "Dica de viajante: arme uma tenda antes de se aventurar. Se algo der errado, \xE9 l\xE1 que voc\xEA volta a si."
+    ]
+  }
 ];
+var NPC_IDS = NPCS.map((n) => n.id);
+var BY_ID = new Map(NPCS.map((n) => [n.id, n]));
+function npcDef(id) {
+  return BY_ID.get(id);
+}
+var SMITH = "black";
+
+// src/game/villager.ts
 var Villager = class extends Wanderer {
-  constructor(x, y, base, outfit, onStreet, rand = Math.random, role = null, resting = "calm") {
-    super(x, y, { speed: 1.4, halfW: 0.26, halfD: 0.14, stepHeight: 0 }, x, y, rand, { idle: [2, 7], walk: [1, 3], leash: role ? 3 : 6 });
-    this.base = base;
-    this.outfit = outfit;
+  constructor(x, y, npc, onStreet, rand = Math.random) {
+    super(x, y, { speed: 1.4, halfW: 0.26, halfD: 0.14, stepHeight: 0 }, x, y, rand, { idle: [2, 7], walk: [1, 3], leash: npcDef(npc).role ? 3 : 6 });
+    this.npc = npc;
     this.onStreet = onStreet;
-    this.role = role;
-    this.resting = resting;
+    this.role = npcDef(npc).role ?? null;
   }
-  base;
-  outfit;
+  npc;
   onStreet;
+  /** Ofício (fala e lugar próprios); sem ofício = morador comum. */
   role;
-  resting;
-  /** Expressão de agora: a de repouso, ou a da conversa por alguns segundos depois de falar. */
-  talking = null;
-  talkTimer = 0;
-  get expression() {
-    return this.talking ?? this.resting;
-  }
-  /** O que diz ao ser tocado: ofício tem fala própria; moradores revezam dicas (na ordem). Reage com o rosto. */
+  /** Falando com alguém agora: parado, virado para a personagem (a caixa de conversa o segura). */
+  hold = false;
   said = 0;
-  speak() {
-    this.talking = TALKING[(this.said + VILLAGER_BASES.indexOf(this.base)) % TALKING.length];
-    this.talkTimer = TALK_SECONDS;
-    if (this.role) return `${ROLE_NAME[this.role]}: \u201C${ROLE_LINE[this.role]}\u201D`;
-    const line = VILLAGER_LINES[(this.said++ + VILLAGER_BASES.indexOf(this.base)) % VILLAGER_LINES.length];
-    return `Morador: \u201C${line}\u201D`;
+  get name() {
+    return npcDef(this.npc).name;
+  }
+  /** A próxima fala (em roda) como conversa; o NPC fica parado até `release()`. */
+  conversation() {
+    const def = npcDef(this.npc);
+    const text = def.lines[this.said++ % def.lines.length];
+    this.hold = true;
+    return { npc: this.npc, name: def.name, text };
+  }
+  /** Terminou a conversa: volta a passear. */
+  release() {
+    this.hold = false;
+  }
+  get talking() {
+    return this.hold;
+  }
+  /** Vira-se para (x, y). */
+  faceTo(x, y) {
+    const dx = x - this.x;
+    const dy = y - this.y;
+    const f = Math.abs(dx) > Math.abs(dy) ? dx < 0 ? "left" : "right" : dy < 0 ? "up" : "down";
+    this.facing = f;
   }
   /** A caixa dos pés inteira fica em rua/praça? */
   allowedAt(x, y) {
@@ -1894,16 +2030,13 @@ var Villager = class extends Wanderer {
     return true;
   }
   update(dt, world, blocked) {
-    if (this.talking && (this.talkTimer -= dt) <= 0) this.talking = null;
+    if (this.hold) {
+      this.move(dt, 0, 0, world, blocked);
+      return;
+    }
     this.wander(dt, world, (self, x, y) => !this.allowedAt(x, y) || !!blocked?.(self, x, y));
   }
 };
-function villagerOutfit(seed, i) {
-  return CASUAL_OUTFITS[Math.floor(hash2(seed, i, 913) * CASUAL_OUTFITS.length)];
-}
-function villagerExpression(seed, i) {
-  return RESTING[Math.floor(hash2(seed, i, 917) * RESTING.length)];
-}
 
 // src/world/interiors.ts
 var SMITHY_INTERIOR = {
@@ -2896,8 +3029,6 @@ var Entities = class {
   remote = false;
   /** Atores extras desenhados com os demais (espelho da sala: coraçõezinhos do namoro). */
   extra = [];
-  /** Aparência modular em teste (`?personagem=chibi`); null = personagem pronto (`body`). */
-  look = null;
   /** Personagem pronto quando não há `look`: Heroína ou Herói (escolhido na tela de personagem; salvo). */
   body = "heroine";
   /** Rebanho inicial perto de (x, y): posições pela seed, em grama andável a 2–8 células. */
@@ -2934,31 +3065,29 @@ var Entities = class {
     }
   }
   /**
-   * Moradores da cidade: um de cada personagem-base livre (`TOWNSFOLK_BASES`, sem os reservados aos ofícios), em pontos
-   * fixos (praça inicial, caminho até o castelo, pátio do castelo), cada um com uma roupa casual sorteada pela seed, e o
-   * **ferreiro** com o visual único do ofício (`ROLE_LOOK`) dentro da Ferraria. Os comuns só andam por ruas/praças dentro
-   * da muralha (nunca pelo portão).
+   * Moradores da cidade (`game/npcs.ts`): o **ferreiro Black** dentro da Ferraria e os 15 NPCs comuns, cada um perto de um
+   * ponto fixo das ruas — os dois primeiros na praça inicial, um no caminho até o castelo, um no pátio do castelo e os
+   * outros espalhados (`homesFor`: células de rua sorteadas pela posição, a pelo menos 16 células umas das outras; a
+   * cidade é igual em toda seed, então os pontos também). Os comuns só andam por ruas/praças dentro da muralha.
    */
   spawnVillagers(world) {
     const t = world.town;
     if (!t) return;
     const a = t.area;
     const onStreet = (cx, cy) => cx > a.x0 && cx < a.x1 && cy > a.y0 && cy < t.gate.y0 && t.street[(cy - a.y0) * t.w + (cx - a.x0)] === 1;
-    const [sx, sy] = t.start;
-    const [kx, ky] = t.castleDoor;
-    const homes = [[sx - 5, sy - 1], [sx + 5, sy - 3], [Math.round((sx + kx) / 2), Math.round((sy + ky) / 2)], [kx + 3, ky + 2]];
-    const people = TOWNSFOLK_BASES.map((base, i) => ({ at: homes[i % homes.length], base, outfit: villagerOutfit(world.seed, i), expression: villagerExpression(world.seed, i), walk: onStreet }));
-    const smithLook = ROLE_LOOK.smith;
+    const common = NPC_IDS.filter((id) => id !== SMITH);
+    const homes = homesFor(world, common.length, onStreet);
+    const people = common.map((npc, i) => ({ at: homes[i], npc, walk: onStreet }));
     const forge = world.interiors.find((l) => l.def.building === Block.SMITHY);
     const smithy = t.buildings.find((b) => b.id === Block.SMITHY);
     if (forge?.keeper) {
       const k = forge.keeper;
       const walk = (cx, cy) => cy >= k.rows[0] && cy <= k.rows[1] && interiorFloor(forge, cx, cy);
-      people.push({ at: k.at, ...smithLook, walk, role: "smith" });
+      people.push({ at: k.at, npc: SMITH, walk });
     } else if (smithy?.door) {
-      people.push({ at: smithy.door, ...smithLook, walk: onStreet, role: "smith" });
+      people.push({ at: smithy.door, npc: SMITH, walk: onStreet });
     }
-    people.forEach(({ at: [hx, hy], base, outfit, expression, walk, role }) => {
+    people.forEach(({ at: [hx, hy], npc, walk }) => {
       for (let r = 0; r <= 12; r++) {
         for (let dy = -r; dy <= r; dy++) {
           for (let dx = -r; dx <= r; dx++) {
@@ -2966,7 +3095,7 @@ var Entities = class {
             const cx = hx + dx;
             const cy = hy + dy;
             if (!walk(cx, cy) || !world.isWalkable(cx, cy)) continue;
-            const v = new Villager(cx + 0.5, cy + 0.5, base, outfit, walk, this.rand, role, expression);
+            const v = new Villager(cx + 0.5, cy + 0.5, npc, walk, this.rand);
             if (this.all().some((w) => v.overlapsAt(v.x, v.y, w))) continue;
             this.villagers.push(v);
             return;
@@ -3393,8 +3522,7 @@ var Entities = class {
         moving: p.moving,
         walkTime: p.walkTime,
         frame: sitting ? p.sitFrame : p.attacking ? p.attackFrame : void 0,
-        hurt: p.invuln > 0,
-        look: this.character === "heroine" && this.look ? this.look : void 0
+        hurt: p.invuln > 0
       });
     }
     for (const s of this.npcs) {
@@ -3440,15 +3568,13 @@ var Entities = class {
     }
     for (const v of this.villagers) {
       out.push({
-        kind: `villager-${v.base}`,
+        kind: `npc-${v.npc}`,
         x: v.x,
         y: v.y,
         visualZ: v.visualZ,
         facing: v.facing,
         moving: v.moving,
-        walkTime: v.walkTime,
-        outfit: v.outfit,
-        expression: v.expression
+        walkTime: v.walkTime
       });
     }
     for (const m of this.monsters) {
@@ -3470,6 +3596,23 @@ var Entities = class {
     return out;
   }
 };
+var HOME_SPACING = 16;
+function homesFor(world, n, onStreet) {
+  const t = world.town;
+  const [sx, sy] = t.start;
+  const [kx, ky] = t.castleDoor;
+  const homes = [[sx - 5, sy - 1], [sx + 5, sy - 3], [Math.round((sx + kx) / 2), Math.round((sy + ky) / 2)], [kx + 3, ky + 2]].slice(0, n);
+  const a = t.area;
+  const cells = [];
+  for (let cy = a.y0; cy < t.gate.y0; cy++) for (let cx = a.x0; cx <= a.x1; cx++) if (onStreet(cx, cy)) cells.push([cx, cy, hash2(7919, cx, cy)]);
+  cells.sort((p, q) => p[2] - q[2]);
+  for (const [cx, cy] of cells) {
+    if (homes.length >= n) break;
+    if (homes.every(([hx, hy]) => Math.hypot(hx - cx, hy - cy) >= HOME_SPACING)) homes.push([cx, cy]);
+  }
+  while (homes.length < n) homes.push(homes[homes.length % 4]);
+  return homes;
+}
 
 // src/game/player.ts
 var ATTACK_SECONDS = 0.36;
