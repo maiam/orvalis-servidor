@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.90.0 (26fa973) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.91.0 (43eea7c) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -499,6 +499,463 @@ function isOpen(id) {
   return id === Block.OAK_DOOR_OPEN || id === Block.FENCE_GATE_OPEN;
 }
 
+// src/world/random.ts
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = a + 1831565813 >>> 0;
+    let t = a;
+    t = Math.imul(t ^ t >>> 15, t | 1);
+    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function hash2(seed, x, y) {
+  let h = (seed ^ Math.imul(x | 0, 668265261) ^ Math.imul(y | 0, 374761393)) >>> 0;
+  h = Math.imul(h ^ h >>> 15, 2246822507);
+  h = Math.imul(h ^ h >>> 13, 3266489909);
+  h ^= h >>> 16;
+  return (h >>> 0) / 4294967296;
+}
+
+// src/world/dungeon.ts
+var WOLF_KINDS = ["wolf-brown", "wolf-gray", "wolf-white"];
+function isWolf(kind) {
+  return WOLF_KINDS.includes(kind);
+}
+var PERIMETER = 2;
+var NODE = 6;
+var BOSS_NODES = 3;
+function inRect(r, x, y) {
+  return x >= r.x0 && x <= r.x1 && y >= r.y0 && y <= r.y1;
+}
+var shift = (r, dx, dy) => ({ x0: r.x0 + dx, y0: r.y0 + dy, x1: r.x1 + dx, y1: r.y1 + dy });
+function dungeonSize(seed) {
+  return [96 + Math.floor(hash2(seed, 811, 3) * 13), 66 + Math.floor(hash2(seed, 812, 5) * 13)];
+}
+function buildMaze(seed, w, h, side) {
+  const rand = mulberry32((seed ^ 1597463007) >>> 0);
+  const ri = (n) => Math.floor(rand() * n);
+  const gw = Math.floor((w - 2 * PERIMETER) / NODE);
+  const gh = Math.floor((h - 2 * PERIMETER) / NODE);
+  const node = (i, j) => j * gw + i;
+  const floor = new Uint8Array(w * h);
+  const carve = (x0, y0, x1, y1) => {
+    for (let y = Math.max(0, Math.min(y0, y1)); y <= Math.min(h - 1, Math.max(y0, y1)); y++) {
+      for (let x = Math.max(0, Math.min(x0, x1)); x <= Math.min(w - 1, Math.max(x0, x1)); x++) floor[y * w + x] = 1;
+    }
+  };
+  const cellX = (i) => PERIMETER + i * NODE;
+  const cellY = (j) => PERIMETER + j * NODE;
+  const cx = new Int16Array(gw * gh);
+  const cy = new Int16Array(gw * gh);
+  const width = new Uint8Array(gw * gh);
+  for (let j = 0; j < gh; j++) {
+    for (let i = 0; i < gw; i++) {
+      cx[node(i, j)] = cellX(i) + 3 + ri(3) - 1;
+      cy[node(i, j)] = cellY(j) + 3 + ri(3) - 1;
+      width[node(i, j)] = rand() < 0.4 ? 3 : 2;
+    }
+  }
+  const horizontal = side === "west" || side === "east";
+  const along = horizontal ? gh : gw;
+  const entryK = 1 + ri(along - 2);
+  const entry = side === "west" ? node(0, entryK) : side === "east" ? node(gw - 1, entryK) : side === "north" ? node(entryK, 0) : node(entryK, gh - 1);
+  const bk = ri(along - BOSS_NODES + 1);
+  const bi0 = side === "west" ? gw - BOSS_NODES : side === "east" ? 0 : bk;
+  const bj0 = side === "north" ? gh - BOSS_NODES : side === "south" ? 0 : bk;
+  const isBoss = (i, j) => i >= bi0 && i < bi0 + BOSS_NODES && j >= bj0 && j < bj0 + BOSS_NODES;
+  const open2 = /* @__PURE__ */ new Map();
+  const link = (a, b) => {
+    if (!open2.has(a)) open2.set(a, /* @__PURE__ */ new Set());
+    if (!open2.has(b)) open2.set(b, /* @__PURE__ */ new Set());
+    open2.get(a).add(b);
+    open2.get(b).add(a);
+  };
+  const neighbors = (n) => {
+    const i = n % gw;
+    const j = Math.floor(n / gw);
+    const out = [];
+    for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const ni = i + di;
+      const nj = j + dj;
+      if (ni >= 0 && nj >= 0 && ni < gw && nj < gh && !isBoss(ni, nj)) out.push(node(ni, nj));
+    }
+    return out;
+  };
+  const visited = new Uint8Array(gw * gh);
+  const active = [entry];
+  visited[entry] = 1;
+  while (active.length) {
+    const k = rand() < 0.75 ? active.length - 1 : ri(active.length);
+    const cur = active[k];
+    const next = neighbors(cur).filter((n2) => !visited[n2]);
+    if (!next.length) {
+      active.splice(k, 1);
+      continue;
+    }
+    const n = next[ri(next.length)];
+    visited[n] = 1;
+    link(cur, n);
+    active.push(n);
+  }
+  for (let n = 0; n < gw * gh; n++) {
+    if (!visited[n]) continue;
+    for (const m of neighbors(n)) if (m > n && !open2.get(n)?.has(m) && rand() < 0.09) link(n, m);
+  }
+  const chambersN = [];
+  const target = Math.max(3, Math.round(gw * gh / 30));
+  for (let t = 0; t < 200 && chambersN.length < target; t++) {
+    const cw = 2 + ri(2);
+    const ch = 2 + ri(2) * (cw === 2 ? 1 : 0);
+    const i0 = ri(gw - cw + 1);
+    const j0 = ri(gh - ch + 1);
+    let ok = true;
+    for (let j = j0 - 1; j <= j0 + ch && ok; j++) {
+      for (let i = i0 - 1; i <= i0 + cw && ok; i++) {
+        if (isBoss(i, j) || i >= 0 && j >= 0 && i < gw && j < gh && node(i, j) === entry) ok = false;
+      }
+    }
+    for (const [a0, b0, a1, b1] of chambersN) if (i0 <= a1 + 1 && i0 + cw - 1 >= a0 - 1 && j0 <= b1 + 1 && j0 + ch - 1 >= b0 - 1) ok = false;
+    if (!ok) continue;
+    chambersN.push([i0, j0, i0 + cw - 1, j0 + ch - 1]);
+    for (let j = j0; j < j0 + ch; j++) for (let i = i0; i < i0 + cw; i++) {
+      if (i + 1 < i0 + cw) link(node(i, j), node(i + 1, j));
+      if (j + 1 < j0 + ch) link(node(i, j), node(i, j + 1));
+    }
+  }
+  const dist = new Int32Array(gw * gh).fill(-1);
+  dist[entry] = 0;
+  const q = [entry];
+  for (let h0 = 0; h0 < q.length; h0++) {
+    for (const m of open2.get(q[h0]) ?? []) if (dist[m] < 0) {
+      dist[m] = dist[q[h0]] + 1;
+      q.push(m);
+    }
+  }
+  let best = null;
+  for (let j = bj0; j < bj0 + BOSS_NODES; j++) {
+    for (let i = bi0; i < bi0 + BOSS_NODES; i++) {
+      for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const ni = i + di;
+        const nj = j + dj;
+        if (ni < 0 || nj < 0 || ni >= gw || nj >= gh || isBoss(ni, nj)) continue;
+        const m = node(ni, nj);
+        if (!best || dist[m] > dist[best[0]]) best = [m, node(i, j)];
+      }
+    }
+  }
+  const chambers = [];
+  for (const [i0, j0, i1, j1] of chambersN) {
+    const r = { x0: cellX(i0) + 1, y0: cellY(j0) + 1, x1: cellX(i1) + NODE - 1, y1: cellY(j1) + NODE - 1 };
+    chambers.push(r);
+  }
+  for (let n = 0; n < gw * gh; n++) {
+    const i = n % gw;
+    const j = Math.floor(n / gw);
+    if (isBoss(i, j) || !visited[n]) continue;
+    const wd = width[n];
+    carve(cx[n] - 1, cy[n] - 1, cx[n] - 2 + wd, cy[n] - 2 + wd);
+    for (const m of open2.get(n) ?? []) {
+      if (m < n) continue;
+      const ww = Math.min(wd, width[m]);
+      carve(cx[n] - 1, cy[n] - 1, cx[m] - 2 + ww, cy[n] - 2 + ww);
+      carve(cx[m] - 1, cy[n] - 1, cx[m] - 2 + ww, cy[m] - 2 + ww);
+    }
+  }
+  const notches = [];
+  for (const r of chambers) {
+    carve(r.x0, r.y0, r.x1, r.y1);
+    for (let x = r.x0; x <= r.x1; x++) {
+      for (const [y, out] of [[r.y0, r.y0 - 1], [r.y1, r.y1 + 1]]) {
+        if (rand() < 0.22 && !floor[out * w + x] && !floor[out * w + x - 1] && !floor[out * w + x + 1]) notches.push([x, y]);
+      }
+    }
+    for (let y = r.y0; y <= r.y1; y++) {
+      for (const [x, out] of [[r.x0, r.x0 - 1], [r.x1, r.x1 + 1]]) {
+        if (rand() < 0.22 && !floor[y * w + out] && !floor[(y - 1) * w + out] && !floor[(y + 1) * w + out]) notches.push([x, y]);
+      }
+    }
+  }
+  for (const [x, y] of notches) floor[y * w + x] = 0;
+  const bossRoom = { x0: cellX(bi0) + 1, y0: cellY(bj0) + 1, x1: cellX(bi0 + BOSS_NODES - 1) + NODE - 1, y1: cellY(bj0 + BOSS_NODES - 1) + NODE - 1 };
+  carve(bossRoom.x0, bossRoom.y0, bossRoom.x1, bossRoom.y1);
+  const [mn, bn] = best;
+  const bxn = bn % gw;
+  const byn = Math.floor(bn / gw);
+  const mxn = mn % gw;
+  const myn = Math.floor(mn / gw);
+  let bossDoor;
+  if (mxn !== bxn) {
+    const y = cy[mn] - 1;
+    const xa = mxn < bxn ? cx[mn] : bossRoom.x1;
+    const xb = mxn < bxn ? bossRoom.x0 : cx[mn];
+    carve(xa, y, xb, y + 1);
+    bossDoor = [mxn < bxn ? bossRoom.x0 - 1 : bossRoom.x1 + 1, y];
+  } else {
+    const x = cx[mn] - 1;
+    const ya = myn < byn ? cy[mn] : bossRoom.y1;
+    const yb = myn < byn ? bossRoom.y0 : cy[mn];
+    carve(x, ya, x + 1, yb);
+    bossDoor = [x, myn < byn ? bossRoom.y0 - 1 : bossRoom.y1 + 1];
+  }
+  const gate = [];
+  const ex = cx[entry];
+  const ey = cy[entry];
+  if (horizontal) {
+    const [xa, xb] = side === "west" ? [0, ex] : [ex, w - 1];
+    carve(xa, ey - 1, xb, ey + 1);
+    for (let d = 0; d < PERIMETER; d++) for (let k = -1; k <= 1; k++) gate.push([side === "west" ? d : w - 1 - d, ey + k]);
+  } else {
+    const [ya, yb] = side === "north" ? [0, ey] : [ey, h - 1];
+    carve(ex - 1, ya, ex + 1, yb);
+    for (let d = 0; d < PERIMETER; d++) for (let k = -1; k <= 1; k++) gate.push([ex + k, side === "north" ? d : h - 1 - d]);
+  }
+  const gateSet = new Set(gate.map(([x, y]) => y * w + x));
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const edge = x < PERIMETER || y < PERIMETER || x >= w - PERIMETER || y >= h - PERIMETER;
+      if (edge && !gateSet.has(y * w + x)) floor[y * w + x] = 0;
+    }
+  }
+  const inside = [ex, ey];
+  const maze = { w, h, floor, side, gate, inside, chambers, bossRoom, bossDoor };
+  const reach = floorDistances(maze, ex, ey);
+  for (let i = 0; i < w * h; i++) if (floor[i] && reach[i] < 0) floor[i] = 0;
+  return maze;
+}
+var PROPS = [
+  Block.DUNGEON_ROCK,
+  Block.DUNGEON_ROCK,
+  Block.DUNGEON_ROCK,
+  Block.DUNGEON_EGGS,
+  Block.DUNGEON_MUSHROOM,
+  Block.DUNGEON_SPIKES,
+  Block.DUNGEON_ROOTS
+];
+var FLOOR_PER_SMALL = 110;
+var FLOOR_PER_BIG = 320;
+function floorDistances(m, sx, sy) {
+  const d = new Int32Array(m.w * m.h).fill(-1);
+  d[sy * m.w + sx] = 0;
+  const q = [sy * m.w + sx];
+  for (let h = 0; h < q.length; h++) {
+    const i = q[h];
+    const x = i % m.w;
+    const y = Math.floor(i / m.w);
+    for (const [nx, ny] of [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]]) {
+      if (nx < 0 || ny < 0 || nx >= m.w || ny >= m.h) continue;
+      const k = ny * m.w + nx;
+      if (m.floor[k] && d[k] < 0) {
+        d[k] = d[i] + 1;
+        q.push(k);
+      }
+    }
+  }
+  return d;
+}
+function decorateDungeon(seed, m, x0, y0) {
+  const { w, h } = m;
+  const ground2 = new Uint8Array(w * h);
+  const objects = new Uint8Array(w * h);
+  const idx = (x, y) => y * w + x;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = idx(x, y);
+      const r = hash2(seed, x * 3 + 101, y * 5 - 77);
+      ground2[i] = r < 0.84 ? Block.DUNGEON_DIRT : r < 0.92 ? Block.DUNGEON_MOSS : r < 0.97 ? Block.DUNGEON_WEB : Block.DUNGEON_BONES;
+      if (m.floor[i]) continue;
+      const outer = x === 0 || y === 0 || x === w - 1 || y === h - 1;
+      ground2[i] = Block.DUNGEON_DIRT;
+      objects[i] = outer ? Block.DUNGEON_MOUNTAIN : Block.DUNGEON_WALL;
+    }
+  }
+  const [bhx, bhy] = [m.bossRoom.x0 + m.bossRoom.x1 >> 1, m.bossRoom.y0 + m.bossRoom.y1 >> 1];
+  for (const r of [...m.chambers, m.bossRoom]) {
+    for (let y = r.y0 + 2; y <= r.y1 - 2; y++) {
+      for (let x = r.x0 + 2; x <= r.x1 - 2; x++) {
+        if (!m.floor[idx(x, y)] || hash2(seed, x + 913, y - 211) > 0.12) continue;
+        if (r === m.bossRoom && Math.hypot(x - bhx, y - bhy) < 5) continue;
+        let lonely = true;
+        for (let dy = -1; dy <= 1 && lonely; dy++) for (let dx = -1; dx <= 1; dx++) {
+          if (!m.floor[idx(x + dx, y + dy)] || objects[idx(x + dx, y + dy)] !== Block.AIR) lonely = false;
+        }
+        if (lonely) objects[idx(x, y)] = PROPS[Math.floor(hash2(seed, x - 57, y + 389) * PROPS.length)];
+      }
+    }
+  }
+  const dist = floorDistances(m, m.inside[0], m.inside[1]);
+  const free = [];
+  for (let i = 0; i < w * h; i++) {
+    const x = i % w;
+    const y = Math.floor(i / w);
+    if (m.floor[i] && objects[i] === Block.AIR && dist[i] >= 14 && !inRect(m.bossRoom, x, y)) free.push(i);
+  }
+  const want = [
+    ...Array(Math.round(free.length / FLOOR_PER_BIG)).fill("spider-big"),
+    ...Array(Math.round(free.length / FLOOR_PER_SMALL)).fill("spider-small")
+  ];
+  const spawns = [{ kind: "spider-boss", x: x0 + bhx + 0.5, y: y0 + bhy + 0.5 }];
+  const taken = [];
+  for (let n = 0; n < 2e4 && want.length && free.length; n++) {
+    const i = free[Math.floor(hash2(seed, n, 4441) * free.length)];
+    const x = i % w;
+    const y = Math.floor(i / w);
+    if (taken.some(([tx, ty]) => Math.abs(tx - x) + Math.abs(ty - y) < 4)) continue;
+    taken.push([x, y]);
+    spawns.push({ kind: want.shift(), x: x0 + x + 0.5, y: y0 + y + 0.5 });
+  }
+  const out = { north: [0, -1], south: [0, 1], west: [-1, 0], east: [1, 0] }[m.side];
+  const c = m.gate[1];
+  return {
+    w,
+    h,
+    area: { x0, y0, x1: x0 + w - 1, y1: y0 + h - 1 },
+    interior: { x0: x0 + PERIMETER, y0: y0 + PERIMETER, x1: x0 + w - 1 - PERIMETER, y1: y0 + h - 1 - PERIMETER },
+    side: m.side,
+    gate: m.gate.map(([x, y]) => [x0 + x, y0 + y]),
+    doorstep: [x0 + c[0] + out[0], y0 + c[1] + out[1]],
+    chambers: m.chambers.map((r) => shift(r, x0, y0)),
+    bossRoom: shift(m.bossRoom, x0, y0),
+    bossHome: [x0 + bhx, y0 + bhy],
+    spawns,
+    ground: ground2,
+    objects
+  };
+}
+function buildDungeon(seed, x0, y0, side, size = dungeonSize(seed)) {
+  return decorateDungeon(seed, buildMaze(seed, size[0], size[1], side), x0, y0);
+}
+var DUNGEON_ORIGIN = [-1e5, -1e5];
+var DUNGEON_RIM = 6;
+var CAVE_MIN_CASTLE_DIST = 10 * CHUNK_SIZE;
+var CAVE_W = 5;
+var CAVE_D = 3;
+function isolatedDungeon(seed) {
+  return buildDungeon(seed, DUNGEON_ORIGIN[0], DUNGEON_ORIGIN[1], "south");
+}
+function dungeonGuard(l) {
+  return { x0: l.area.x0 - DUNGEON_RIM, y0: l.area.y0 - DUNGEON_RIM, x1: l.area.x1 + DUNGEON_RIM, y1: l.area.y1 + DUNGEON_RIM };
+}
+function dungeonEntry(l) {
+  const c = l.gate[l.gate.length - 2];
+  const inward = { north: [0, 1], south: [0, -1], west: [1, 0], east: [-1, 0] }[l.side];
+  return [c[0] + inward[0], c[1] + inward[1]];
+}
+function isDungeonExit(l, x, y) {
+  return l.gate.slice(0, 3).some(([gx, gy]) => gx === x && gy === y);
+}
+function caveAt(x, y) {
+  const footprint = { x0: x, y0: y - CAVE_D + 1, x1: x + CAVE_W - 1, y1: y };
+  const outside = [x + (CAVE_W >> 1), y + 1];
+  return {
+    x,
+    y,
+    footprint,
+    outside,
+    guard: { x0: footprint.x0 - 1, y0: footprint.y0 - 1, x1: footprint.x1 + 1, y1: footprint.y1 },
+    front: { x0: outside[0] - 2, y0: outside[1], x1: outside[0] + 2, y1: outside[1] + 2 }
+  };
+}
+function planCave(base, castle, avoid) {
+  const seed = base.seed;
+  const a0 = hash2(seed, 7001, 3) * Math.PI * 2;
+  const overlaps = (r) => !!avoid && r.x0 <= avoid.x1 && r.x1 >= avoid.x0 && r.y0 <= avoid.y1 && r.y1 >= avoid.y0;
+  let fallback = null;
+  for (let t = 0; t < 96; t++) {
+    const a = a0 + t * 0.7;
+    const dist = CAVE_MIN_CASTLE_DIST + 8 + hash2(seed, 7002, t) * 80 + Math.floor(t / 9) * 24;
+    const ox = Math.round(castle[0] + Math.cos(a) * dist);
+    const oy = Math.round(castle[1] + Math.sin(a) * dist);
+    const cave = caveAt(ox - (CAVE_W >> 1), oy);
+    if (Math.hypot(cave.outside[0] - castle[0], cave.outside[1] - castle[1]) < CAVE_MIN_CASTLE_DIST) continue;
+    if (overlaps(cave.guard) || overlaps(cave.front)) continue;
+    fallback ??= cave;
+    let dry = true;
+    for (const r of [cave.footprint, cave.front]) {
+      for (let y = r.y0; y <= r.y1 && dry; y++) for (let x = r.x0; x <= r.x1 && dry; x++) if (base.groundAt(x, y) === Block.WATER) dry = false;
+    }
+    if (dry) return cave;
+  }
+  return fallback;
+}
+var DungeonTerrain = class {
+  constructor(base, layout, cave = null) {
+    this.base = base;
+    this.layout = layout;
+    this.cave = cave;
+    this.guard = dungeonGuard(layout);
+    const [dx, dy] = layout.doorstep;
+    this.landing = layout.side === "north" || layout.side === "south" ? { x0: dx - 1, y0: dy, x1: dx + 1, y1: dy } : { x0: dx, y0: dy - 1, x1: dx, y1: dy + 1 };
+  }
+  base;
+  layout;
+  cave;
+  guard;
+  landing;
+  clearFront(c) {
+    return { ground: blockDef(c.ground).liquid || c.ground === Block.HOLE ? Block.GRASS : c.ground, object: Block.AIR, upper: Block.AIR };
+  }
+  get seed() {
+    return this.base.seed;
+  }
+  /** Célula sobreposta, ou null se for terreno base puro. `baseCell` só é calculada quando precisa. */
+  overlay(x, y, baseCell) {
+    const l = this.layout;
+    if (inRect(l.area, x, y)) {
+      const i = (y - l.area.y0) * l.w + (x - l.area.x0);
+      return { ground: l.ground[i], object: l.objects[i], upper: Block.AIR };
+    }
+    if (inRect(this.guard, x, y)) {
+      const floor = inRect(this.landing, x, y);
+      return { ground: Block.DUNGEON_DIRT, object: floor ? Block.AIR : Block.DUNGEON_MOUNTAIN, upper: Block.AIR };
+    }
+    const cave = this.cave;
+    if (cave && inRect(cave.footprint, x, y)) {
+      const g = baseCell().ground;
+      const ground2 = blockDef(g).liquid || g === Block.HOLE ? Block.GRASS : g;
+      return { ground: ground2, object: x === cave.x && y === cave.y ? Block.DUNGEON_CAVE : Block.TOWN_PART, upper: Block.AIR };
+    }
+    if (cave && inRect(cave.front, x, y)) return this.clearFront(baseCell());
+    return null;
+  }
+  cellAt(x, y) {
+    return this.overlay(x, y, () => this.base.cellAt(x, y)) ?? this.base.cellAt(x, y);
+  }
+  groundAt(x, y) {
+    return this.cellAt(x, y).ground;
+  }
+  objectAt(x, y) {
+    return this.cellAt(x, y).object;
+  }
+  upperAt(x, y) {
+    return this.cellAt(x, y).upper;
+  }
+  biomeAt(x, y) {
+    return this.base.biomeAt(x, y);
+  }
+  /** Cada chunk copia a sua parte do mapa lógico (corredores seguem sem interrupção entre chunks). */
+  generateChunk(cx, cy, ground2, objects, upper) {
+    this.base.generateChunk(cx, cy, ground2, objects, upper);
+    const S = Math.round(Math.sqrt(ground2.length));
+    const x0 = cx * S;
+    const y0 = cy * S;
+    const misses = (r) => x0 > r.x1 || x0 + S - 1 < r.x0 || y0 > r.y1 || y0 + S - 1 < r.y0;
+    const c = this.cave;
+    if (misses(this.guard) && (!c || misses(c.footprint) && misses(c.front))) return;
+    for (let ly = 0; ly < S; ly++) {
+      for (let lx = 0; lx < S; lx++) {
+        const i = ly * S + lx;
+        const cell = this.overlay(x0 + lx, y0 + ly, () => ({ ground: ground2[i], object: objects[i], upper: upper[i] }));
+        if (!cell) continue;
+        ground2[i] = cell.ground;
+        objects[i] = cell.object;
+        upper[i] = cell.upper;
+      }
+    }
+  }
+};
+
 // src/world/items.ts
 var Item = {
   WHEAT_SEED: "wheat_seed",
@@ -507,6 +964,9 @@ var Item = {
   SILK: "silk",
   FANG: "fang",
   QUEEN_HEART: "queen_heart",
+  /** Espólios dos lobos (v0.91.0; sem uso ainda — futuras receitas). */
+  WOLF_FANG: "wolf_fang",
+  WOLF_PELT: "wolf_pelt",
   /** Fruta da macieira (comer vem com a comida, Fase P). As mudas saíram do jogo na v0.88.0 (`RETIRED_ITEMS`). */
   APPLE: "apple",
   /** Hortaliças: o próprio legume é o que se planta (e o que se colhe). */
@@ -532,6 +992,8 @@ var ITEMS = {
   silk: { id: Item.SILK, name: "Seda de Aranha", loot: true },
   fang: { id: Item.FANG, name: "Presa de Aranha", loot: true },
   queen_heart: { id: Item.QUEEN_HEART, name: "Cora\xE7\xE3o da Rainha", loot: true },
+  wolf_fang: { id: Item.WOLF_FANG, name: "Presa de Lobo", loot: true },
+  wolf_pelt: { id: Item.WOLF_PELT, name: "Pelagem de Lobo", loot: true },
   apple: { id: Item.APPLE, name: "Ma\xE7\xE3" },
   potato: { id: Item.POTATO, name: "Batata", plants: Block.POTATO_0 },
   tomato: { id: Item.TOMATO, name: "Tomate", plants: Block.TOMATO_0 },
@@ -547,8 +1009,16 @@ var ITEMS = {
 var ANIMAL_PRODUCE = { cow: Item.MILK, chicken: Item.EGG };
 var VEGETABLES = [Item.POTATO, Item.TOMATO, Item.CARROT];
 var GRASS_VEGETABLE_CHANCE = 0.12;
-var LOOT_ITEMS = [Item.SILK, Item.FANG, Item.QUEEN_HEART];
+var LOOT_ITEMS = [Item.SILK, Item.FANG, Item.QUEEN_HEART, Item.WOLF_FANG, Item.WOLF_PELT];
+var WOLF_PELT_CHANCE = 0.55;
+var WOLF_FANG_CHANCE = 0.4;
 function monsterDrops(kind, rand = Math.random) {
+  if (isWolf(kind)) {
+    const out = [];
+    if (rand() < WOLF_PELT_CHANCE) out.push({ item: Item.WOLF_PELT, count: 1 });
+    if (rand() < WOLF_FANG_CHANCE) out.push({ item: Item.WOLF_FANG, count: 1 });
+    return out;
+  }
   if (kind === "spider-small") return rand() < 0.6 ? [{ item: Item.SILK, count: 1 }] : [];
   if (kind === "spider-big") {
     const out = [{ item: Item.SILK, count: 1 + (rand() < 0.5 ? 1 : 0) }];
@@ -877,7 +1347,7 @@ function applyAction(world, a) {
 }
 
 // src/net/protocol.ts
-var PROTOCOL_VERSION = 18;
+var PROTOCOL_VERSION = 19;
 var MAX_PLAYERS = 10;
 var ROOMS = [
   { id: 1, name: "Sala 1", seed: 20261106 }
@@ -892,7 +1362,7 @@ function sanitizeName(text) {
   if (n.length < NAME_MIN || n.length > NAME_MAX) return null;
   return /^[\p{L}\p{N} _-]+$/u.test(n) ? n : null;
 }
-var APPEARANCE_BODIES = ["heroine", "hero", "hood", "gino"];
+var APPEARANCE_BODIES = ["heroine", "hero", "hood", "gino", "mila"];
 var DEFAULT_APPEARANCE = { body: "heroine", look: null };
 var FACING_ORDER = ["down", "left", "right", "up"];
 var FACINGS = /* @__PURE__ */ new Set(["down", "left", "right", "up"]);
@@ -999,25 +1469,6 @@ function parseChestSlots(v, size = 27) {
   return out;
 }
 
-// src/world/random.ts
-function mulberry32(seed) {
-  let a = seed >>> 0;
-  return () => {
-    a = a + 1831565813 >>> 0;
-    let t = a;
-    t = Math.imul(t ^ t >>> 15, t | 1);
-    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
-    return ((t ^ t >>> 14) >>> 0) / 4294967296;
-  };
-}
-function hash2(seed, x, y) {
-  let h = (seed ^ Math.imul(x | 0, 668265261) ^ Math.imul(y | 0, 374761393)) >>> 0;
-  h = Math.imul(h ^ h >>> 15, 2246822507);
-  h = Math.imul(h ^ h >>> 13, 3266489909);
-  h ^= h >>> 16;
-  return (h >>> 0) / 4294967296;
-}
-
 // src/world/progression.ts
 var BASE_STATS = { maxHp: 100, attack: 5, defense: 2 };
 function playerStats(_level = 1) {
@@ -1030,7 +1481,11 @@ function weaponPower(tool) {
 var MONSTER_STATS = {
   "spider-small": { hp: 20, attack: 8, defense: 0 },
   "spider-big": { hp: 45, attack: 14, defense: 2 },
-  "spider-boss": { hp: 180, attack: 36, defense: 6 }
+  "spider-boss": { hp: 180, attack: 36, defense: 6 },
+  // Lobos (v0.91.0): mais fortes quanto mais claros; bando de 1 a 3.
+  "wolf-brown": { hp: 35, attack: 11, defense: 1 },
+  "wolf-gray": { hp: 45, attack: 13, defense: 2 },
+  "wolf-white": { hp: 55, attack: 15, defense: 3 }
 };
 var DAMAGE_SPREAD = 0.1;
 var CRIT_CHANCE = 0.05;
@@ -1450,440 +1905,6 @@ function villagerExpression(seed, i) {
   return RESTING[Math.floor(hash2(seed, i, 917) * RESTING.length)];
 }
 
-// src/world/dungeon.ts
-var PERIMETER = 2;
-var NODE = 6;
-var BOSS_NODES = 3;
-function inRect(r, x, y) {
-  return x >= r.x0 && x <= r.x1 && y >= r.y0 && y <= r.y1;
-}
-var shift = (r, dx, dy) => ({ x0: r.x0 + dx, y0: r.y0 + dy, x1: r.x1 + dx, y1: r.y1 + dy });
-function dungeonSize(seed) {
-  return [96 + Math.floor(hash2(seed, 811, 3) * 13), 66 + Math.floor(hash2(seed, 812, 5) * 13)];
-}
-function buildMaze(seed, w, h, side) {
-  const rand = mulberry32((seed ^ 1597463007) >>> 0);
-  const ri = (n) => Math.floor(rand() * n);
-  const gw = Math.floor((w - 2 * PERIMETER) / NODE);
-  const gh = Math.floor((h - 2 * PERIMETER) / NODE);
-  const node = (i, j) => j * gw + i;
-  const floor = new Uint8Array(w * h);
-  const carve = (x0, y0, x1, y1) => {
-    for (let y = Math.max(0, Math.min(y0, y1)); y <= Math.min(h - 1, Math.max(y0, y1)); y++) {
-      for (let x = Math.max(0, Math.min(x0, x1)); x <= Math.min(w - 1, Math.max(x0, x1)); x++) floor[y * w + x] = 1;
-    }
-  };
-  const cellX = (i) => PERIMETER + i * NODE;
-  const cellY = (j) => PERIMETER + j * NODE;
-  const cx = new Int16Array(gw * gh);
-  const cy = new Int16Array(gw * gh);
-  const width = new Uint8Array(gw * gh);
-  for (let j = 0; j < gh; j++) {
-    for (let i = 0; i < gw; i++) {
-      cx[node(i, j)] = cellX(i) + 3 + ri(3) - 1;
-      cy[node(i, j)] = cellY(j) + 3 + ri(3) - 1;
-      width[node(i, j)] = rand() < 0.4 ? 3 : 2;
-    }
-  }
-  const horizontal = side === "west" || side === "east";
-  const along = horizontal ? gh : gw;
-  const entryK = 1 + ri(along - 2);
-  const entry = side === "west" ? node(0, entryK) : side === "east" ? node(gw - 1, entryK) : side === "north" ? node(entryK, 0) : node(entryK, gh - 1);
-  const bk = ri(along - BOSS_NODES + 1);
-  const bi0 = side === "west" ? gw - BOSS_NODES : side === "east" ? 0 : bk;
-  const bj0 = side === "north" ? gh - BOSS_NODES : side === "south" ? 0 : bk;
-  const isBoss = (i, j) => i >= bi0 && i < bi0 + BOSS_NODES && j >= bj0 && j < bj0 + BOSS_NODES;
-  const open = /* @__PURE__ */ new Map();
-  const link = (a, b) => {
-    if (!open.has(a)) open.set(a, /* @__PURE__ */ new Set());
-    if (!open.has(b)) open.set(b, /* @__PURE__ */ new Set());
-    open.get(a).add(b);
-    open.get(b).add(a);
-  };
-  const neighbors = (n) => {
-    const i = n % gw;
-    const j = Math.floor(n / gw);
-    const out = [];
-    for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
-      const ni = i + di;
-      const nj = j + dj;
-      if (ni >= 0 && nj >= 0 && ni < gw && nj < gh && !isBoss(ni, nj)) out.push(node(ni, nj));
-    }
-    return out;
-  };
-  const visited = new Uint8Array(gw * gh);
-  const active = [entry];
-  visited[entry] = 1;
-  while (active.length) {
-    const k = rand() < 0.75 ? active.length - 1 : ri(active.length);
-    const cur = active[k];
-    const next = neighbors(cur).filter((n2) => !visited[n2]);
-    if (!next.length) {
-      active.splice(k, 1);
-      continue;
-    }
-    const n = next[ri(next.length)];
-    visited[n] = 1;
-    link(cur, n);
-    active.push(n);
-  }
-  for (let n = 0; n < gw * gh; n++) {
-    if (!visited[n]) continue;
-    for (const m of neighbors(n)) if (m > n && !open.get(n)?.has(m) && rand() < 0.09) link(n, m);
-  }
-  const chambersN = [];
-  const target = Math.max(3, Math.round(gw * gh / 30));
-  for (let t = 0; t < 200 && chambersN.length < target; t++) {
-    const cw = 2 + ri(2);
-    const ch = 2 + ri(2) * (cw === 2 ? 1 : 0);
-    const i0 = ri(gw - cw + 1);
-    const j0 = ri(gh - ch + 1);
-    let ok = true;
-    for (let j = j0 - 1; j <= j0 + ch && ok; j++) {
-      for (let i = i0 - 1; i <= i0 + cw && ok; i++) {
-        if (isBoss(i, j) || i >= 0 && j >= 0 && i < gw && j < gh && node(i, j) === entry) ok = false;
-      }
-    }
-    for (const [a0, b0, a1, b1] of chambersN) if (i0 <= a1 + 1 && i0 + cw - 1 >= a0 - 1 && j0 <= b1 + 1 && j0 + ch - 1 >= b0 - 1) ok = false;
-    if (!ok) continue;
-    chambersN.push([i0, j0, i0 + cw - 1, j0 + ch - 1]);
-    for (let j = j0; j < j0 + ch; j++) for (let i = i0; i < i0 + cw; i++) {
-      if (i + 1 < i0 + cw) link(node(i, j), node(i + 1, j));
-      if (j + 1 < j0 + ch) link(node(i, j), node(i, j + 1));
-    }
-  }
-  const dist = new Int32Array(gw * gh).fill(-1);
-  dist[entry] = 0;
-  const q = [entry];
-  for (let h0 = 0; h0 < q.length; h0++) {
-    for (const m of open.get(q[h0]) ?? []) if (dist[m] < 0) {
-      dist[m] = dist[q[h0]] + 1;
-      q.push(m);
-    }
-  }
-  let best = null;
-  for (let j = bj0; j < bj0 + BOSS_NODES; j++) {
-    for (let i = bi0; i < bi0 + BOSS_NODES; i++) {
-      for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
-        const ni = i + di;
-        const nj = j + dj;
-        if (ni < 0 || nj < 0 || ni >= gw || nj >= gh || isBoss(ni, nj)) continue;
-        const m = node(ni, nj);
-        if (!best || dist[m] > dist[best[0]]) best = [m, node(i, j)];
-      }
-    }
-  }
-  const chambers = [];
-  for (const [i0, j0, i1, j1] of chambersN) {
-    const r = { x0: cellX(i0) + 1, y0: cellY(j0) + 1, x1: cellX(i1) + NODE - 1, y1: cellY(j1) + NODE - 1 };
-    chambers.push(r);
-  }
-  for (let n = 0; n < gw * gh; n++) {
-    const i = n % gw;
-    const j = Math.floor(n / gw);
-    if (isBoss(i, j) || !visited[n]) continue;
-    const wd = width[n];
-    carve(cx[n] - 1, cy[n] - 1, cx[n] - 2 + wd, cy[n] - 2 + wd);
-    for (const m of open.get(n) ?? []) {
-      if (m < n) continue;
-      const ww = Math.min(wd, width[m]);
-      carve(cx[n] - 1, cy[n] - 1, cx[m] - 2 + ww, cy[n] - 2 + ww);
-      carve(cx[m] - 1, cy[n] - 1, cx[m] - 2 + ww, cy[m] - 2 + ww);
-    }
-  }
-  const notches = [];
-  for (const r of chambers) {
-    carve(r.x0, r.y0, r.x1, r.y1);
-    for (let x = r.x0; x <= r.x1; x++) {
-      for (const [y, out] of [[r.y0, r.y0 - 1], [r.y1, r.y1 + 1]]) {
-        if (rand() < 0.22 && !floor[out * w + x] && !floor[out * w + x - 1] && !floor[out * w + x + 1]) notches.push([x, y]);
-      }
-    }
-    for (let y = r.y0; y <= r.y1; y++) {
-      for (const [x, out] of [[r.x0, r.x0 - 1], [r.x1, r.x1 + 1]]) {
-        if (rand() < 0.22 && !floor[y * w + out] && !floor[(y - 1) * w + out] && !floor[(y + 1) * w + out]) notches.push([x, y]);
-      }
-    }
-  }
-  for (const [x, y] of notches) floor[y * w + x] = 0;
-  const bossRoom = { x0: cellX(bi0) + 1, y0: cellY(bj0) + 1, x1: cellX(bi0 + BOSS_NODES - 1) + NODE - 1, y1: cellY(bj0 + BOSS_NODES - 1) + NODE - 1 };
-  carve(bossRoom.x0, bossRoom.y0, bossRoom.x1, bossRoom.y1);
-  const [mn, bn] = best;
-  const bxn = bn % gw;
-  const byn = Math.floor(bn / gw);
-  const mxn = mn % gw;
-  const myn = Math.floor(mn / gw);
-  let bossDoor;
-  if (mxn !== bxn) {
-    const y = cy[mn] - 1;
-    const xa = mxn < bxn ? cx[mn] : bossRoom.x1;
-    const xb = mxn < bxn ? bossRoom.x0 : cx[mn];
-    carve(xa, y, xb, y + 1);
-    bossDoor = [mxn < bxn ? bossRoom.x0 - 1 : bossRoom.x1 + 1, y];
-  } else {
-    const x = cx[mn] - 1;
-    const ya = myn < byn ? cy[mn] : bossRoom.y1;
-    const yb = myn < byn ? bossRoom.y0 : cy[mn];
-    carve(x, ya, x + 1, yb);
-    bossDoor = [x, myn < byn ? bossRoom.y0 - 1 : bossRoom.y1 + 1];
-  }
-  const gate = [];
-  const ex = cx[entry];
-  const ey = cy[entry];
-  if (horizontal) {
-    const [xa, xb] = side === "west" ? [0, ex] : [ex, w - 1];
-    carve(xa, ey - 1, xb, ey + 1);
-    for (let d = 0; d < PERIMETER; d++) for (let k = -1; k <= 1; k++) gate.push([side === "west" ? d : w - 1 - d, ey + k]);
-  } else {
-    const [ya, yb] = side === "north" ? [0, ey] : [ey, h - 1];
-    carve(ex - 1, ya, ex + 1, yb);
-    for (let d = 0; d < PERIMETER; d++) for (let k = -1; k <= 1; k++) gate.push([ex + k, side === "north" ? d : h - 1 - d]);
-  }
-  const gateSet = new Set(gate.map(([x, y]) => y * w + x));
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const edge = x < PERIMETER || y < PERIMETER || x >= w - PERIMETER || y >= h - PERIMETER;
-      if (edge && !gateSet.has(y * w + x)) floor[y * w + x] = 0;
-    }
-  }
-  const inside = [ex, ey];
-  const maze = { w, h, floor, side, gate, inside, chambers, bossRoom, bossDoor };
-  const reach = floorDistances(maze, ex, ey);
-  for (let i = 0; i < w * h; i++) if (floor[i] && reach[i] < 0) floor[i] = 0;
-  return maze;
-}
-var PROPS = [
-  Block.DUNGEON_ROCK,
-  Block.DUNGEON_ROCK,
-  Block.DUNGEON_ROCK,
-  Block.DUNGEON_EGGS,
-  Block.DUNGEON_MUSHROOM,
-  Block.DUNGEON_SPIKES,
-  Block.DUNGEON_ROOTS
-];
-var FLOOR_PER_SMALL = 110;
-var FLOOR_PER_BIG = 320;
-function floorDistances(m, sx, sy) {
-  const d = new Int32Array(m.w * m.h).fill(-1);
-  d[sy * m.w + sx] = 0;
-  const q = [sy * m.w + sx];
-  for (let h = 0; h < q.length; h++) {
-    const i = q[h];
-    const x = i % m.w;
-    const y = Math.floor(i / m.w);
-    for (const [nx, ny] of [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]]) {
-      if (nx < 0 || ny < 0 || nx >= m.w || ny >= m.h) continue;
-      const k = ny * m.w + nx;
-      if (m.floor[k] && d[k] < 0) {
-        d[k] = d[i] + 1;
-        q.push(k);
-      }
-    }
-  }
-  return d;
-}
-function decorateDungeon(seed, m, x0, y0) {
-  const { w, h } = m;
-  const ground2 = new Uint8Array(w * h);
-  const objects = new Uint8Array(w * h);
-  const idx = (x, y) => y * w + x;
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const i = idx(x, y);
-      const r = hash2(seed, x * 3 + 101, y * 5 - 77);
-      ground2[i] = r < 0.84 ? Block.DUNGEON_DIRT : r < 0.92 ? Block.DUNGEON_MOSS : r < 0.97 ? Block.DUNGEON_WEB : Block.DUNGEON_BONES;
-      if (m.floor[i]) continue;
-      const outer = x === 0 || y === 0 || x === w - 1 || y === h - 1;
-      ground2[i] = Block.DUNGEON_DIRT;
-      objects[i] = outer ? Block.DUNGEON_MOUNTAIN : Block.DUNGEON_WALL;
-    }
-  }
-  const [bhx, bhy] = [m.bossRoom.x0 + m.bossRoom.x1 >> 1, m.bossRoom.y0 + m.bossRoom.y1 >> 1];
-  for (const r of [...m.chambers, m.bossRoom]) {
-    for (let y = r.y0 + 2; y <= r.y1 - 2; y++) {
-      for (let x = r.x0 + 2; x <= r.x1 - 2; x++) {
-        if (!m.floor[idx(x, y)] || hash2(seed, x + 913, y - 211) > 0.12) continue;
-        if (r === m.bossRoom && Math.hypot(x - bhx, y - bhy) < 5) continue;
-        let lonely = true;
-        for (let dy = -1; dy <= 1 && lonely; dy++) for (let dx = -1; dx <= 1; dx++) {
-          if (!m.floor[idx(x + dx, y + dy)] || objects[idx(x + dx, y + dy)] !== Block.AIR) lonely = false;
-        }
-        if (lonely) objects[idx(x, y)] = PROPS[Math.floor(hash2(seed, x - 57, y + 389) * PROPS.length)];
-      }
-    }
-  }
-  const dist = floorDistances(m, m.inside[0], m.inside[1]);
-  const free = [];
-  for (let i = 0; i < w * h; i++) {
-    const x = i % w;
-    const y = Math.floor(i / w);
-    if (m.floor[i] && objects[i] === Block.AIR && dist[i] >= 14 && !inRect(m.bossRoom, x, y)) free.push(i);
-  }
-  const want = [
-    ...Array(Math.round(free.length / FLOOR_PER_BIG)).fill("spider-big"),
-    ...Array(Math.round(free.length / FLOOR_PER_SMALL)).fill("spider-small")
-  ];
-  const spawns = [{ kind: "spider-boss", x: x0 + bhx + 0.5, y: y0 + bhy + 0.5 }];
-  const taken = [];
-  for (let n = 0; n < 2e4 && want.length && free.length; n++) {
-    const i = free[Math.floor(hash2(seed, n, 4441) * free.length)];
-    const x = i % w;
-    const y = Math.floor(i / w);
-    if (taken.some(([tx, ty]) => Math.abs(tx - x) + Math.abs(ty - y) < 4)) continue;
-    taken.push([x, y]);
-    spawns.push({ kind: want.shift(), x: x0 + x + 0.5, y: y0 + y + 0.5 });
-  }
-  const out = { north: [0, -1], south: [0, 1], west: [-1, 0], east: [1, 0] }[m.side];
-  const c = m.gate[1];
-  return {
-    w,
-    h,
-    area: { x0, y0, x1: x0 + w - 1, y1: y0 + h - 1 },
-    interior: { x0: x0 + PERIMETER, y0: y0 + PERIMETER, x1: x0 + w - 1 - PERIMETER, y1: y0 + h - 1 - PERIMETER },
-    side: m.side,
-    gate: m.gate.map(([x, y]) => [x0 + x, y0 + y]),
-    doorstep: [x0 + c[0] + out[0], y0 + c[1] + out[1]],
-    chambers: m.chambers.map((r) => shift(r, x0, y0)),
-    bossRoom: shift(m.bossRoom, x0, y0),
-    bossHome: [x0 + bhx, y0 + bhy],
-    spawns,
-    ground: ground2,
-    objects
-  };
-}
-function buildDungeon(seed, x0, y0, side, size = dungeonSize(seed)) {
-  return decorateDungeon(seed, buildMaze(seed, size[0], size[1], side), x0, y0);
-}
-var DUNGEON_ORIGIN = [-1e5, -1e5];
-var DUNGEON_RIM = 6;
-var CAVE_MIN_CASTLE_DIST = 10 * CHUNK_SIZE;
-var CAVE_W = 5;
-var CAVE_D = 3;
-function isolatedDungeon(seed) {
-  return buildDungeon(seed, DUNGEON_ORIGIN[0], DUNGEON_ORIGIN[1], "south");
-}
-function dungeonGuard(l) {
-  return { x0: l.area.x0 - DUNGEON_RIM, y0: l.area.y0 - DUNGEON_RIM, x1: l.area.x1 + DUNGEON_RIM, y1: l.area.y1 + DUNGEON_RIM };
-}
-function dungeonEntry(l) {
-  const c = l.gate[l.gate.length - 2];
-  const inward = { north: [0, 1], south: [0, -1], west: [1, 0], east: [-1, 0] }[l.side];
-  return [c[0] + inward[0], c[1] + inward[1]];
-}
-function isDungeonExit(l, x, y) {
-  return l.gate.slice(0, 3).some(([gx, gy]) => gx === x && gy === y);
-}
-function caveAt(x, y) {
-  const footprint = { x0: x, y0: y - CAVE_D + 1, x1: x + CAVE_W - 1, y1: y };
-  const outside = [x + (CAVE_W >> 1), y + 1];
-  return {
-    x,
-    y,
-    footprint,
-    outside,
-    guard: { x0: footprint.x0 - 1, y0: footprint.y0 - 1, x1: footprint.x1 + 1, y1: footprint.y1 },
-    front: { x0: outside[0] - 2, y0: outside[1], x1: outside[0] + 2, y1: outside[1] + 2 }
-  };
-}
-function planCave(base, castle, avoid) {
-  const seed = base.seed;
-  const a0 = hash2(seed, 7001, 3) * Math.PI * 2;
-  const overlaps = (r) => !!avoid && r.x0 <= avoid.x1 && r.x1 >= avoid.x0 && r.y0 <= avoid.y1 && r.y1 >= avoid.y0;
-  let fallback = null;
-  for (let t = 0; t < 96; t++) {
-    const a = a0 + t * 0.7;
-    const dist = CAVE_MIN_CASTLE_DIST + 8 + hash2(seed, 7002, t) * 80 + Math.floor(t / 9) * 24;
-    const ox = Math.round(castle[0] + Math.cos(a) * dist);
-    const oy = Math.round(castle[1] + Math.sin(a) * dist);
-    const cave = caveAt(ox - (CAVE_W >> 1), oy);
-    if (Math.hypot(cave.outside[0] - castle[0], cave.outside[1] - castle[1]) < CAVE_MIN_CASTLE_DIST) continue;
-    if (overlaps(cave.guard) || overlaps(cave.front)) continue;
-    fallback ??= cave;
-    let dry = true;
-    for (const r of [cave.footprint, cave.front]) {
-      for (let y = r.y0; y <= r.y1 && dry; y++) for (let x = r.x0; x <= r.x1 && dry; x++) if (base.groundAt(x, y) === Block.WATER) dry = false;
-    }
-    if (dry) return cave;
-  }
-  return fallback;
-}
-var DungeonTerrain = class {
-  constructor(base, layout, cave = null) {
-    this.base = base;
-    this.layout = layout;
-    this.cave = cave;
-    this.guard = dungeonGuard(layout);
-    const [dx, dy] = layout.doorstep;
-    this.landing = layout.side === "north" || layout.side === "south" ? { x0: dx - 1, y0: dy, x1: dx + 1, y1: dy } : { x0: dx, y0: dy - 1, x1: dx, y1: dy + 1 };
-  }
-  base;
-  layout;
-  cave;
-  guard;
-  landing;
-  clearFront(c) {
-    return { ground: blockDef(c.ground).liquid || c.ground === Block.HOLE ? Block.GRASS : c.ground, object: Block.AIR, upper: Block.AIR };
-  }
-  get seed() {
-    return this.base.seed;
-  }
-  /** Célula sobreposta, ou null se for terreno base puro. `baseCell` só é calculada quando precisa. */
-  overlay(x, y, baseCell) {
-    const l = this.layout;
-    if (inRect(l.area, x, y)) {
-      const i = (y - l.area.y0) * l.w + (x - l.area.x0);
-      return { ground: l.ground[i], object: l.objects[i], upper: Block.AIR };
-    }
-    if (inRect(this.guard, x, y)) {
-      const floor = inRect(this.landing, x, y);
-      return { ground: Block.DUNGEON_DIRT, object: floor ? Block.AIR : Block.DUNGEON_MOUNTAIN, upper: Block.AIR };
-    }
-    const cave = this.cave;
-    if (cave && inRect(cave.footprint, x, y)) {
-      const g = baseCell().ground;
-      const ground2 = blockDef(g).liquid || g === Block.HOLE ? Block.GRASS : g;
-      return { ground: ground2, object: x === cave.x && y === cave.y ? Block.DUNGEON_CAVE : Block.TOWN_PART, upper: Block.AIR };
-    }
-    if (cave && inRect(cave.front, x, y)) return this.clearFront(baseCell());
-    return null;
-  }
-  cellAt(x, y) {
-    return this.overlay(x, y, () => this.base.cellAt(x, y)) ?? this.base.cellAt(x, y);
-  }
-  groundAt(x, y) {
-    return this.cellAt(x, y).ground;
-  }
-  objectAt(x, y) {
-    return this.cellAt(x, y).object;
-  }
-  upperAt(x, y) {
-    return this.cellAt(x, y).upper;
-  }
-  biomeAt(x, y) {
-    return this.base.biomeAt(x, y);
-  }
-  /** Cada chunk copia a sua parte do mapa lógico (corredores seguem sem interrupção entre chunks). */
-  generateChunk(cx, cy, ground2, objects, upper) {
-    this.base.generateChunk(cx, cy, ground2, objects, upper);
-    const S = Math.round(Math.sqrt(ground2.length));
-    const x0 = cx * S;
-    const y0 = cy * S;
-    const misses = (r) => x0 > r.x1 || x0 + S - 1 < r.x0 || y0 > r.y1 || y0 + S - 1 < r.y0;
-    const c = this.cave;
-    if (misses(this.guard) && (!c || misses(c.footprint) && misses(c.front))) return;
-    for (let ly = 0; ly < S; ly++) {
-      for (let lx = 0; lx < S; lx++) {
-        const i = ly * S + lx;
-        const cell = this.overlay(x0 + lx, y0 + ly, () => ({ ground: ground2[i], object: objects[i], upper: upper[i] }));
-        if (!cell) continue;
-        ground2[i] = cell.ground;
-        objects[i] = cell.object;
-        upper[i] = cell.upper;
-      }
-    }
-  }
-};
-
 // src/world/interiors.ts
 var SMITHY_INTERIOR = {
   id: "smithy",
@@ -2043,10 +2064,16 @@ var InteriorTerrain = class {
 };
 
 // src/game/monster.ts
+var WOLF_SIGHT = 3;
 var MONSTERS = {
   "spider-small": { spec: { speed: 2.1, halfW: 0.3, halfD: 0.18, stepHeight: 0 }, sight: 6, leash: 5, biteEvery: 1, respawn: 40, deathSeconds: 0.7 },
   "spider-big": { spec: { speed: 1.6, halfW: 0.42, halfD: 0.24, stepHeight: 0 }, sight: 7, leash: 5, biteEvery: 1.2, respawn: 60, deathSeconds: 0.9 },
-  "spider-boss": { spec: { speed: 1.15, halfW: 0.9, halfD: 0.45, stepHeight: 0 }, sight: 9, leash: 4, biteEvery: 1.6, respawn: 300, deathSeconds: 1.6 }
+  "spider-boss": { spec: { speed: 1.15, halfW: 0.9, halfD: 0.45, stepHeight: 0 }, sight: 9, leash: 4, biteEvery: 1.6, respawn: 300, deathSeconds: 1.6 },
+  // Lobos (v0.91.0): só atacam a personagem a até 3 células (regra do dono do produto: `sight` = 3, em linha reta);
+  // mais lentos que ela (4,2) para dar para fugir; o bando passeia junto, perto da toca.
+  "wolf-brown": { spec: { speed: 3, halfW: 0.36, halfD: 0.2, stepHeight: 1 }, sight: WOLF_SIGHT, leash: 5, biteEvery: 1.1, respawn: 120, deathSeconds: 0.8, open: true },
+  "wolf-gray": { spec: { speed: 3, halfW: 0.36, halfD: 0.2, stepHeight: 1 }, sight: WOLF_SIGHT, leash: 5, biteEvery: 1.1, respawn: 120, deathSeconds: 0.8, open: true },
+  "wolf-white": { spec: { speed: 3, halfW: 0.36, halfD: 0.2, stepHeight: 1 }, sight: WOLF_SIGHT, leash: 5, biteEvery: 1.1, respawn: 120, deathSeconds: 0.8, open: true }
 };
 var HURT_SECONDS = 0.35;
 var Monster = class extends Walker {
@@ -2121,7 +2148,7 @@ var Monster = class extends Walker {
     const cx = Math.floor(this.x);
     const cy = Math.floor(this.y);
     const steps = flow ? flow(cx, cy) : -1;
-    const chasing = targetInside && (flow ? steps >= 0 && steps <= def.sight * 1.6 : dist < def.sight);
+    const chasing = targetInside && (def.open ? dist <= def.sight : flow ? steps >= 0 && steps <= def.sight * 1.6 : dist < def.sight);
     if (chasing) {
       const reach = this.reach;
       if (dist <= reach) {
@@ -2131,7 +2158,7 @@ var Monster = class extends Walker {
       }
       let dx = tx / dist;
       let dy = ty / dist;
-      if (flow && steps > 1) {
+      if (flow && !def.open && steps > 1) {
         let best = steps;
         let nx = cx;
         let ny = cy;
@@ -2170,13 +2197,645 @@ var Monster = class extends Walker {
   }
 };
 
+// src/world/town.ts
+var TOWN_W = 164;
+var TOWN_H = 132;
+var TOWN_X0 = -TOWN_W / 2;
+var TOWN_Y0 = -TOWN_H;
+var TOWN_SEED = 233152122;
+var TOWN_MARGIN = 8;
+var TOWN_CLEAR = 3;
+var ROAD_LEN = 14;
+var TOWN_SOUTH_FIELD = 28;
+var WALL = 2;
+var TOWN_WALL = WALL;
+var TOWN_SIZES = {
+  [Block.CASTLE]: [26, 17, 17],
+  [Block.GUILD]: [9, 9, 9],
+  [Block.INN]: [9, 5, 5],
+  [Block.SMITHY]: [8, 5, 5],
+  [Block.SHOP_POTION]: [5, 5, 4],
+  [Block.SHOP_GOODS]: [5, 5, 5],
+  [Block.SHOP_TOOLS]: [5, 5, 4],
+  [Block.HOUSE]: [5, 5, 4],
+  [Block.HOUSE_TALL]: [5, 5, 5],
+  [Block.WATCHTOWER]: [4, 6, 6],
+  [Block.WELL]: [2, 2, 2],
+  [Block.FOUNTAIN]: [5, 5, 5],
+  [Block.STALL]: [2, 1, 1],
+  [Block.BENCH]: [2, 1, 1],
+  [Block.BENCH_LONG]: [3, 1, 1]
+};
+function townSize(id) {
+  const s = TOWN_SIZES[id];
+  return s ? [s[0], s[1]] : [1, 1];
+}
+function townSolid(id) {
+  return TOWN_SIZES[id]?.[2] ?? 1;
+}
+var SIGNS = [
+  "Cidade do Despertar \u2014 o Castelo fica ao norte; o port\xE3o, ao sul",
+  "Pra\xE7a Central: Guilda a oeste, Hospedaria a leste",
+  "Ferreiro e Lojas: siga as ruas a partir da Pra\xE7a Central"
+];
+var FREE = 0;
+var STREET = 1;
+var PLAZA = 2;
+var WALLED = 3;
+var BUILT = 4;
+var RESERVED = 5;
+var WALKWAY = 6;
+var DECOR = 7;
+var YARD = 8;
+var cached = null;
+function townLayout() {
+  return cached ??= buildTown();
+}
+function buildTown() {
+  const W = TOWN_W;
+  const H = TOWN_H;
+  const rand = mulberry32(TOWN_SEED);
+  const ri = (n) => Math.floor(rand() * n);
+  const idx = (x, y) => y * W + x;
+  const inside = (x, y) => x >= 0 && y >= 0 && x < W && y < H;
+  const ground2 = new Uint8Array(W * H).fill(Block.GRASS);
+  const FLOOR = Block.STONE_BRICK;
+  const objects = new Uint8Array(W * H);
+  const upper = new Uint8Array(W * H);
+  const use = new Uint8Array(W * H);
+  const keepOff = new Uint8Array(W * H);
+  const main = new Uint8Array(W * H);
+  const buildingAt = new Int16Array(W * H).fill(-1);
+  const buildings = [];
+  const h = (x, y, salt) => hash2(TOWN_SEED, x * 31 + salt, y * 17 - salt);
+  const GX0 = W / 2 - 2;
+  const GX1 = W / 2 + 1;
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      if (x >= WALL && y >= WALL && x < W - WALL && y < H - WALL) continue;
+      const i = idx(x, y);
+      ground2[i] = FLOOR;
+      if (y >= H - WALL && x >= GX0 && x <= GX1) {
+        use[i] = STREET;
+        continue;
+      }
+      use[i] = WALLED;
+      objects[i] = Block.STONE_BRICK;
+      upper[i] = Block.STONE_BRICK;
+    }
+  }
+  const place = (id, x, y, name, door) => {
+    const [w, lot] = townSize(id);
+    const d = townSolid(id);
+    const b = {
+      id,
+      name,
+      x: TOWN_X0 + x,
+      y: TOWN_Y0 + y + lot - 1,
+      w,
+      d,
+      door: door ? [TOWN_X0 + x + Math.floor(w / 2), TOWN_Y0 + y + lot] : null
+    };
+    const k = buildings.push(b) - 1;
+    for (let yy = y; yy < y + lot - d; yy++) {
+      for (let xx = x; xx < x + w; xx++) if (use[idx(xx, yy)] === FREE || use[idx(xx, yy)] === RESERVED) use[idx(xx, yy)] = YARD;
+    }
+    y += lot - d;
+    for (let yy = y; yy < y + d; yy++) {
+      for (let xx = x; xx < x + w; xx++) {
+        const i = idx(xx, yy);
+        if (use[i] !== WALLED && use[i] !== PLAZA && use[i] !== STREET) ground2[i] = Block.GRASS;
+        use[i] = BUILT;
+        objects[i] = Block.TOWN_PART;
+        upper[i] = Block.AIR;
+        buildingAt[i] = k;
+      }
+    }
+    objects[idx(x, y + d - 1)] = id;
+    return b;
+  };
+  const rect = (x0, y0, x1, y1, fn) => {
+    for (let y = Math.max(0, y0); y <= Math.min(H - 1, y1); y++) for (let x = Math.max(0, x0); x <= Math.min(W - 1, x1); x++) fn(x, y, idx(x, y));
+  };
+  const TW = 4;
+  const TD = 6;
+  place(Block.WATCHTOWER, 0, 0, "Guarita", false);
+  place(Block.WATCHTOWER, W - TW, 0, "Guarita", false);
+  place(Block.WATCHTOWER, 0, H - TD, "Guarita", false);
+  place(Block.WATCHTOWER, W - TW, H - TD, "Guarita", false);
+  place(Block.WATCHTOWER, GX0 - TW, H - TD, "Guarita", false);
+  place(Block.WATCHTOWER, GX1 + 1, H - TD, "Guarita", false);
+  const CX0 = W / 2 - 13;
+  const CY1 = 3 + 17;
+  const COURT_Y1 = CY1 + 7;
+  rect(CX0 - 2, WALL, CX0 + 27, COURT_Y1, (_x, _y, i) => {
+    if (use[i] === FREE) use[i] = RESERVED;
+  });
+  const castle = place(Block.CASTLE, CX0, 3, "Castelo", true);
+  const plaza = (x0, y0, x1, y1, floor) => rect(x0, y0, x1, y1, (_x, _y, i) => {
+    use[i] = PLAZA;
+    ground2[i] = floor;
+  });
+  const MID = 70;
+  const START_Y = H - 12;
+  plaza(CX0 + 2, CY1, CX0 + 23, COURT_Y1, FLOOR);
+  plaza(W / 2 - 9, MID - 6, W / 2 + 9, MID + 6, FLOOR);
+  plaza(W / 2 - 9, H - 17, W / 2 + 8, H - TD - 1, FLOOR);
+  rect(GX0, H - TD, GX1, H - 1, (_x, _y, i) => {
+    use[i] = STREET;
+    ground2[i] = FLOOR;
+  });
+  const required = [
+    place(Block.GUILD, W / 2 - 28, MID - 8, "Guilda dos Aventureiros", true),
+    place(Block.INN, W / 2 + 20, MID - 4, "Hospedaria", true),
+    place(Block.SMITHY, 30, MID + 18, "Ferreiro", true),
+    place(Block.SHOP_POTION, W / 2 + 22, MID + 18, "Loja de Po\xE7\xF5es", true),
+    place(Block.SHOP_GOODS, W / 2 + 27, MID + 18, "Armaz\xE9m", true),
+    place(Block.SHOP_TOOLS, W / 2 + 32, MID + 18, "Loja de Ferramentas", true)
+  ];
+  for (const b of required) {
+    const x0 = b.x - TOWN_X0;
+    const y1 = b.y - TOWN_Y0;
+    rect(x0 - 1, y1 - townSize(b.id)[1], x0 + b.w, y1 + 1, (_x, _y, i) => {
+      keepOff[i] = 1;
+    });
+    const [dx, dy] = b.door;
+    rect(dx - TOWN_X0 - 1, dy - TOWN_Y0, dx - TOWN_X0 + 1, dy - TOWN_Y0, (_x, _y, i) => {
+      if (use[i] === FREE) use[i] = RESERVED;
+    });
+  }
+  const carvable = (x, y) => inside(x, y) && (use[idx(x, y)] === FREE || use[idx(x, y)] === STREET || use[idx(x, y)] === PLAZA || use[idx(x, y)] === RESERVED && y > COURT_Y1);
+  const segment = (ax, ay, bx, by, width, jog) => {
+    const out = [];
+    const lo = -Math.floor((width - 1) / 2);
+    const hi = lo + width - 1;
+    const line = (x0, y0, x1, y1) => {
+      for (let y = Math.min(y0, y1) + lo; y <= Math.max(y0, y1) + hi; y++) {
+        for (let x = Math.min(x0, x1) + lo; x <= Math.max(x0, x1) + hi; x++) out.push([x, y]);
+      }
+    };
+    if (Math.abs(bx - ax) >= Math.abs(by - ay)) {
+      const mx = Math.round((ax + bx) / 2) + jog;
+      line(ax, ay, mx, ay);
+      line(mx, ay, mx, by);
+      line(mx, by, bx, by);
+    } else {
+      const my = Math.round((ay + by) / 2) + jog;
+      line(ax, ay, ax, my);
+      line(ax, my, bx, my);
+      line(bx, my, bx, by);
+    }
+    return out;
+  };
+  const SX = 15;
+  const SY = 13;
+  const GW = Math.floor((W - 16) / SX) + 1;
+  const GH = Math.floor((H - 28) / SY) + 1;
+  const nodes = [];
+  for (let j = 0; j < GH; j++) {
+    for (let i = 0; i < GW; i++) {
+      const x = 8 + SX * i + ri(5) - 2;
+      const y = 8 + SY * j + ri(5) - 2;
+      nodes.push({ x, y, ok: carvable(x, y) && carvable(x + 1, y + 1) && use[idx(x, y)] !== RESERVED });
+    }
+  }
+  const COURT = nodes.push({ x: W / 2, y: COURT_Y1, ok: true }) - 1;
+  const edges = [];
+  const tryEdge = (a, b, width) => {
+    const A = nodes[a];
+    const B = nodes[b];
+    if (!A.ok || !B.ok) return;
+    const jog = ri(3) - 1;
+    const cells = segment(A.x, A.y, B.x, B.y, width, jog);
+    if (cells.every(([x, y]) => carvable(x, y))) edges.push({ a, b, cells, narrow: segment(A.x, A.y, B.x, B.y, 2, jog) });
+  };
+  for (let j = 0; j < GH; j++) {
+    for (let i = 0; i < GW; i++) {
+      const n = j * GW + i;
+      if (i + 1 < GW) tryEdge(n, n + 1, 3);
+      if (j + 1 < GH) tryEdge(n, n + GW, 3);
+    }
+  }
+  for (let n = 0; n < GW * GH; n++) {
+    if (nodes[n].ok && nodes[n].y > COURT_Y1 && nodes[n].y < COURT_Y1 + 10 && Math.abs(nodes[n].x - W / 2) <= 14) tryEdge(COURT, n, 3);
+  }
+  const adj = /* @__PURE__ */ new Map();
+  for (const e of edges) {
+    adj.set(e.a, [...adj.get(e.a) ?? [], e]);
+    adj.set(e.b, [...adj.get(e.b) ?? [], e]);
+  }
+  const other = (e, n) => e.a === n ? e.b : e.a;
+  const nearestNode = (x, y) => {
+    let best = -1;
+    let bd = Infinity;
+    nodes.forEach((n, k) => {
+      if (!n.ok || !adj.has(k)) return;
+      const d = Math.hypot(n.x - x, n.y - y);
+      if (d < bd) {
+        bd = d;
+        best = k;
+      }
+    });
+    return best;
+  };
+  const weight = new Map(edges.map((e) => [e, 1 + rand() * 5]));
+  const route = (from, to) => {
+    const dist = /* @__PURE__ */ new Map([[from, 0]]);
+    const prev = /* @__PURE__ */ new Map();
+    const open2 = /* @__PURE__ */ new Set([from]);
+    while (open2.size) {
+      let cur = -1;
+      let cd = Infinity;
+      for (const n of open2) {
+        const d = dist.get(n);
+        if (d < cd) {
+          cd = d;
+          cur = n;
+        }
+      }
+      open2.delete(cur);
+      if (cur === to) break;
+      for (const e of adj.get(cur) ?? []) {
+        const n = other(e, cur);
+        const nd = cd + weight.get(e);
+        if (nd < (dist.get(n) ?? Infinity)) {
+          dist.set(n, nd);
+          prev.set(n, e);
+          open2.add(n);
+        }
+      }
+    }
+    const out = [];
+    for (let n = to; n !== from; ) {
+      const e = prev.get(n);
+      if (!e) break;
+      out.push(e);
+      n = other(e, n);
+    }
+    return out.reverse();
+  };
+  const startNode = nearestNode(W / 2, H - 18);
+  const plazaNode = nearestNode(W / 2, MID);
+  const mainEdges = [...route(startNode, plazaNode), ...route(plazaNode, COURT)];
+  const inTree = /* @__PURE__ */ new Set();
+  const chosen = new Set(mainEdges);
+  for (const e of mainEdges) {
+    inTree.add(e.a);
+    inTree.add(e.b);
+  }
+  for (let guard = 0; guard < 1e4; guard++) {
+    const frontier = edges.filter((e2) => inTree.has(e2.a) !== inTree.has(e2.b));
+    if (!frontier.length) break;
+    const e = frontier[ri(frontier.length)];
+    chosen.add(e);
+    inTree.add(e.a);
+    inTree.add(e.b);
+  }
+  for (const e of edges) if (!chosen.has(e) && rand() < 0.16) chosen.add(e);
+  const carve = (cells, isMain) => {
+    for (const [x, y] of cells) {
+      if (!carvable(x, y)) continue;
+      const i = idx(x, y);
+      if (use[i] !== PLAZA) use[i] = STREET;
+      if (isMain) main[i] = 1;
+    }
+  };
+  for (const e of chosen) {
+    const isMain = mainEdges.includes(e);
+    carve(isMain ? e.cells : e.narrow, isMain);
+  }
+  const connect = (x, y) => {
+    const sx = x - TOWN_X0;
+    const sy = y - TOWN_Y0;
+    const prev = new Int32Array(W * H).fill(-1);
+    const q = [idx(sx, sy)];
+    prev[q[0]] = q[0];
+    let found = -1;
+    for (let k = 0; k < q.length && found < 0; k++) {
+      const c = q[k];
+      const cx = c % W;
+      const cy = Math.floor(c / W);
+      for (const [ox, oy] of [[0, 1], [1, 0], [-1, 0], [0, -1]]) {
+        const nx = cx + ox;
+        const ny = cy + oy;
+        if (!inside(nx, ny)) continue;
+        const n = idx(nx, ny);
+        if (prev[n] >= 0) continue;
+        if (use[n] === STREET || use[n] === PLAZA) {
+          prev[n] = c;
+          found = n;
+          break;
+        }
+        if (use[n] !== FREE && use[n] !== RESERVED) continue;
+        prev[n] = c;
+        q.push(n);
+      }
+    }
+    for (let c = found; c >= 0 && prev[c] !== c; c = prev[c]) {
+      const p = prev[c];
+      for (const k of [p, p + 1]) if (use[k] === FREE || use[k] === RESERVED) use[k] = STREET;
+    }
+    if (use[idx(sx, sy)] !== PLAZA) use[idx(sx, sy)] = STREET;
+  };
+  for (const b of required) connect(b.door[0], b.door[1]);
+  connect(castle.door[0], castle.door[1]);
+  const alleyEnds = [];
+  for (let n = 0; n < 400 && alleyEnds.length < 10; n++) {
+    const x = 4 + ri(W - 8);
+    const y = COURT_Y1 + 2 + ri(H - COURT_Y1 - 22);
+    if (use[idx(x, y)] !== STREET || main[idx(x, y)]) continue;
+    const [ox, oy] = [[1, 0], [-1, 0], [0, 1], [0, -1]][ri(4)];
+    const len = 3 + ri(3);
+    const cells = [];
+    let ok = true;
+    for (let k = 1; k <= len + 1 && ok; k++) {
+      const cx = x + ox * k;
+      const cy = y + oy * k;
+      for (const s of [-1, 0, 1]) {
+        const tx = cx + (oy !== 0 ? s : 0);
+        const ty = cy + (ox !== 0 ? s : 0);
+        if (!inside(tx, ty) || use[idx(tx, ty)] !== FREE || keepOff[idx(tx, ty)]) ok = false;
+      }
+      if (k <= len) cells.push([cx, cy]);
+    }
+    if (!ok) continue;
+    for (const [cx, cy] of cells) use[idx(cx, cy)] = STREET;
+    alleyEnds.push(cells[cells.length - 1]);
+  }
+  rect(0, 0, W - 1, H - 1, (_x, _y, i) => {
+    if (use[i] === RESERVED && i > idx(0, COURT_Y1)) use[i] = FREE;
+  });
+  rect(0, 0, W - 1, H - 1, (_x, _y, i) => {
+    if (use[i] === STREET) ground2[i] = FLOOR;
+  });
+  const isFree = (x, y) => inside(x, y) && use[idx(x, y)] === FREE && !keepOff[idx(x, y)];
+  const isWalk = (x, y) => inside(x, y) && (use[idx(x, y)] === STREET || use[idx(x, y)] === PLAZA);
+  const setDecor = (x, y, id) => {
+    const i = idx(x, y);
+    objects[i] = id;
+    use[i] = DECOR;
+  };
+  const nearStreet = (x, y) => [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([ox, oy]) => isWalk(x + ox, y + oy));
+  const fx = W / 2 - 1;
+  place(Block.FOUNTAIN, W / 2 - 2, MID - 2, "Fonte", false);
+  place(Block.WELL, W / 2 + 4, H - 15, "Po\xE7o", false);
+  place(Block.STALL, W / 2 - 7, MID - 4, "Barraca", false);
+  place(Block.STALL, W / 2 + 5, MID + 4, "Barraca", false);
+  place(Block.BENCH, fx - 4, MID + 1, "Banco", false);
+  place(Block.BENCH, fx + 5, MID + 1, "Banco", false);
+  place(Block.BENCH_LONG, W / 2 - 8, H - 11, "Banco", false);
+  place(Block.BENCH_LONG, W / 2 + 5, H - 9, "Banco", false);
+  place(Block.BENCH_LONG, CX0 + 5, CY1 + 4, "Banco", false);
+  place(Block.BENCH_LONG, CX0 + 18, CY1 + 4, "Banco", false);
+  for (const [x, y] of [
+    [W / 2 - 9, MID - 6],
+    [W / 2 + 9, MID - 6],
+    [W / 2 - 9, MID + 6],
+    [W / 2 + 9, MID + 6],
+    [W / 2 - 9, H - 17],
+    [W / 2 + 8, H - 17],
+    [CX0 + 2, CY1],
+    [CX0 + 23, CY1],
+    [CX0 + 2, COURT_Y1],
+    [CX0 + 23, COURT_Y1],
+    [GX0 - 1, H - TD - 1],
+    [GX1 + 1, H - TD - 1]
+  ]) setDecor(x, y, Block.LAMP);
+  for (const x of [CX0 + 3, CX0 + 4, CX0 + 21, CX0 + 22]) for (const y of [CY1 + 1, CY1 + 2]) setDecor(x, y, Block.HEDGE);
+  for (const x of [CX0 + 7, CX0 + 9, CX0 + 16, CX0 + 18]) setDecor(x, CY1 + 1, Block.FLOWER);
+  const signs = [[W / 2 - 5, H - 15, SIGNS[0]], [W / 2 - 9, MID + 2, SIGNS[1]], [W / 2 + 8, MID + 7, SIGNS[2]]];
+  for (const [x, y, text] of signs) {
+    const k = buildings.push({ id: Block.SIGNPOST, name: text, x: TOWN_X0 + x, y: TOWN_Y0 + y, w: 1, d: 1, door: null }) - 1;
+    setDecor(x, y, Block.SIGNPOST);
+    buildingAt[idx(x, y)] = k;
+  }
+  const order = [];
+  for (let y = WALL + 1; y < H - WALL - 1; y++) for (let x = WALL + 1; x < W - WALL - 1; x++) order.push(idx(x, y));
+  for (let k = order.length - 1; k > 0; k--) {
+    const j = ri(k + 1);
+    [order[k], order[j]] = [order[j], order[k]];
+  }
+  {
+    const [w, d] = townSize(Block.HOUSE);
+    for (const c of order) {
+      const x = c % W;
+      const y = Math.floor(c / W);
+      const id = h(x, y, 11) < 0.5 ? Block.HOUSE : Block.HOUSE_TALL;
+      let ok = true;
+      for (let yy = y - 1; yy <= y + d && ok; yy++) {
+        for (let xx = x - 1; xx <= x + w && ok; xx++) {
+          const inner = xx >= x && xx < x + w && yy >= y && yy < y + d;
+          if (inner ? !isFree(xx, yy) : inside(xx, yy) && (use[idx(xx, yy)] === BUILT || use[idx(xx, yy)] === YARD)) ok = false;
+        }
+      }
+      if (!ok) continue;
+      const dx = x + Math.floor(w / 2);
+      let path = 0;
+      while (path < 4 && !isWalk(dx, y + d + path)) {
+        if (!isFree(dx, y + d + path)) {
+          path = 99;
+          break;
+        }
+        path++;
+      }
+      if (path >= 4 || rand() < 0.12) continue;
+      for (let k = 0; k < path; k++) {
+        const i = idx(dx, y + d + k);
+        use[i] = WALKWAY;
+        ground2[i] = FLOOR;
+      }
+      place(id, x, y, "Casa", true);
+    }
+  }
+  const lamps = [];
+  rect(0, 0, W - 1, H - 1, (x, y, i) => {
+    if (use[i] !== FREE || keepOff[i] || !nearStreet(x, y)) return;
+    if (![[1, 0], [-1, 0], [0, 1], [0, -1]].some(([ox, oy]) => inside(x + ox, y + oy) && main[idx(x + ox, y + oy)])) return;
+    if (lamps.some(([lx, ly]) => Math.abs(lx - x) + Math.abs(ly - y) < 7)) return;
+    lamps.push([x, y]);
+    setDecor(x, y, Block.LAMP);
+  });
+  alleyEnds.forEach(([x, y], k) => setDecor(x, y, k % 2 ? Block.BARREL : Block.CRATES));
+  for (const b of required.filter((r) => r.id === Block.SMITHY || r.id === Block.SHOP_TOOLS || r.id === Block.SHOP_POTION)) {
+    const x0 = b.x - TOWN_X0;
+    const y1 = b.y - TOWN_Y0;
+    for (const [x, y] of [[x0 - 1, y1], [x0 + b.w, y1], [x0 - 1, y1 - 1], [x0 + b.w, y1 - 1]]) {
+      if (inside(x, y) && use[idx(x, y)] === FREE) setDecor(x, y, h(x, y, 9) < 0.5 ? Block.BARREL : Block.CRATES);
+    }
+  }
+  rect(WALL, WALL, W - WALL - 1, H - WALL - 1, (x, y, i) => {
+    if (use[i] !== FREE) return;
+    const r = h(x, y, 5);
+    if (nearStreet(x, y)) {
+      if (r < 0.62) setDecor(x, y, Block.HEDGE);
+      else if (r < 0.75) setDecor(x, y, Block.FLOWER);
+      return;
+    }
+    const roomy = [-1, 0, 1].every((oy) => [-1, 0, 1].every((ox) => inside(x + ox, y + oy) && use[idx(x + ox, y + oy)] === FREE));
+    if (roomy && r < 0.2 && y > 3) {
+      objects[i] = h(x, y, 6) < 0.3 ? Block.SAKURA_TREE : h(x, y, 7) < 0.4 ? Block.BIRCH_TREE : Block.OAK_TREE;
+      use[i] = DECOR;
+      rect(x - 1, y - 1, x + 1, y + 1, (_x, _y, j) => {
+        if (use[j] === FREE) use[j] = RESERVED;
+      });
+    } else if (r < 0.34) objects[i] = Block.FLOWER;
+    else if (r < 0.42) objects[i] = Block.TALL_GRASS;
+  });
+  rect(0, 0, W - 1, H - 1, (_x, _y, i) => {
+    if (use[i] === RESERVED) use[i] = FREE;
+  });
+  rect(0, 0, W - 1, H - 1, (x, y, i) => {
+    if (use[i] !== YARD) return;
+    const r = h(x, y, 12);
+    objects[i] = r < 0.2 ? Block.FLOWER : r < 0.32 ? Block.TALL_GRASS : Block.AIR;
+  });
+  const street = new Uint8Array(W * H);
+  for (let i = 0; i < W * H; i++) street[i] = use[i] === STREET || use[i] === PLAZA || use[i] === WALKWAY ? 1 : 0;
+  return {
+    w: W,
+    h: H,
+    area: { x0: TOWN_X0, y0: TOWN_Y0, x1: TOWN_X0 + W - 1, y1: TOWN_Y0 + H - 1 },
+    gate: { x0: TOWN_X0 + GX0, y0: TOWN_Y0 + H - WALL, x1: TOWN_X0 + GX1, y1: TOWN_Y0 + H - 1 },
+    start: [TOWN_X0 + W / 2, TOWN_Y0 + START_Y],
+    doorstep: [TOWN_X0 + W / 2, TOWN_Y0 + H + 4],
+    castleDoor: castle.door,
+    buildings,
+    ground: ground2,
+    objects,
+    upper,
+    buildingAt,
+    street
+  };
+}
+function grow(r, m) {
+  return { x0: r.x0 - m, y0: r.y0 - m, x1: r.x1 + m, y1: r.y1 + m };
+}
+var TownTerrain = class {
+  constructor(base, layout) {
+    this.base = base;
+    this.layout = layout;
+    const a = grow(layout.area, TOWN_MARGIN);
+    this.touched = { ...a, y1: Math.max(a.y1, layout.area.y1 + ROAD_LEN) };
+  }
+  base;
+  layout;
+  /** Tudo o que a cidade altera (área + anel + estrada). */
+  touched;
+  get seed() {
+    return this.base.seed;
+  }
+  surround(x, y, c) {
+    const l = this.layout;
+    const a = l.area;
+    if (x >= l.gate.x0 && x <= l.gate.x1 && y > a.y1 && y <= a.y1 + ROAD_LEN) return { ground: Block.PATH, object: Block.AIR, upper: Block.AIR };
+    const d = Math.max(a.x0 - x, x - a.x1, a.y0 - y, y - a.y1);
+    if (d > TOWN_MARGIN) return c;
+    const g = blockDef(c.ground);
+    const ground2 = g.liquid || c.ground === Block.HOLE ? Block.GRASS : c.ground;
+    if (d <= TOWN_CLEAR) return { ground: ground2, object: Block.AIR, upper: Block.AIR };
+    return { ground: ground2, object: c.object, upper: c.upper };
+  }
+  cellAt(x, y) {
+    const l = this.layout;
+    if (inRect(l.area, x, y)) {
+      const i = (y - l.area.y0) * l.w + (x - l.area.x0);
+      return { ground: l.ground[i], object: l.objects[i], upper: l.upper[i] };
+    }
+    const c = this.base.cellAt(x, y);
+    return inRect(this.touched, x, y) ? this.surround(x, y, c) : c;
+  }
+  groundAt(x, y) {
+    return this.cellAt(x, y).ground;
+  }
+  objectAt(x, y) {
+    return this.cellAt(x, y).object;
+  }
+  upperAt(x, y) {
+    return this.cellAt(x, y).upper;
+  }
+  biomeAt(x, y) {
+    return this.base.biomeAt(x, y);
+  }
+  generateChunk(cx, cy, ground2, objects, upper) {
+    this.base.generateChunk(cx, cy, ground2, objects, upper);
+    const t = this.touched;
+    const S = Math.round(Math.sqrt(ground2.length));
+    const x0 = cx * S;
+    const y0 = cy * S;
+    if (x0 > t.x1 || x0 + S - 1 < t.x0 || y0 > t.y1 || y0 + S - 1 < t.y0) return;
+    const l = this.layout;
+    for (let ly = 0; ly < S; ly++) {
+      for (let lx = 0; lx < S; lx++) {
+        const x = x0 + lx;
+        const y = y0 + ly;
+        if (!inRect(t, x, y)) continue;
+        const i = ly * S + lx;
+        let c;
+        if (inRect(l.area, x, y)) {
+          const k = (y - l.area.y0) * l.w + (x - l.area.x0);
+          c = { ground: l.ground[k], object: l.objects[k], upper: l.upper[k] };
+        } else {
+          c = this.surround(x, y, { ground: ground2[i], object: objects[i], upper: upper[i] });
+        }
+        ground2[i] = c.ground;
+        objects[i] = c.object;
+        upper[i] = c.upper;
+      }
+    }
+  }
+};
+
+// src/world/wolves.ts
+var WOLF_REGION = 40;
+var WOLF_REGIONS = 3;
+var WOLF_DEN_CHANCE = 0.5;
+var WOLF_TOWN_CLEARANCE = 28;
+var WOLF_ROAM = 12;
+var SLOTS = [[0, 0], [2, 1], [-1, 2]];
+function open(world, x, y) {
+  const g = world.generator.groundAt(x, y);
+  if (g === Block.WATER || g === Block.HOLE || g === Block.VOID || blockDef(g).liquid) return false;
+  const o = world.generator.objectAt(x, y);
+  return (o === Block.AIR || blockDef(o).shape === "decoration") && world.generator.upperAt(x, y) === Block.AIR && !world.isProtected(x, y);
+}
+function wolfRoam(homeX, homeY) {
+  return { x0: homeX - WOLF_ROAM, y0: homeY - WOLF_ROAM, x1: homeX + WOLF_ROAM, y1: homeY + WOLF_ROAM };
+}
+function wolfPacks(world) {
+  const town = world.town;
+  if (!world.profile.wolves || !town) return [];
+  const seed = world.seed;
+  const keepOut = grow({ ...town.area, y1: town.area.y1 + TOWN_SOUTH_FIELD }, WOLF_TOWN_CLEARANCE);
+  const cx = Math.floor((town.area.x0 + town.area.x1) / 2 / WOLF_REGION);
+  const cy = Math.floor((town.area.y0 + town.area.y1) / 2 / WOLF_REGION);
+  const out = [];
+  for (let ry = cy - WOLF_REGIONS; ry <= cy + WOLF_REGIONS; ry++) {
+    for (let rx = cx - WOLF_REGIONS; rx <= cx + WOLF_REGIONS; rx++) {
+      if (hash2(seed, rx * 7 + 101, ry * 13 + 211) >= WOLF_DEN_CHANCE) continue;
+      const kind = WOLF_KINDS[Math.floor(hash2(seed, rx * 31 + 5, ry * 17 + 9) * WOLF_KINDS.length)];
+      const count = 1 + Math.floor(hash2(seed, rx * 5 + 3, ry * 11 + 7) * 3);
+      for (let k = 0; k < 12; k++) {
+        const hx = rx * WOLF_REGION + 4 + Math.floor(hash2(seed, rx * 3 + k, ry * 19 + 1) * (WOLF_REGION - 8));
+        const hy = ry * WOLF_REGION + 4 + Math.floor(hash2(seed, rx * 23 + 2, ry * 3 + k) * (WOLF_REGION - 8));
+        if (hx >= keepOut.x0 && hx <= keepOut.x1 && hy >= keepOut.y0 && hy <= keepOut.y1) continue;
+        const cells = SLOTS.slice(0, count).map(([dx, dy]) => [hx + dx, hy + dy]);
+        if (!cells.every(([x, y]) => open(world, x, y))) continue;
+        for (const [x, y] of cells) out.push({ kind, x: x + 0.5, y: y + 0.5, homeX: hx + 0.5, homeY: hy + 0.5 });
+        break;
+      }
+    }
+  }
+  return out;
+}
+
 // src/game/entities.ts
-var SIT_BODIES = ["heroine", "hero", "hood", "gino"];
+var SIT_BODIES = ["heroine", "hero", "hood", "gino", "mila"];
 function canSit(body) {
   return SIT_BODIES.includes(body);
 }
 var FLOW_EVERY = 0.25;
 var RESPAWN_CLEARANCE = 10;
+var ACTIVE_RADIUS = 48;
 var FLOCK_SIZE = 4;
 var SWORD_REACH = 1.45;
 var SWORD_ARC_COS = 0.3;
@@ -2330,12 +2989,17 @@ var Entities = class {
       this.spawnAnimals(world, "chicken", gx - 6, gy + (town ? 6 : 1), 4, 97);
     }
     this.spawnMonsters(world);
+    this.spawnWolves(world);
   }
   /** Monstros nos pontos da dungeon (posições pela seed; o sorteio do passeio usa `rand`). */
   spawnMonsters(world) {
     const d = world.dungeon;
     if (!d) return;
     for (const s of d.spawns) this.monsters.push(new Monster(s.kind, s.x, s.y, s.kind === "spider-boss" ? d.bossRoom : d.interior, this.rand));
+  }
+  /** Bandos de lobos pelo mapa (`world/wolves.ts`; posições pela seed): cada lobo passeia perto da toca do bando. */
+  spawnWolves(world) {
+    for (const w of wolfPacks(world)) this.monsters.push(new Monster(w.kind, w.x, w.y, wolfRoam(w.homeX, w.homeY), this.rand, w.homeX, w.homeY));
   }
   /** Quem os monstros perseguem e mordem: a personagem (aparelho) ou os jogadores da sala (servidor). */
   hunters() {
@@ -2389,8 +3053,10 @@ var Entities = class {
     for (const h of this.horses) h.update(dt, world, this.blocker);
     this.updateFlow(dt, world);
     const flow = this.flow ? this.flowAt : void 0;
-    for (const m of this.monsters) m.update(dt, world, this.targetOf(m), this.blocker, flow);
+    const awake = (m) => this.hunters().some((h) => Math.abs(h.x - m.x) <= ACTIVE_RADIUS && Math.abs(h.y - m.y) <= ACTIVE_RADIUS);
+    for (const m of this.monsters) if (awake(m)) m.update(dt, world, this.targetOf(m), this.blocker, flow);
     for (const m of this.monsters) {
+      if (!awake(m)) continue;
       for (const h of this.hunters()) {
         if (h.dead || !m.tryBite(h)) continue;
         if (h === this.player) this.biteFrom(m.kind, m.x, m.y, world);
@@ -3102,594 +3768,6 @@ var Chunk = class {
   }
 };
 
-// src/world/town.ts
-var TOWN_W = 164;
-var TOWN_H = 132;
-var TOWN_X0 = -TOWN_W / 2;
-var TOWN_Y0 = -TOWN_H;
-var TOWN_SEED = 233152122;
-var TOWN_MARGIN = 8;
-var TOWN_CLEAR = 3;
-var ROAD_LEN = 14;
-var TOWN_SOUTH_FIELD = 28;
-var WALL = 2;
-var TOWN_WALL = WALL;
-var TOWN_SIZES = {
-  [Block.CASTLE]: [26, 17, 17],
-  [Block.GUILD]: [9, 9, 9],
-  [Block.INN]: [9, 5, 5],
-  [Block.SMITHY]: [8, 5, 5],
-  [Block.SHOP_POTION]: [5, 5, 4],
-  [Block.SHOP_GOODS]: [5, 5, 5],
-  [Block.SHOP_TOOLS]: [5, 5, 4],
-  [Block.HOUSE]: [5, 5, 4],
-  [Block.HOUSE_TALL]: [5, 5, 5],
-  [Block.WATCHTOWER]: [4, 6, 6],
-  [Block.WELL]: [2, 2, 2],
-  [Block.FOUNTAIN]: [5, 5, 5],
-  [Block.STALL]: [2, 1, 1],
-  [Block.BENCH]: [2, 1, 1],
-  [Block.BENCH_LONG]: [3, 1, 1]
-};
-function townSize(id) {
-  const s = TOWN_SIZES[id];
-  return s ? [s[0], s[1]] : [1, 1];
-}
-function townSolid(id) {
-  return TOWN_SIZES[id]?.[2] ?? 1;
-}
-var SIGNS = [
-  "Cidade do Despertar \u2014 o Castelo fica ao norte; o port\xE3o, ao sul",
-  "Pra\xE7a Central: Guilda a oeste, Hospedaria a leste",
-  "Ferreiro e Lojas: siga as ruas a partir da Pra\xE7a Central"
-];
-var FREE = 0;
-var STREET = 1;
-var PLAZA = 2;
-var WALLED = 3;
-var BUILT = 4;
-var RESERVED = 5;
-var WALKWAY = 6;
-var DECOR = 7;
-var YARD = 8;
-var cached = null;
-function townLayout() {
-  return cached ??= buildTown();
-}
-function buildTown() {
-  const W = TOWN_W;
-  const H = TOWN_H;
-  const rand = mulberry32(TOWN_SEED);
-  const ri = (n) => Math.floor(rand() * n);
-  const idx = (x, y) => y * W + x;
-  const inside = (x, y) => x >= 0 && y >= 0 && x < W && y < H;
-  const ground2 = new Uint8Array(W * H).fill(Block.GRASS);
-  const FLOOR = Block.STONE_BRICK;
-  const objects = new Uint8Array(W * H);
-  const upper = new Uint8Array(W * H);
-  const use = new Uint8Array(W * H);
-  const keepOff = new Uint8Array(W * H);
-  const main = new Uint8Array(W * H);
-  const buildingAt = new Int16Array(W * H).fill(-1);
-  const buildings = [];
-  const h = (x, y, salt) => hash2(TOWN_SEED, x * 31 + salt, y * 17 - salt);
-  const GX0 = W / 2 - 2;
-  const GX1 = W / 2 + 1;
-  for (let y = 0; y < H; y++) {
-    for (let x = 0; x < W; x++) {
-      if (x >= WALL && y >= WALL && x < W - WALL && y < H - WALL) continue;
-      const i = idx(x, y);
-      ground2[i] = FLOOR;
-      if (y >= H - WALL && x >= GX0 && x <= GX1) {
-        use[i] = STREET;
-        continue;
-      }
-      use[i] = WALLED;
-      objects[i] = Block.STONE_BRICK;
-      upper[i] = Block.STONE_BRICK;
-    }
-  }
-  const place = (id, x, y, name, door) => {
-    const [w, lot] = townSize(id);
-    const d = townSolid(id);
-    const b = {
-      id,
-      name,
-      x: TOWN_X0 + x,
-      y: TOWN_Y0 + y + lot - 1,
-      w,
-      d,
-      door: door ? [TOWN_X0 + x + Math.floor(w / 2), TOWN_Y0 + y + lot] : null
-    };
-    const k = buildings.push(b) - 1;
-    for (let yy = y; yy < y + lot - d; yy++) {
-      for (let xx = x; xx < x + w; xx++) if (use[idx(xx, yy)] === FREE || use[idx(xx, yy)] === RESERVED) use[idx(xx, yy)] = YARD;
-    }
-    y += lot - d;
-    for (let yy = y; yy < y + d; yy++) {
-      for (let xx = x; xx < x + w; xx++) {
-        const i = idx(xx, yy);
-        if (use[i] !== WALLED && use[i] !== PLAZA && use[i] !== STREET) ground2[i] = Block.GRASS;
-        use[i] = BUILT;
-        objects[i] = Block.TOWN_PART;
-        upper[i] = Block.AIR;
-        buildingAt[i] = k;
-      }
-    }
-    objects[idx(x, y + d - 1)] = id;
-    return b;
-  };
-  const rect = (x0, y0, x1, y1, fn) => {
-    for (let y = Math.max(0, y0); y <= Math.min(H - 1, y1); y++) for (let x = Math.max(0, x0); x <= Math.min(W - 1, x1); x++) fn(x, y, idx(x, y));
-  };
-  const TW = 4;
-  const TD = 6;
-  place(Block.WATCHTOWER, 0, 0, "Guarita", false);
-  place(Block.WATCHTOWER, W - TW, 0, "Guarita", false);
-  place(Block.WATCHTOWER, 0, H - TD, "Guarita", false);
-  place(Block.WATCHTOWER, W - TW, H - TD, "Guarita", false);
-  place(Block.WATCHTOWER, GX0 - TW, H - TD, "Guarita", false);
-  place(Block.WATCHTOWER, GX1 + 1, H - TD, "Guarita", false);
-  const CX0 = W / 2 - 13;
-  const CY1 = 3 + 17;
-  const COURT_Y1 = CY1 + 7;
-  rect(CX0 - 2, WALL, CX0 + 27, COURT_Y1, (_x, _y, i) => {
-    if (use[i] === FREE) use[i] = RESERVED;
-  });
-  const castle = place(Block.CASTLE, CX0, 3, "Castelo", true);
-  const plaza = (x0, y0, x1, y1, floor) => rect(x0, y0, x1, y1, (_x, _y, i) => {
-    use[i] = PLAZA;
-    ground2[i] = floor;
-  });
-  const MID = 70;
-  const START_Y = H - 12;
-  plaza(CX0 + 2, CY1, CX0 + 23, COURT_Y1, FLOOR);
-  plaza(W / 2 - 9, MID - 6, W / 2 + 9, MID + 6, FLOOR);
-  plaza(W / 2 - 9, H - 17, W / 2 + 8, H - TD - 1, FLOOR);
-  rect(GX0, H - TD, GX1, H - 1, (_x, _y, i) => {
-    use[i] = STREET;
-    ground2[i] = FLOOR;
-  });
-  const required = [
-    place(Block.GUILD, W / 2 - 28, MID - 8, "Guilda dos Aventureiros", true),
-    place(Block.INN, W / 2 + 20, MID - 4, "Hospedaria", true),
-    place(Block.SMITHY, 30, MID + 18, "Ferreiro", true),
-    place(Block.SHOP_POTION, W / 2 + 22, MID + 18, "Loja de Po\xE7\xF5es", true),
-    place(Block.SHOP_GOODS, W / 2 + 27, MID + 18, "Armaz\xE9m", true),
-    place(Block.SHOP_TOOLS, W / 2 + 32, MID + 18, "Loja de Ferramentas", true)
-  ];
-  for (const b of required) {
-    const x0 = b.x - TOWN_X0;
-    const y1 = b.y - TOWN_Y0;
-    rect(x0 - 1, y1 - townSize(b.id)[1], x0 + b.w, y1 + 1, (_x, _y, i) => {
-      keepOff[i] = 1;
-    });
-    const [dx, dy] = b.door;
-    rect(dx - TOWN_X0 - 1, dy - TOWN_Y0, dx - TOWN_X0 + 1, dy - TOWN_Y0, (_x, _y, i) => {
-      if (use[i] === FREE) use[i] = RESERVED;
-    });
-  }
-  const carvable = (x, y) => inside(x, y) && (use[idx(x, y)] === FREE || use[idx(x, y)] === STREET || use[idx(x, y)] === PLAZA || use[idx(x, y)] === RESERVED && y > COURT_Y1);
-  const segment = (ax, ay, bx, by, width, jog) => {
-    const out = [];
-    const lo = -Math.floor((width - 1) / 2);
-    const hi = lo + width - 1;
-    const line = (x0, y0, x1, y1) => {
-      for (let y = Math.min(y0, y1) + lo; y <= Math.max(y0, y1) + hi; y++) {
-        for (let x = Math.min(x0, x1) + lo; x <= Math.max(x0, x1) + hi; x++) out.push([x, y]);
-      }
-    };
-    if (Math.abs(bx - ax) >= Math.abs(by - ay)) {
-      const mx = Math.round((ax + bx) / 2) + jog;
-      line(ax, ay, mx, ay);
-      line(mx, ay, mx, by);
-      line(mx, by, bx, by);
-    } else {
-      const my = Math.round((ay + by) / 2) + jog;
-      line(ax, ay, ax, my);
-      line(ax, my, bx, my);
-      line(bx, my, bx, by);
-    }
-    return out;
-  };
-  const SX = 15;
-  const SY = 13;
-  const GW = Math.floor((W - 16) / SX) + 1;
-  const GH = Math.floor((H - 28) / SY) + 1;
-  const nodes = [];
-  for (let j = 0; j < GH; j++) {
-    for (let i = 0; i < GW; i++) {
-      const x = 8 + SX * i + ri(5) - 2;
-      const y = 8 + SY * j + ri(5) - 2;
-      nodes.push({ x, y, ok: carvable(x, y) && carvable(x + 1, y + 1) && use[idx(x, y)] !== RESERVED });
-    }
-  }
-  const COURT = nodes.push({ x: W / 2, y: COURT_Y1, ok: true }) - 1;
-  const edges = [];
-  const tryEdge = (a, b, width) => {
-    const A = nodes[a];
-    const B = nodes[b];
-    if (!A.ok || !B.ok) return;
-    const jog = ri(3) - 1;
-    const cells = segment(A.x, A.y, B.x, B.y, width, jog);
-    if (cells.every(([x, y]) => carvable(x, y))) edges.push({ a, b, cells, narrow: segment(A.x, A.y, B.x, B.y, 2, jog) });
-  };
-  for (let j = 0; j < GH; j++) {
-    for (let i = 0; i < GW; i++) {
-      const n = j * GW + i;
-      if (i + 1 < GW) tryEdge(n, n + 1, 3);
-      if (j + 1 < GH) tryEdge(n, n + GW, 3);
-    }
-  }
-  for (let n = 0; n < GW * GH; n++) {
-    if (nodes[n].ok && nodes[n].y > COURT_Y1 && nodes[n].y < COURT_Y1 + 10 && Math.abs(nodes[n].x - W / 2) <= 14) tryEdge(COURT, n, 3);
-  }
-  const adj = /* @__PURE__ */ new Map();
-  for (const e of edges) {
-    adj.set(e.a, [...adj.get(e.a) ?? [], e]);
-    adj.set(e.b, [...adj.get(e.b) ?? [], e]);
-  }
-  const other = (e, n) => e.a === n ? e.b : e.a;
-  const nearestNode = (x, y) => {
-    let best = -1;
-    let bd = Infinity;
-    nodes.forEach((n, k) => {
-      if (!n.ok || !adj.has(k)) return;
-      const d = Math.hypot(n.x - x, n.y - y);
-      if (d < bd) {
-        bd = d;
-        best = k;
-      }
-    });
-    return best;
-  };
-  const weight = new Map(edges.map((e) => [e, 1 + rand() * 5]));
-  const route = (from, to) => {
-    const dist = /* @__PURE__ */ new Map([[from, 0]]);
-    const prev = /* @__PURE__ */ new Map();
-    const open = /* @__PURE__ */ new Set([from]);
-    while (open.size) {
-      let cur = -1;
-      let cd = Infinity;
-      for (const n of open) {
-        const d = dist.get(n);
-        if (d < cd) {
-          cd = d;
-          cur = n;
-        }
-      }
-      open.delete(cur);
-      if (cur === to) break;
-      for (const e of adj.get(cur) ?? []) {
-        const n = other(e, cur);
-        const nd = cd + weight.get(e);
-        if (nd < (dist.get(n) ?? Infinity)) {
-          dist.set(n, nd);
-          prev.set(n, e);
-          open.add(n);
-        }
-      }
-    }
-    const out = [];
-    for (let n = to; n !== from; ) {
-      const e = prev.get(n);
-      if (!e) break;
-      out.push(e);
-      n = other(e, n);
-    }
-    return out.reverse();
-  };
-  const startNode = nearestNode(W / 2, H - 18);
-  const plazaNode = nearestNode(W / 2, MID);
-  const mainEdges = [...route(startNode, plazaNode), ...route(plazaNode, COURT)];
-  const inTree = /* @__PURE__ */ new Set();
-  const chosen = new Set(mainEdges);
-  for (const e of mainEdges) {
-    inTree.add(e.a);
-    inTree.add(e.b);
-  }
-  for (let guard = 0; guard < 1e4; guard++) {
-    const frontier = edges.filter((e2) => inTree.has(e2.a) !== inTree.has(e2.b));
-    if (!frontier.length) break;
-    const e = frontier[ri(frontier.length)];
-    chosen.add(e);
-    inTree.add(e.a);
-    inTree.add(e.b);
-  }
-  for (const e of edges) if (!chosen.has(e) && rand() < 0.16) chosen.add(e);
-  const carve = (cells, isMain) => {
-    for (const [x, y] of cells) {
-      if (!carvable(x, y)) continue;
-      const i = idx(x, y);
-      if (use[i] !== PLAZA) use[i] = STREET;
-      if (isMain) main[i] = 1;
-    }
-  };
-  for (const e of chosen) {
-    const isMain = mainEdges.includes(e);
-    carve(isMain ? e.cells : e.narrow, isMain);
-  }
-  const connect = (x, y) => {
-    const sx = x - TOWN_X0;
-    const sy = y - TOWN_Y0;
-    const prev = new Int32Array(W * H).fill(-1);
-    const q = [idx(sx, sy)];
-    prev[q[0]] = q[0];
-    let found = -1;
-    for (let k = 0; k < q.length && found < 0; k++) {
-      const c = q[k];
-      const cx = c % W;
-      const cy = Math.floor(c / W);
-      for (const [ox, oy] of [[0, 1], [1, 0], [-1, 0], [0, -1]]) {
-        const nx = cx + ox;
-        const ny = cy + oy;
-        if (!inside(nx, ny)) continue;
-        const n = idx(nx, ny);
-        if (prev[n] >= 0) continue;
-        if (use[n] === STREET || use[n] === PLAZA) {
-          prev[n] = c;
-          found = n;
-          break;
-        }
-        if (use[n] !== FREE && use[n] !== RESERVED) continue;
-        prev[n] = c;
-        q.push(n);
-      }
-    }
-    for (let c = found; c >= 0 && prev[c] !== c; c = prev[c]) {
-      const p = prev[c];
-      for (const k of [p, p + 1]) if (use[k] === FREE || use[k] === RESERVED) use[k] = STREET;
-    }
-    if (use[idx(sx, sy)] !== PLAZA) use[idx(sx, sy)] = STREET;
-  };
-  for (const b of required) connect(b.door[0], b.door[1]);
-  connect(castle.door[0], castle.door[1]);
-  const alleyEnds = [];
-  for (let n = 0; n < 400 && alleyEnds.length < 10; n++) {
-    const x = 4 + ri(W - 8);
-    const y = COURT_Y1 + 2 + ri(H - COURT_Y1 - 22);
-    if (use[idx(x, y)] !== STREET || main[idx(x, y)]) continue;
-    const [ox, oy] = [[1, 0], [-1, 0], [0, 1], [0, -1]][ri(4)];
-    const len = 3 + ri(3);
-    const cells = [];
-    let ok = true;
-    for (let k = 1; k <= len + 1 && ok; k++) {
-      const cx = x + ox * k;
-      const cy = y + oy * k;
-      for (const s of [-1, 0, 1]) {
-        const tx = cx + (oy !== 0 ? s : 0);
-        const ty = cy + (ox !== 0 ? s : 0);
-        if (!inside(tx, ty) || use[idx(tx, ty)] !== FREE || keepOff[idx(tx, ty)]) ok = false;
-      }
-      if (k <= len) cells.push([cx, cy]);
-    }
-    if (!ok) continue;
-    for (const [cx, cy] of cells) use[idx(cx, cy)] = STREET;
-    alleyEnds.push(cells[cells.length - 1]);
-  }
-  rect(0, 0, W - 1, H - 1, (_x, _y, i) => {
-    if (use[i] === RESERVED && i > idx(0, COURT_Y1)) use[i] = FREE;
-  });
-  rect(0, 0, W - 1, H - 1, (_x, _y, i) => {
-    if (use[i] === STREET) ground2[i] = FLOOR;
-  });
-  const isFree = (x, y) => inside(x, y) && use[idx(x, y)] === FREE && !keepOff[idx(x, y)];
-  const isWalk = (x, y) => inside(x, y) && (use[idx(x, y)] === STREET || use[idx(x, y)] === PLAZA);
-  const setDecor = (x, y, id) => {
-    const i = idx(x, y);
-    objects[i] = id;
-    use[i] = DECOR;
-  };
-  const nearStreet = (x, y) => [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([ox, oy]) => isWalk(x + ox, y + oy));
-  const fx = W / 2 - 1;
-  place(Block.FOUNTAIN, W / 2 - 2, MID - 2, "Fonte", false);
-  place(Block.WELL, W / 2 + 4, H - 15, "Po\xE7o", false);
-  place(Block.STALL, W / 2 - 7, MID - 4, "Barraca", false);
-  place(Block.STALL, W / 2 + 5, MID + 4, "Barraca", false);
-  place(Block.BENCH, fx - 4, MID + 1, "Banco", false);
-  place(Block.BENCH, fx + 5, MID + 1, "Banco", false);
-  place(Block.BENCH_LONG, W / 2 - 8, H - 11, "Banco", false);
-  place(Block.BENCH_LONG, W / 2 + 5, H - 9, "Banco", false);
-  place(Block.BENCH_LONG, CX0 + 5, CY1 + 4, "Banco", false);
-  place(Block.BENCH_LONG, CX0 + 18, CY1 + 4, "Banco", false);
-  for (const [x, y] of [
-    [W / 2 - 9, MID - 6],
-    [W / 2 + 9, MID - 6],
-    [W / 2 - 9, MID + 6],
-    [W / 2 + 9, MID + 6],
-    [W / 2 - 9, H - 17],
-    [W / 2 + 8, H - 17],
-    [CX0 + 2, CY1],
-    [CX0 + 23, CY1],
-    [CX0 + 2, COURT_Y1],
-    [CX0 + 23, COURT_Y1],
-    [GX0 - 1, H - TD - 1],
-    [GX1 + 1, H - TD - 1]
-  ]) setDecor(x, y, Block.LAMP);
-  for (const x of [CX0 + 3, CX0 + 4, CX0 + 21, CX0 + 22]) for (const y of [CY1 + 1, CY1 + 2]) setDecor(x, y, Block.HEDGE);
-  for (const x of [CX0 + 7, CX0 + 9, CX0 + 16, CX0 + 18]) setDecor(x, CY1 + 1, Block.FLOWER);
-  const signs = [[W / 2 - 5, H - 15, SIGNS[0]], [W / 2 - 9, MID + 2, SIGNS[1]], [W / 2 + 8, MID + 7, SIGNS[2]]];
-  for (const [x, y, text] of signs) {
-    const k = buildings.push({ id: Block.SIGNPOST, name: text, x: TOWN_X0 + x, y: TOWN_Y0 + y, w: 1, d: 1, door: null }) - 1;
-    setDecor(x, y, Block.SIGNPOST);
-    buildingAt[idx(x, y)] = k;
-  }
-  const order = [];
-  for (let y = WALL + 1; y < H - WALL - 1; y++) for (let x = WALL + 1; x < W - WALL - 1; x++) order.push(idx(x, y));
-  for (let k = order.length - 1; k > 0; k--) {
-    const j = ri(k + 1);
-    [order[k], order[j]] = [order[j], order[k]];
-  }
-  {
-    const [w, d] = townSize(Block.HOUSE);
-    for (const c of order) {
-      const x = c % W;
-      const y = Math.floor(c / W);
-      const id = h(x, y, 11) < 0.5 ? Block.HOUSE : Block.HOUSE_TALL;
-      let ok = true;
-      for (let yy = y - 1; yy <= y + d && ok; yy++) {
-        for (let xx = x - 1; xx <= x + w && ok; xx++) {
-          const inner = xx >= x && xx < x + w && yy >= y && yy < y + d;
-          if (inner ? !isFree(xx, yy) : inside(xx, yy) && (use[idx(xx, yy)] === BUILT || use[idx(xx, yy)] === YARD)) ok = false;
-        }
-      }
-      if (!ok) continue;
-      const dx = x + Math.floor(w / 2);
-      let path = 0;
-      while (path < 4 && !isWalk(dx, y + d + path)) {
-        if (!isFree(dx, y + d + path)) {
-          path = 99;
-          break;
-        }
-        path++;
-      }
-      if (path >= 4 || rand() < 0.12) continue;
-      for (let k = 0; k < path; k++) {
-        const i = idx(dx, y + d + k);
-        use[i] = WALKWAY;
-        ground2[i] = FLOOR;
-      }
-      place(id, x, y, "Casa", true);
-    }
-  }
-  const lamps = [];
-  rect(0, 0, W - 1, H - 1, (x, y, i) => {
-    if (use[i] !== FREE || keepOff[i] || !nearStreet(x, y)) return;
-    if (![[1, 0], [-1, 0], [0, 1], [0, -1]].some(([ox, oy]) => inside(x + ox, y + oy) && main[idx(x + ox, y + oy)])) return;
-    if (lamps.some(([lx, ly]) => Math.abs(lx - x) + Math.abs(ly - y) < 7)) return;
-    lamps.push([x, y]);
-    setDecor(x, y, Block.LAMP);
-  });
-  alleyEnds.forEach(([x, y], k) => setDecor(x, y, k % 2 ? Block.BARREL : Block.CRATES));
-  for (const b of required.filter((r) => r.id === Block.SMITHY || r.id === Block.SHOP_TOOLS || r.id === Block.SHOP_POTION)) {
-    const x0 = b.x - TOWN_X0;
-    const y1 = b.y - TOWN_Y0;
-    for (const [x, y] of [[x0 - 1, y1], [x0 + b.w, y1], [x0 - 1, y1 - 1], [x0 + b.w, y1 - 1]]) {
-      if (inside(x, y) && use[idx(x, y)] === FREE) setDecor(x, y, h(x, y, 9) < 0.5 ? Block.BARREL : Block.CRATES);
-    }
-  }
-  rect(WALL, WALL, W - WALL - 1, H - WALL - 1, (x, y, i) => {
-    if (use[i] !== FREE) return;
-    const r = h(x, y, 5);
-    if (nearStreet(x, y)) {
-      if (r < 0.62) setDecor(x, y, Block.HEDGE);
-      else if (r < 0.75) setDecor(x, y, Block.FLOWER);
-      return;
-    }
-    const roomy = [-1, 0, 1].every((oy) => [-1, 0, 1].every((ox) => inside(x + ox, y + oy) && use[idx(x + ox, y + oy)] === FREE));
-    if (roomy && r < 0.2 && y > 3) {
-      objects[i] = h(x, y, 6) < 0.3 ? Block.SAKURA_TREE : h(x, y, 7) < 0.4 ? Block.BIRCH_TREE : Block.OAK_TREE;
-      use[i] = DECOR;
-      rect(x - 1, y - 1, x + 1, y + 1, (_x, _y, j) => {
-        if (use[j] === FREE) use[j] = RESERVED;
-      });
-    } else if (r < 0.34) objects[i] = Block.FLOWER;
-    else if (r < 0.42) objects[i] = Block.TALL_GRASS;
-  });
-  rect(0, 0, W - 1, H - 1, (_x, _y, i) => {
-    if (use[i] === RESERVED) use[i] = FREE;
-  });
-  rect(0, 0, W - 1, H - 1, (x, y, i) => {
-    if (use[i] !== YARD) return;
-    const r = h(x, y, 12);
-    objects[i] = r < 0.2 ? Block.FLOWER : r < 0.32 ? Block.TALL_GRASS : Block.AIR;
-  });
-  const street = new Uint8Array(W * H);
-  for (let i = 0; i < W * H; i++) street[i] = use[i] === STREET || use[i] === PLAZA || use[i] === WALKWAY ? 1 : 0;
-  return {
-    w: W,
-    h: H,
-    area: { x0: TOWN_X0, y0: TOWN_Y0, x1: TOWN_X0 + W - 1, y1: TOWN_Y0 + H - 1 },
-    gate: { x0: TOWN_X0 + GX0, y0: TOWN_Y0 + H - WALL, x1: TOWN_X0 + GX1, y1: TOWN_Y0 + H - 1 },
-    start: [TOWN_X0 + W / 2, TOWN_Y0 + START_Y],
-    doorstep: [TOWN_X0 + W / 2, TOWN_Y0 + H + 4],
-    castleDoor: castle.door,
-    buildings,
-    ground: ground2,
-    objects,
-    upper,
-    buildingAt,
-    street
-  };
-}
-function grow(r, m) {
-  return { x0: r.x0 - m, y0: r.y0 - m, x1: r.x1 + m, y1: r.y1 + m };
-}
-var TownTerrain = class {
-  constructor(base, layout) {
-    this.base = base;
-    this.layout = layout;
-    const a = grow(layout.area, TOWN_MARGIN);
-    this.touched = { ...a, y1: Math.max(a.y1, layout.area.y1 + ROAD_LEN) };
-  }
-  base;
-  layout;
-  /** Tudo o que a cidade altera (área + anel + estrada). */
-  touched;
-  get seed() {
-    return this.base.seed;
-  }
-  surround(x, y, c) {
-    const l = this.layout;
-    const a = l.area;
-    if (x >= l.gate.x0 && x <= l.gate.x1 && y > a.y1 && y <= a.y1 + ROAD_LEN) return { ground: Block.PATH, object: Block.AIR, upper: Block.AIR };
-    const d = Math.max(a.x0 - x, x - a.x1, a.y0 - y, y - a.y1);
-    if (d > TOWN_MARGIN) return c;
-    const g = blockDef(c.ground);
-    const ground2 = g.liquid || c.ground === Block.HOLE ? Block.GRASS : c.ground;
-    if (d <= TOWN_CLEAR) return { ground: ground2, object: Block.AIR, upper: Block.AIR };
-    return { ground: ground2, object: c.object, upper: c.upper };
-  }
-  cellAt(x, y) {
-    const l = this.layout;
-    if (inRect(l.area, x, y)) {
-      const i = (y - l.area.y0) * l.w + (x - l.area.x0);
-      return { ground: l.ground[i], object: l.objects[i], upper: l.upper[i] };
-    }
-    const c = this.base.cellAt(x, y);
-    return inRect(this.touched, x, y) ? this.surround(x, y, c) : c;
-  }
-  groundAt(x, y) {
-    return this.cellAt(x, y).ground;
-  }
-  objectAt(x, y) {
-    return this.cellAt(x, y).object;
-  }
-  upperAt(x, y) {
-    return this.cellAt(x, y).upper;
-  }
-  biomeAt(x, y) {
-    return this.base.biomeAt(x, y);
-  }
-  generateChunk(cx, cy, ground2, objects, upper) {
-    this.base.generateChunk(cx, cy, ground2, objects, upper);
-    const t = this.touched;
-    const S = Math.round(Math.sqrt(ground2.length));
-    const x0 = cx * S;
-    const y0 = cy * S;
-    if (x0 > t.x1 || x0 + S - 1 < t.x0 || y0 > t.y1 || y0 + S - 1 < t.y0) return;
-    const l = this.layout;
-    for (let ly = 0; ly < S; ly++) {
-      for (let lx = 0; lx < S; lx++) {
-        const x = x0 + lx;
-        const y = y0 + ly;
-        if (!inRect(t, x, y)) continue;
-        const i = ly * S + lx;
-        let c;
-        if (inRect(l.area, x, y)) {
-          const k = (y - l.area.y0) * l.w + (x - l.area.x0);
-          c = { ground: l.ground[k], object: l.objects[k], upper: l.upper[k] };
-        } else {
-          c = this.surround(x, y, { ground: ground2[i], object: objects[i], upper: upper[i] });
-        }
-        ground2[i] = c.ground;
-        objects[i] = c.object;
-        upper[i] = c.upper;
-      }
-    }
-  }
-};
-
 // src/world/biomes.ts
 var BIOMES = {
   meadow: {
@@ -3978,6 +4056,7 @@ var WORLD_PROFILES = {
     tools: true,
     farming: true,
     sheep: true,
+    wolves: true,
     dungeon: true,
     town: true,
     collectBlocks: true,
@@ -3996,6 +4075,7 @@ var WORLD_PROFILES = {
     tools: false,
     farming: false,
     sheep: false,
+    wolves: false,
     dungeon: false,
     town: false,
     collectBlocks: false,
@@ -4439,7 +4519,7 @@ var World = class {
     void py;
     return blockDef(this.getObject(x, y)).seat ? [x, y] : null;
   }
-  /** A porta só vai entre dois batentes (qualquer bloco de madeira ou de pedra, podem misturar): células da esquerda e da direita. */
+  /** A porta só vai entre dois batentes (qualquer bloco de madeira — tora ou tábuas, de qualquer árvore — ou de pedra, podem misturar): células da esquerda e da direita. */
   hasDoorFrame(x, y) {
     return this.isDoorJamb(x - 1, y) && this.isDoorJamb(x + 1, y);
   }
