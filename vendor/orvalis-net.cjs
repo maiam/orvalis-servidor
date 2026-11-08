@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.86.0 (0e6557f) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.88.0 (fe3d9fa) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -60,6 +60,9 @@ var Block = {
   STONE: 25,
   OAK_LOG: 26,
   OAK_PLANKS: 27,
+  /** Madeira de cerejeira (v0.88.0): tora (da Cerejeira derrubada) e tábuas (da tora). */
+  CHERRY_LOG: 230,
+  CHERRY_PLANKS: 231,
   // --- porta (objeto de 3 níveis de altura; o id guarda o estado) ---
   OAK_DOOR: 28,
   /** Porta aberta: mesma porta, passável. Só existe no mundo (a hotbar coloca a fechada). */
@@ -101,7 +104,7 @@ var Block = {
   // --- árvores (objeto alto) ---
   OAK_TREE: 40,
   SAKURA_TREE: 41,
-  // --- árvores que crescem (prancha de crescimento): muda → jovem → (crescendo) → adulta ---
+  // --- estágios de crescimento APOSENTADOS (v0.88.0: as árvores só aparecem adultas): ids reservados, ver `GROWTH_STAGE_ADULT` ---
   OAK_SAPLING: 52,
   OAK_YOUNG: 53,
   OAK_GROWING: 54,
@@ -253,6 +256,7 @@ function isRemovedBlock(id) {
   return id >= REMOVED_BLOCK_FIRST && id <= REMOVED_BLOCK_LAST;
 }
 function isRemovedStack(stack) {
+  if (RETIRED_ITEMS.has(stack)) return true;
   const m = /^block:(\d+)$/.exec(stack);
   return m !== null && isRemovedBlock(Number(m[1]));
 }
@@ -277,6 +281,8 @@ var defs = [
   object(Block.STONE_BRICK_CRACKED, "Tijolo de Pedra Rachado", { stone: true }),
   object(Block.OAK_LOG, "Tora de Carvalho", { organic: "wood" }),
   object(Block.OAK_PLANKS, "T\xE1bua de Carvalho", { organic: "wood" }),
+  object(Block.CHERRY_LOG, "Tora de Cerejeira", { organic: "wood" }),
+  object(Block.CHERRY_PLANKS, "T\xE1bua de Cerejeira", { organic: "wood" }),
   // Porta: ocupa a célula inteira (nada empilha em cima); fechada bloqueia, aberta deixa passar.
   object(Block.OAK_DOOR, "Porta de Carvalho", { shape: "door", organic: "wood" }),
   object(Block.TENT, "Tenda", { shape: "rock", organic: "wood" }),
@@ -407,7 +413,10 @@ var MATERIALS = [
   Block.STONE_SMOOTH,
   Block.STONE_POLISHED,
   Block.STONE_CRACKED,
-  Block.STONE_BRICK_CRACKED
+  Block.STONE_BRICK_CRACKED,
+  // Madeira de cerejeira (v0.88.0): só no V2 (não há coluna no atlas antigo, que termina nas pedras).
+  Block.CHERRY_LOG,
+  Block.CHERRY_PLANKS
 ];
 var CELESTIAL_BLOCKS = [
   Block.CLOUD_SOLID,
@@ -441,12 +450,18 @@ var HOTBAR_BLOCKS = [
   Block.FENCE,
   Block.FENCE_GATE
 ];
-var TREE_NEXT = {
-  [Block.OAK_SAPLING]: Block.OAK_YOUNG,
-  [Block.OAK_YOUNG]: Block.OAK_GROWING,
+var GROWTH_STAGE_ADULT = {
+  [Block.OAK_SAPLING]: Block.OAK_TREE,
+  [Block.OAK_YOUNG]: Block.OAK_TREE,
   [Block.OAK_GROWING]: Block.OAK_TREE,
-  [Block.APPLE_SAPLING]: Block.APPLE_YOUNG,
-  [Block.APPLE_YOUNG]: Block.APPLE_TREE,
+  [Block.APPLE_SAPLING]: Block.APPLE_TREE,
+  [Block.APPLE_YOUNG]: Block.APPLE_TREE
+};
+function adultOfStage(id) {
+  return GROWTH_STAGE_ADULT[id] ?? id;
+}
+var RETIRED_ITEMS = /* @__PURE__ */ new Set(["oak_sapling", "apple_sapling"]);
+var TREE_NEXT = {
   [Block.APPLE_TREE_BARE]: Block.APPLE_TREE
 };
 function isGrowingTree(id) {
@@ -482,9 +497,7 @@ var Item = {
   SILK: "silk",
   FANG: "fang",
   QUEEN_HEART: "queen_heart",
-  /** Mudas (cortar a árvore adulta) e a fruta da macieira (comer vem com a comida, Fase P). */
-  OAK_SAPLING: "oak_sapling",
-  APPLE_SAPLING: "apple_sapling",
+  /** Fruta da macieira (comer vem com a comida, Fase P). As mudas saíram do jogo na v0.88.0 (`RETIRED_ITEMS`). */
   APPLE: "apple",
   /** Hortaliças: o próprio legume é o que se planta (e o que se colhe). */
   POTATO: "potato",
@@ -509,8 +522,6 @@ var ITEMS = {
   silk: { id: Item.SILK, name: "Seda de Aranha", loot: true },
   fang: { id: Item.FANG, name: "Presa de Aranha", loot: true },
   queen_heart: { id: Item.QUEEN_HEART, name: "Cora\xE7\xE3o da Rainha", loot: true },
-  oak_sapling: { id: Item.OAK_SAPLING, name: "Muda de Carvalho", plants: Block.OAK_SAPLING },
-  apple_sapling: { id: Item.APPLE_SAPLING, name: "Muda de Macieira", plants: Block.APPLE_SAPLING },
   apple: { id: Item.APPLE, name: "Ma\xE7\xE3" },
   potato: { id: Item.POTATO, name: "Batata", plants: Block.POTATO_0 },
   tomato: { id: Item.TOMATO, name: "Tomate", plants: Block.TOMATO_0 },
@@ -563,18 +574,13 @@ function dropsFor(id, rand = Math.random) {
   return [{ item: Item.WHEAT_SEED, count: 1 }];
 }
 function treeDrops(id, rand) {
-  const sapling = (item) => rand() < 0.5 ? [{ item, count: 1 }] : [];
   switch (id) {
-    case Block.OAK_SAPLING:
-      return [{ item: Item.OAK_SAPLING, count: 1 }];
-    case Block.APPLE_SAPLING:
-      return [{ item: Item.APPLE_SAPLING, count: 1 }];
-    case Block.OAK_TREE:
-      return sapling(Item.OAK_SAPLING);
     case Block.APPLE_TREE:
-      return [...pickDrops(rand), ...sapling(Item.APPLE_SAPLING)];
+      return pickDrops(rand);
+    case Block.OAK_TREE:
+    case Block.SAKURA_TREE:
     case Block.APPLE_TREE_BARE:
-      return sapling(Item.APPLE_SAPLING);
+      return [];
     default:
       return null;
   }
@@ -660,10 +666,10 @@ function toolDrops(tool, id, rand = Math.random) {
 }
 var TOOL_ORDER = [Tool.SWORD, Tool.HOE, Tool.PICKAXE, Tool.SHOVEL, Tool.AXE];
 var COLLECTABLE = /* @__PURE__ */ new Set([...MATERIALS, Block.OAK_DOOR, Block.TENT, Block.CHEST, Block.CAMPFIRE, Block.CAULDRON, Block.OVEN, Block.CHAIR, Block.FENCE]);
-var ADULT_TREES = /* @__PURE__ */ new Set([Block.OAK_TREE, Block.SAKURA_TREE, Block.APPLE_TREE, Block.APPLE_TREE_BARE]);
+var ADULT_TREES = /* @__PURE__ */ new Set([Block.OAK_TREE, Block.APPLE_TREE, Block.APPLE_TREE_BARE]);
 function blockDrops(id, rand = Math.random) {
   if (ADULT_TREES.has(id)) return [{ item: blockStack(Block.OAK_LOG), count: 2 + (rand() < 0.5 ? 1 : 0) }];
-  if (id === Block.OAK_YOUNG || id === Block.OAK_GROWING || id === Block.APPLE_YOUNG) return [{ item: blockStack(Block.OAK_LOG), count: 1 }];
+  if (id === Block.SAKURA_TREE) return [{ item: blockStack(Block.CHERRY_LOG), count: 2 + (rand() < 0.5 ? 1 : 0) }];
   if (isDoor(id)) return [{ item: blockStack(Block.OAK_DOOR), count: 1 }];
   if (isGate(id)) return [{ item: blockStack(Block.FENCE_GATE), count: 1 }];
   if (id === Block.ROCK_BOULDER) return [{ item: blockStack(Block.STONE), count: 1 + Math.floor(rand() * 3) }];
@@ -679,6 +685,13 @@ var RECIPES = [
     profession: "builder",
     inputs: [{ item: blockStack(Block.OAK_LOG), count: 1 }],
     output: { item: blockStack(Block.OAK_PLANKS), count: 2 }
+  },
+  {
+    id: "cherry-planks",
+    name: "T\xE1bua de Cerejeira",
+    profession: "builder",
+    inputs: [{ item: blockStack(Block.CHERRY_LOG), count: 1 }],
+    output: { item: blockStack(Block.CHERRY_PLANKS), count: 2 }
   },
   {
     id: "oak-door",
@@ -3081,6 +3094,7 @@ var TOWN_CLEAR = 3;
 var ROAD_LEN = 14;
 var TOWN_SOUTH_FIELD = 28;
 var WALL = 2;
+var TOWN_WALL = WALL;
 var TOWN_SIZES = {
   [Block.CASTLE]: [26, 17, 17],
   [Block.GUILD]: [9, 9, 9],
@@ -3968,9 +3982,7 @@ var WORLD_PROFILES = {
 // src/world/world.ts
 var WHEAT_STAGE_SECONDS = 6;
 var CROP_STAGE_SECONDS = { wheat: WHEAT_STAGE_SECONDS, potato: 8, carrot: 8, tomato: 10 };
-var TREE_STAGE_SECONDS = 120;
 var FRUIT_REGROW_SECONDS = 150;
-var SAPLING_GROUND = /* @__PURE__ */ new Set([Block.DIRT, Block.GRASS]);
 var PLANTABLE_GROUND = Block.TILLED;
 var TILLABLE = /* @__PURE__ */ new Set([Block.DIRT, Block.GRASS]);
 var FLATTENABLE = /* @__PURE__ */ new Set([Block.DIRT, Block.GRASS, Block.TILLED]);
@@ -3978,7 +3990,7 @@ function tentCells(x, y) {
   return [[x, y], [x + 1, y], [x, y - 1], [x + 1, y - 1]];
 }
 var CHEST_SLOTS = 27;
-var REPLACES_WATER = /* @__PURE__ */ new Set([Block.DIRT, Block.GRASS, Block.TILLED, Block.PATH, Block.STONE, Block.OAK_LOG, Block.OAK_PLANKS]);
+var REPLACES_WATER = /* @__PURE__ */ new Set([Block.DIRT, Block.GRASS, Block.TILLED, Block.PATH, Block.STONE, Block.OAK_LOG, Block.OAK_PLANKS, Block.CHERRY_LOG, Block.CHERRY_PLANKS]);
 var FLOW_SECONDS = 0.6;
 var FLOW_DIRS = [["west", -1, 0], ["east", 1, 0], ["north", 0, -1], ["south", 0, 1]];
 function numKey(cx, cy) {
@@ -4043,9 +4055,30 @@ var World = class {
     if (this.profile.blocks.includes(Block.TENT)) this.interiors = [...this.interiors, tentLayout()];
     if (this.interiors.length) this.generator = new InteriorTerrain(this.generator, this.interiors);
   }
-  /** Célula dentro da dungeon, da cidade (muralhas incluídas) ou de um interior? Lá nada é quebrado, colocado, arado nem plantado. */
+  /**
+   * Célula dentro da dungeon, da cidade (muralhas incluídas) ou de um interior — ou num chunk que tem pedaço da muralha
+   * da cidade (regra do dono do produto, 2026-11-08: não se constrói no chunk do muro, mesmo fora dos limites da
+   * cidade)? Lá nada é quebrado, colocado, arado nem plantado.
+   */
   isProtected(x, y) {
+    return this.inGuardedArea(x, y) || !!this.town && this.inWallChunk(this.town.area, x, y);
+  }
+  /**
+   * Áreas fixas do mapa (dungeon, covil, cidade, interiores): voltam sempre do gerador ao carregar. A regra do chunk do
+   * muro NÃO entra aqui: o que já foi construído fora da cidade, nesses chunks, continua lá (só não se constrói mais).
+   */
+  inGuardedArea(x, y) {
     return !!this.dungeon && inRect(dungeonGuard(this.dungeon), x, y) || !!this.cave && inRect(this.cave.guard, x, y) || !!this.town && inRect(this.town.area, x, y) || this.interiors.some((l) => inRect(l.guard, x, y));
+  }
+  /** O chunk da célula contém alguma célula da muralha (o anel de `TOWN_WALL` na borda da área da cidade)? */
+  inWallChunk(area, x, y) {
+    const x0 = Math.floor(x / CHUNK_SIZE) * CHUNK_SIZE;
+    const y0 = Math.floor(y / CHUNK_SIZE) * CHUNK_SIZE;
+    const x1 = x0 + CHUNK_SIZE - 1;
+    const y1 = y0 + CHUNK_SIZE - 1;
+    if (x1 < area.x0 || x0 > area.x1 || y1 < area.y0 || y0 > area.y1) return false;
+    const inside = x0 >= area.x0 + TOWN_WALL && x1 <= area.x1 - TOWN_WALL && y0 >= area.y0 + TOWN_WALL && y1 <= area.y1 - TOWN_WALL;
+    return !inside;
   }
   /** Interior (cômodo) que contém a célula, ou null. */
   interiorAt(x, y) {
@@ -4093,7 +4126,10 @@ var World = class {
   }
   /** Do lado de fora do portão da cidade (na estrada); sem cidade, o início. */
   outsideGate() {
-    return this.town ? this.town.doorstep : this.findSpawn();
+    if (!this.town) return this.findSpawn();
+    let [x, y] = this.town.doorstep;
+    while (this.isProtected(x, y)) y++;
+    return [x, y];
   }
   /** A célula está dentro dos limites do mundo? (sempre true em mundo ilimitado) */
   inBounds(x, y) {
@@ -4198,6 +4234,7 @@ var World = class {
     const ly = toLocal(y);
     const chunk = this.loadChunk(cx, cy);
     if (isRemovedBlock(id)) id = Block.AIR;
+    id = adultOfStage(id);
     if (level === "ground") {
       if (id === Block.HOLE) this.holeAge.set(chunkKey(x, y), 0);
       else this.holeAge.delete(chunkKey(x, y));
@@ -4486,15 +4523,13 @@ var World = class {
   }
   // ---- Plantação ----
   /**
-   * Dá para plantar `id` aqui? Plantação (trigo, batata, tomate, cenoura): só em Terra Arada. Muda de árvore: em Terra
-   * ou Terra com Grama.
+   * Dá para plantar `id` aqui? Plantação (trigo, batata, tomate, cenoura): só em Terra Arada. Não há mais mudas de árvore
+   * (v0.88.0: as árvores só aparecem adultas).
    * Sempre com a célula livre (ou só com enfeite).
    */
   canPlant(x, y, id = Block.WHEAT_0) {
     if (this.isProtected(x, y)) return false;
-    const sapling = id === Block.OAK_SAPLING || id === Block.APPLE_SAPLING;
-    if (!sapling && !isCropSeedling(id)) return false;
-    if (sapling ? !SAPLING_GROUND.has(this.getGround(x, y)) : this.getGround(x, y) !== PLANTABLE_GROUND) return false;
+    if (!isCropSeedling(id) || this.getGround(x, y) !== PLANTABLE_GROUND) return false;
     const base = blockDef(this.getObject(x, y));
     return base.id === Block.AIR || base.shape === "decoration";
   }
@@ -4653,8 +4688,7 @@ var World = class {
         this.trees.delete(key);
         continue;
       }
-      const t = id === Block.APPLE_TREE_BARE ? FRUIT_REGROW_SECONDS : TREE_STAGE_SECONDS;
-      if (rand() < dt / t) set(x, y, next);
+      if (rand() < dt / FRUIT_REGROW_SECONDS) set(x, y, next);
     }
   }
   /**
@@ -4733,12 +4767,12 @@ var World = class {
     levels.forEach((l, i) => {
       if (i < c.levels.length) c.levels[i].set(l.subarray(0, c.levels[i].length));
     });
-    for (const l of c.levels) for (let i = 0; i < l.length; i++) if (isRemovedBlock(l[i])) l[i] = Block.AIR;
+    for (const l of c.levels) for (let i = 0; i < l.length; i++) l[i] = isRemovedBlock(l[i]) ? Block.AIR : adultOfStage(l[i]);
     for (let ly = 0; ly < CHUNK_SIZE; ly++) {
       for (let lx = 0; lx < CHUNK_SIZE; lx++) {
         const x = cx * CHUNK_SIZE + lx;
         const y = cy * CHUNK_SIZE + ly;
-        if (!this.isProtected(x, y)) continue;
+        if (!this.inGuardedArea(x, y)) continue;
         const cell = this.generator.cellAt(x, y);
         c.setGround(lx, ly, cell.ground);
         c.levels.forEach((l, i) => {
