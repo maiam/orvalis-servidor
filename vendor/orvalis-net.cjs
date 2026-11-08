@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.85.0 (5610c30) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.86.0 (0e6557f) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -4010,6 +4010,12 @@ var World = class {
   interiors = [];
   /** Buracos enchendo de água (estado de execução; ao carregar, `settleWater` reagenda). */
   flows = /* @__PURE__ */ new Map();
+  /**
+   * Chão quebrado sem bloco: buraco ("x,y" → segundos que está assim). Quando faz um dia inteiro (`DAY_LENGTH_S`) o buraco
+   * ganha um chão igual ao de um vizinho (dono do produto, 2026-11-08). Ao carregar, as idades voltam do salvamento
+   * (`loadHoleAges`); buraco sem idade guardada começa a contar do zero.
+   */
+  holeAge = /* @__PURE__ */ new Map();
   /** Spawn calculado no terreno base (a dungeon é posta longe dele e não o altera). */
   spawn = null;
   constructor(seed, profile = WORLD_PROFILES.principal) {
@@ -4192,8 +4198,11 @@ var World = class {
     const ly = toLocal(y);
     const chunk = this.loadChunk(cx, cy);
     if (isRemovedBlock(id)) id = Block.AIR;
-    if (level === "ground") chunk.setGround(lx, ly, id);
-    else chunk.setLevel(lx, ly, level, id);
+    if (level === "ground") {
+      if (id === Block.HOLE) this.holeAge.set(chunkKey(x, y), 0);
+      else this.holeAge.delete(chunkKey(x, y));
+      chunk.setGround(lx, ly, id);
+    } else chunk.setLevel(lx, ly, level, id);
     if (level === 0) {
       if (isCrop(id)) this.crops.add(chunkKey(x, y));
       else this.crops.delete(chunkKey(x, y));
@@ -4555,7 +4564,69 @@ var World = class {
    */
   tick(dt, rand = Math.random, grow2 = true, onGrow) {
     this.tickWater(dt);
-    if (grow2) this.tickGrowth(dt, rand, onGrow);
+    if (grow2) {
+      this.tickGrowth(dt, rand, onGrow);
+      this.tickHoles(dt, onGrow);
+    }
+  }
+  /**
+   * Chão quebrado: cada buraco sem bloco envelhece; ao completar um dia inteiro ganha um chão igual ao de um vizinho
+   * (`healedGround`). Quem decide é quem faz crescer (o jogo sozinho ou a sala), que avisa a célula pelo `onGrow`.
+   */
+  tickHoles(dt, onFill) {
+    if (!this.holeAge.size) return;
+    for (const [key, age] of [...this.holeAge]) {
+      const next = age + dt;
+      if (next < DAY_LENGTH_S) {
+        this.holeAge.set(key, next);
+        continue;
+      }
+      const [x, y] = key.split(",").map(Number);
+      const id = this.getGround(x, y) === Block.HOLE ? this.healedGround(x, y) : null;
+      if (id === null) {
+        this.holeAge.set(key, Math.min(next, DAY_LENGTH_S));
+        continue;
+      }
+      this.setLevel(x, y, "ground", id);
+      onFill?.(x, y, id);
+    }
+  }
+  /**
+   * Chão que um buraco antigo ganha: o de um vizinho (primeiro os de lado, depois as diagonais), escolhido pela seed e
+   * pela posição — o mesmo buraco sempre ganha o mesmo chão. Só chão de bloco (não água, não outro buraco). Null se
+   * nenhum vizinho serve.
+   */
+  healedGround(x, y) {
+    const usable = (nx, ny) => {
+      const g = this.getGround(nx, ny);
+      const d = blockDef(g);
+      return g !== Block.HOLE && g !== Block.AIR && d.shape === "cube" && !d.liquid ? g : null;
+    };
+    for (const ring of [[[0, -1], [1, 0], [0, 1], [-1, 0]], [[1, -1], [1, 1], [-1, 1], [-1, -1]]]) {
+      const found = ring.map(([dx, dy]) => usable(x + dx, y + dy)).filter((g) => g !== null);
+      if (found.length) return found[Math.floor(hash2(this.seed, x * 7 + 1, y * 13 + 3) * found.length)];
+    }
+    return null;
+  }
+  /** Idades (s) dos buracos para o salvamento: `[x, y, segundos]`. */
+  holeAges() {
+    return [...this.holeAge].map(([key, age]) => {
+      const [x, y] = key.split(",").map(Number);
+      return [x, y, Math.round(age)];
+    });
+  }
+  /** Devolve as idades salvas (só vale para célula que ainda é buraco; idade fora do razoável é ignorada). */
+  loadHoleAges(list) {
+    for (const e of list ?? []) {
+      if (!Array.isArray(e) || e.length !== 3 || !e.every(Number.isFinite)) continue;
+      const [x, y, age] = e;
+      if (Math.abs(x) + Math.abs(y) > 2 ** 30 || age < 0 || age > DAY_LENGTH_S) continue;
+      if (this.getGround(x, y) === Block.HOLE && this.holeAge.has(chunkKey(x, y))) this.holeAge.set(chunkKey(x, y), age);
+    }
+  }
+  /** Buracos esperando virar chão (testes e depuração). */
+  get holeCount() {
+    return this.holeAge.size;
   }
   /** Plantas e árvores: cada estágio avança com probabilidade dt / tempo do estágio. */
   tickGrowth(dt, rand, onGrow) {
@@ -4591,6 +4662,10 @@ var World = class {
    * ação que chegou antes vale). Retorna se aplicou.
    */
   applyGrowth(x, y, id) {
+    if (this.getGround(x, y) === Block.HOLE && this.getObject(x, y) === Block.AIR && blockDef(id).shape === "cube" && !blockDef(id).liquid) {
+      this.setLevel(x, y, "ground", id);
+      return true;
+    }
     const cur = this.getObject(x, y);
     if (!isCrop(cur) && TREE_NEXT[cur] === void 0) return false;
     this.setLevel(x, y, 0, id);
@@ -4678,8 +4753,11 @@ var World = class {
     for (let ly = 0; ly < CHUNK_SIZE; ly++) {
       for (let lx = 0; lx < CHUNK_SIZE; lx++) {
         const id = c.getObject(lx, ly);
-        if (isCrop(id)) this.crops.add(chunkKey(cx * CHUNK_SIZE + lx, cy * CHUNK_SIZE + ly));
-        if (isGrowingTree(id)) this.trees.add(chunkKey(cx * CHUNK_SIZE + lx, cy * CHUNK_SIZE + ly));
+        const key = chunkKey(cx * CHUNK_SIZE + lx, cy * CHUNK_SIZE + ly);
+        if (isCrop(id)) this.crops.add(key);
+        if (isGrowingTree(id)) this.trees.add(key);
+        if (c.getGround(lx, ly) === Block.HOLE) this.holeAge.set(key, 0);
+        else this.holeAge.delete(key);
       }
     }
   }
@@ -4698,7 +4776,7 @@ function fromB64(s) {
 // src/net/room.ts
 var ROOM_START_TIME = 0.31;
 var TIME_SYNC_SECONDS = 30;
-var ROOM_SNAPSHOT_VERSION = 3;
+var ROOM_SNAPSHOT_VERSION = 4;
 var DROP_LIFETIME = 300;
 var TAKE_REACH = 3;
 var MOBS_EVERY = 0.1;
@@ -5017,14 +5095,16 @@ var Room = class {
       chunks: this.chunks(),
       bags: Object.fromEntries(this.bags),
       chests: Object.fromEntries(this.world.chests),
-      animals: this.entities.saveAnimals()
+      animals: this.entities.saveAnimals(),
+      holes: this.world.holeAges()
     };
   }
   /** Recarrega o que o servidor gravou (só se for desta sala e desta seed; senão, a sala começa do zero). */
   restore(s) {
-    if (!s || ![1, 2, ROOM_SNAPSHOT_VERSION].includes(s.v) || s.room !== this.id || s.seed !== this.seed) return false;
+    if (!s || ![1, 2, 3, ROOM_SNAPSHOT_VERSION].includes(s.v) || s.room !== this.id || s.seed !== this.seed) return false;
     for (const c of s.chunks) this.world.restoreChunk(c.cx, c.cy, fromB64(c.ground), c.levels.map(fromB64));
     this.world.settleWater();
+    this.world.loadHoleAges(s.holes);
     if (Number.isFinite(s.time)) this.time = (s.time % 1 + 1) % 1;
     for (const [k, bag] of Object.entries(s.bags ?? {})) this.bags.set(k, bag);
     for (const [k, slots] of Object.entries(s.chests ?? {})) {
