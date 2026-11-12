@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.92.0 (2e74261) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.93.4 (c235e5b) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -36,7 +36,7 @@ module.exports = __toCommonJS(index_exports);
 var DAY_LENGTH_S = 480;
 var TILE = 32;
 var CUBE_FRONT = 18;
-var MAX_STACK = 3;
+var MAX_STACK = 2;
 var STEP_HEIGHT = 1;
 var CHUNK_SIZE = 16;
 var UNLOAD_MARGIN = 3;
@@ -565,12 +565,12 @@ function buildMaze(seed, w, h, side) {
   const bi0 = side === "west" ? gw - BOSS_NODES : side === "east" ? 0 : bk;
   const bj0 = side === "north" ? gh - BOSS_NODES : side === "south" ? 0 : bk;
   const isBoss = (i, j) => i >= bi0 && i < bi0 + BOSS_NODES && j >= bj0 && j < bj0 + BOSS_NODES;
-  const open2 = /* @__PURE__ */ new Map();
+  const open3 = /* @__PURE__ */ new Map();
   const link = (a, b) => {
-    if (!open2.has(a)) open2.set(a, /* @__PURE__ */ new Set());
-    if (!open2.has(b)) open2.set(b, /* @__PURE__ */ new Set());
-    open2.get(a).add(b);
-    open2.get(b).add(a);
+    if (!open3.has(a)) open3.set(a, /* @__PURE__ */ new Set());
+    if (!open3.has(b)) open3.set(b, /* @__PURE__ */ new Set());
+    open3.get(a).add(b);
+    open3.get(b).add(a);
   };
   const neighbors = (n) => {
     const i = n % gw;
@@ -601,7 +601,7 @@ function buildMaze(seed, w, h, side) {
   }
   for (let n = 0; n < gw * gh; n++) {
     if (!visited[n]) continue;
-    for (const m of neighbors(n)) if (m > n && !open2.get(n)?.has(m) && rand() < 0.09) link(n, m);
+    for (const m of neighbors(n)) if (m > n && !open3.get(n)?.has(m) && rand() < 0.09) link(n, m);
   }
   const chambersN = [];
   const target = Math.max(3, Math.round(gw * gh / 30));
@@ -628,7 +628,7 @@ function buildMaze(seed, w, h, side) {
   dist[entry] = 0;
   const q = [entry];
   for (let h0 = 0; h0 < q.length; h0++) {
-    for (const m of open2.get(q[h0]) ?? []) if (dist[m] < 0) {
+    for (const m of open3.get(q[h0]) ?? []) if (dist[m] < 0) {
       dist[m] = dist[q[h0]] + 1;
       q.push(m);
     }
@@ -656,7 +656,7 @@ function buildMaze(seed, w, h, side) {
     if (isBoss(i, j) || !visited[n]) continue;
     const wd = width[n];
     carve(cx[n] - 1, cy[n] - 1, cx[n] - 2 + wd, cy[n] - 2 + wd);
-    for (const m of open2.get(n) ?? []) {
+    for (const m of open3.get(n) ?? []) {
       if (m < n) continue;
       const ww = Math.min(wd, width[m]);
       carve(cx[n] - 1, cy[n] - 1, cx[m] - 2 + ww, cy[n] - 2 + ww);
@@ -1013,6 +1013,7 @@ var LOOT_ITEMS = [Item.SILK, Item.FANG, Item.QUEEN_HEART, Item.WOLF_FANG, Item.W
 var WOLF_PELT_CHANCE = 0.55;
 var WOLF_FANG_CHANCE = 0.4;
 function monsterDrops(kind, rand = Math.random) {
+  if (kind === "goblin") return [];
   if (isWolf(kind)) {
     const out = [];
     if (rand() < WOLF_PELT_CHANCE) out.push({ item: Item.WOLF_PELT, count: 1 });
@@ -1477,7 +1478,9 @@ var MONSTER_STATS = {
   // Lobos (v0.91.0): mais fortes quanto mais claros; bando de 1 a 3.
   "wolf-brown": { hp: 35, attack: 11, defense: 1 },
   "wolf-gray": { hp: 45, attack: 13, defense: 2 },
-  "wolf-white": { hp: 55, attack: 15, defense: 3 }
+  "wolf-white": { hp: 55, attack: 15, defense: 3 },
+  /** Goblin comum: vida 60, ataque nominal 15, mesma fórmula dos lobos. */
+  goblin: { hp: 60, attack: 15, defense: 2 }
 };
 var DAMAGE_SPREAD = 0.1;
 var CRIT_CHANCE = 0.05;
@@ -2198,6 +2201,10 @@ var InteriorTerrain = class {
 
 // src/game/monster.ts
 var WOLF_SIGHT = 3;
+var GOBLIN_SIGHT = WOLF_SIGHT;
+var GOBLIN_ATTACK_SECONDS = 0.55;
+var GOBLIN_ALERT_SECONDS = 0.48;
+var GOBLIN_VISUALS = ["idle", "walk", "run", "alert", "attack", "hurt"];
 var MONSTERS = {
   "spider-small": { spec: { speed: 2.1, halfW: 0.3, halfD: 0.18, stepHeight: 0 }, sight: 6, leash: 5, biteEvery: 1, respawn: 40, deathSeconds: 0.7 },
   "spider-big": { spec: { speed: 1.6, halfW: 0.42, halfD: 0.24, stepHeight: 0 }, sight: 7, leash: 5, biteEvery: 1.2, respawn: 60, deathSeconds: 0.9 },
@@ -2206,7 +2213,17 @@ var MONSTERS = {
   // mais lentos que ela (4,2) para dar para fugir; o bando passeia junto, perto da toca.
   "wolf-brown": { spec: { speed: 3, halfW: 0.36, halfD: 0.2, stepHeight: 1 }, sight: WOLF_SIGHT, leash: 5, biteEvery: 1.1, respawn: 120, deathSeconds: 0.8, open: true },
   "wolf-gray": { spec: { speed: 3, halfW: 0.36, halfD: 0.2, stepHeight: 1 }, sight: WOLF_SIGHT, leash: 5, biteEvery: 1.1, respawn: 120, deathSeconds: 0.8, open: true },
-  "wolf-white": { spec: { speed: 3, halfW: 0.36, halfD: 0.2, stepHeight: 1 }, sight: WOLF_SIGHT, leash: 5, biteEvery: 1.1, respawn: 120, deathSeconds: 0.8, open: true }
+  "wolf-white": { spec: { speed: 3, halfW: 0.36, halfD: 0.2, stepHeight: 1 }, sight: WOLF_SIGHT, leash: 5, biteEvery: 1.1, respawn: 120, deathSeconds: 0.8, open: true },
+  // Goblins guard a campfire in groups of seven; aggression only within 3 cells.
+  goblin: {
+    spec: { speed: 2.75, halfW: 0.34, halfD: 0.21, stepHeight: 1 },
+    sight: GOBLIN_SIGHT,
+    leash: 4,
+    biteEvery: 1.2,
+    respawn: 150,
+    deathSeconds: 0.95,
+    open: true
+  }
 };
 var HURT_SECONDS = 0.35;
 var Monster = class extends Walker {
@@ -2231,6 +2248,27 @@ var Monster = class extends Walker {
   /** Espera até poder morder de novo (s). */
   biteCd = 0;
   state;
+  attackAnim = 0;
+  alertAnim = 0;
+  chasing = false;
+  /** Network mirror visual override (not part of monster combat simulation). */
+  presentationState = null;
+  presentationFrame = null;
+  get visualState() {
+    if (this.presentationState) return this.presentationState;
+    if (this.hurt > 0) return "hurt";
+    if (this.attackAnim > 0) return "attack";
+    if (this.alertAnim > 0) return "alert";
+    if (this.chasing && this.moving) return "run";
+    return this.moving ? "walk" : "idle";
+  }
+  get visualFrame() {
+    if (this.presentationFrame !== null) return this.presentationFrame;
+    if (this.visualState === "attack") return Math.min(3, Math.floor((1 - this.attackAnim / GOBLIN_ATTACK_SECONDS) * 4));
+    if (this.visualState === "alert") return Math.min(3, Math.floor((1 - this.alertAnim / GOBLIN_ALERT_SECONDS) * 4));
+    if (this.visualState === "hurt") return Math.min(3, Math.floor((1 - this.hurt / HURT_SECONDS) * 4));
+    return 0;
+  }
   get dead() {
     return this.hp <= 0;
   }
@@ -2262,6 +2300,7 @@ var Monster = class extends Walker {
     if (this.dead || this.biteCd > 0 || this.hurt > 0) return false;
     if (Math.hypot(target.x - this.x, target.y - this.y) > this.reach + 0.15) return false;
     this.biteCd = MONSTERS[this.kind].biteEvery;
+    if (this.kind === "goblin") this.attackAnim = GOBLIN_ATTACK_SECONDS;
     return true;
   }
   /**
@@ -2272,6 +2311,8 @@ var Monster = class extends Walker {
   update(dt, world, target, blocked, flow) {
     this.hurt = Math.max(0, this.hurt - dt);
     this.biteCd = Math.max(0, this.biteCd - dt);
+    this.attackAnim = Math.max(0, this.attackAnim - dt);
+    this.alertAnim = Math.max(0, this.alertAnim - dt);
     const def = MONSTERS[this.kind];
     const fence = this.confine(blocked);
     const tx = target.x - this.x;
@@ -2283,6 +2324,8 @@ var Monster = class extends Walker {
     const steps = flow ? flow(cx, cy) : -1;
     const chasing = targetInside && (def.open ? dist <= def.sight : flow ? steps >= 0 && steps <= def.sight * 1.6 : dist < def.sight);
     if (chasing) {
+      if (this.kind === "goblin" && !this.chasing) this.alertAnim = GOBLIN_ALERT_SECONDS;
+      this.chasing = true;
       const reach = this.reach;
       if (dist <= reach) {
         this.move(dt, 0, 0, world, fence);
@@ -2312,6 +2355,7 @@ var Monster = class extends Walker {
       this.move(dt, dx, dy, world, fence);
       return;
     }
+    this.chasing = false;
     const s = this.state;
     s.timer -= dt;
     if (s.kind === "idle") {
@@ -2575,18 +2619,18 @@ function buildTown() {
   const route = (from, to) => {
     const dist = /* @__PURE__ */ new Map([[from, 0]]);
     const prev = /* @__PURE__ */ new Map();
-    const open2 = /* @__PURE__ */ new Set([from]);
-    while (open2.size) {
+    const open3 = /* @__PURE__ */ new Set([from]);
+    while (open3.size) {
       let cur = -1;
       let cd = Infinity;
-      for (const n of open2) {
+      for (const n of open3) {
         const d = dist.get(n);
         if (d < cd) {
           cd = d;
           cur = n;
         }
       }
-      open2.delete(cur);
+      open3.delete(cur);
       if (cur === to) break;
       for (const e of adj.get(cur) ?? []) {
         const n = other(e, cur);
@@ -2594,7 +2638,7 @@ function buildTown() {
         if (nd < (dist.get(n) ?? Infinity)) {
           dist.set(n, nd);
           prev.set(n, e);
-          open2.add(n);
+          open3.add(n);
         }
       }
     }
@@ -2961,6 +3005,112 @@ function wolfPacks(world) {
   return out;
 }
 
+// src/world/goblins.ts
+var GOBLIN_PACK_SIZE = 7;
+var GOBLIN_CAMP_COUNT = 4;
+var GOBLIN_CAMP_ROAM = 11;
+var GOBLIN_CAMP_SLOTS = [
+  [0, -3],
+  [2, -2],
+  [3, 0],
+  [2, 2],
+  [0, 3],
+  [-2, 2],
+  [-3, 0]
+];
+function goblinRoam(x, y) {
+  return {
+    x0: x - GOBLIN_CAMP_ROAM,
+    y0: y - GOBLIN_CAMP_ROAM,
+    x1: x + GOBLIN_CAMP_ROAM,
+    y1: y + GOBLIN_CAMP_ROAM
+  };
+}
+function open2(world, x, y) {
+  if (world.isProtected(x, y)) return false;
+  const cell = world.generator.cellAt(x, y);
+  const ground2 = cell.ground;
+  const def = blockDef(ground2);
+  const standable = def.layer === "object" ? def.shape === "cube" : def.standable;
+  if (ground2 === Block.VOID || ground2 === Block.HOLE || ground2 === Block.WATER || def.liquid || !standable) return false;
+  return cell.upper === Block.AIR;
+}
+function planGoblinCamps(world) {
+  if (world.profile.id !== "principal" || !world.town) return [];
+  const town = world.town;
+  const mx = (town.area.x0 + town.area.x1) / 2;
+  const my = (town.area.y0 + town.area.y1) / 2;
+  const rx = (town.area.x1 - town.area.x0 + 1) / 2;
+  const ry = (town.area.y1 - town.area.y0 + 1) / 2;
+  const camps = [];
+  for (let i = 0; i < 1800 && camps.length < GOBLIN_CAMP_COUNT; i++) {
+    const angle = hash2(world.seed, 113 + i, 274) * Math.PI * 2;
+    const extra = 36 + hash2(world.seed, 938 + i, 181) * Math.min(220, 56 + Math.floor(i / 15) * 8);
+    const x = Math.round(mx + Math.cos(angle) * (rx + extra));
+    const y = Math.round(my + Math.sin(angle) * (ry + extra));
+    if (camps.some((c) => Math.hypot(c.x - x, c.y - y) < 32)) continue;
+    if (!open2(world, x, y)) continue;
+    const slots = GOBLIN_CAMP_SLOTS.map(([dx, dy]) => [x + dx, y + dy]);
+    if (!slots.every(([sx, sy]) => open2(world, sx, sy))) continue;
+    camps.push({ x, y, slots });
+  }
+  return camps;
+}
+var GoblinCampTerrain = class {
+  constructor(source, camps) {
+    this.source = source;
+    this.camps = camps;
+    this.seed = source.seed;
+    this.fires = new Set(camps.map((c) => `${c.x},${c.y}`));
+    this.cleared = new Set(camps.flatMap((c) => c.slots.map(([x, y]) => `${x},${y}`)));
+    for (const c of camps) {
+      const cx = Math.floor(c.x / CHUNK_SIZE), cy = Math.floor(c.y / CHUNK_SIZE);
+      const k = `${cx},${cy}`;
+      const list = this.inChunk.get(k) ?? [];
+      list.push(c);
+      this.inChunk.set(k, list);
+    }
+  }
+  source;
+  camps;
+  seed;
+  fires;
+  cleared;
+  inChunk = /* @__PURE__ */ new Map();
+  cellAt(x, y) {
+    const c = this.source.cellAt(x, y);
+    return this.fires.has(`${x},${y}`) ? { ...c, object: Block.CAMPFIRE } : this.cleared.has(`${x},${y}`) ? { ...c, object: Block.AIR } : c;
+  }
+  groundAt(x, y) {
+    return this.source.groundAt(x, y);
+  }
+  objectAt(x, y) {
+    return this.fires.has(`${x},${y}`) ? Block.CAMPFIRE : this.cleared.has(`${x},${y}`) ? Block.AIR : this.source.objectAt(x, y);
+  }
+  upperAt(x, y) {
+    return this.source.upperAt(x, y);
+  }
+  biomeAt(x, y) {
+    return this.source.biomeAt(x, y);
+  }
+  generateChunk(cx, cy, ground2, objects, upper) {
+    this.source.generateChunk(cx, cy, ground2, objects, upper);
+    for (const c of this.inChunk.get(`${cx},${cy}`) ?? []) {
+      const lx = c.x - cx * CHUNK_SIZE, ly = c.y - cy * CHUNK_SIZE;
+      objects[ly * CHUNK_SIZE + lx] = Block.CAMPFIRE;
+      for (const [x, y] of c.slots) {
+        if (Math.floor(x / CHUNK_SIZE) === cx && Math.floor(y / CHUNK_SIZE) === cy)
+          objects[(y - cy * CHUNK_SIZE) * CHUNK_SIZE + (x - cx * CHUNK_SIZE)] = Block.AIR;
+      }
+    }
+    for (const xy of this.cleared) {
+      const [x, y] = xy.split(",").map(Number);
+      if (Math.floor(x / CHUNK_SIZE) === cx && Math.floor(y / CHUNK_SIZE) === cy)
+        objects[(y - cy * CHUNK_SIZE) * CHUNK_SIZE + (x - cx * CHUNK_SIZE)] = Block.AIR;
+    }
+  }
+};
+
 // src/game/entities.ts
 var SIT_BODIES = ["heroine", "hero", "hood", "gino", "mila"];
 function canSit(body) {
@@ -3119,6 +3269,7 @@ var Entities = class {
     }
     this.spawnMonsters(world);
     this.spawnWolves(world);
+    this.spawnGoblins(world);
   }
   /** Monstros nos pontos da dungeon (posições pela seed; o sorteio do passeio usa `rand`). */
   spawnMonsters(world) {
@@ -3129,6 +3280,36 @@ var Entities = class {
   /** Bandos de lobos pelo mapa (`world/wolves.ts`; posições pela seed): cada lobo passeia perto da toca do bando. */
   spawnWolves(world) {
     for (const w of wolfPacks(world)) this.monsters.push(new Monster(w.kind, w.x, w.y, wolfRoam(w.homeX, w.homeY), this.rand, w.homeX, w.homeY));
+  }
+  /** Exactly seven goblins around each deterministic campfire in the open world. */
+  spawnGoblins(world) {
+    for (const camp of world.goblinCamps) {
+      if (world.getObject(camp.x, camp.y) !== Block.CAMPFIRE) continue;
+      const bounds = goblinRoam(camp.x, camp.y);
+      const existing = this.monsters.filter((m) => m.kind === "goblin" && Math.abs(m.homeX - (camp.x + 0.5)) <= 5 && Math.abs(m.homeY - (camp.y + 0.5)) <= 5);
+      if (existing.length >= GOBLIN_PACK_SIZE) continue;
+      for (const [x, y] of camp.slots) {
+        if (!world.isWalkable(x, y)) continue;
+        const px = x + 0.5, py = y + 0.5;
+        if (existing.some((m) => Math.hypot(m.homeX - px, m.homeY - py) < 0.2)) continue;
+        this.monsters.push(new Monster("goblin", px, py, bounds, this.rand, px, py));
+      }
+    }
+  }
+  /** When old saves replace the generated campfire tile with a player edit,
+   * keep the goblins and respawns consistent with the actual world object.
+   */
+  reconcileGoblinCamps(world) {
+    const allowed = new Set(world.goblinCamps.filter((c) => world.getObject(c.x, c.y) === Block.CAMPFIRE).map((c) => c.x + "," + c.y));
+    const known = (x, y) => world.goblinCamps.some((c) => Math.hypot(c.x + 0.5 - x, c.y + 0.5 - y) <= 5 && allowed.has(c.x + "," + c.y));
+    for (let i = this.monsters.length - 1; i >= 0; i--) {
+      const m = this.monsters[i];
+      if (m.kind === "goblin" && !known(m.homeX, m.homeY)) this.monsters.splice(i, 1);
+    }
+    for (let i = this.respawns.length - 1; i >= 0; i--) {
+      const r = this.respawns[i];
+      if (r.kind === "goblin" && !known(r.x, r.y)) this.respawns.splice(i, 1);
+    }
   }
   /** Quem os monstros perseguem e mordem: a personagem (aparelho) ou os jogadores da sala (servidor). */
   hunters() {
@@ -3578,15 +3759,18 @@ var Entities = class {
       });
     }
     for (const m of this.monsters) {
+      const state = m.kind === "goblin" ? m.visualState : null;
+      const kind = state ? state === "walk" ? "goblin" : `goblin-${state}` : m.kind;
       out.push({
-        kind: m.kind,
+        kind,
         x: m.x,
         y: m.y,
         visualZ: m.visualZ,
         facing: m.facing,
         moving: m.moving,
         walkTime: m.walkTime,
-        hurt: m.hurt > 0,
+        frame: state === "attack" || state === "alert" || state === "hurt" ? m.visualFrame : void 0,
+        hurt: state === "hurt" ? false : m.hurt > 0,
         hp: m.hp < m.maxHp ? m.hp / m.maxHp : void 0
       });
     }
@@ -4258,6 +4442,12 @@ var World = class {
   crops = /* @__PURE__ */ new Set();
   /** Árvores plantadas crescendo e macieiras colhidas (avançam em `tick`). */
   trees = /* @__PURE__ */ new Set();
+  /** Ordem das colocações de mármore no Santuário: 0 = construção antiga sem histórico. */
+  marblePlacements = /* @__PURE__ */ new Map();
+  marblePlacementIndex = 0;
+  /** V3: novas bases ocupam a própria célula e a célula norte.
+   * Painéis antigos preservam sua geometria V2. */
+  marbleV3Bases = /* @__PURE__ */ new Set();
   /**
    * Covil deste mundo (perfil com `dungeon`), ou null: labirinto isolado do mapa (ADR 0019), protegido; só se luta lá
    * dentro. No mundo fica só a entrada, a caverna (`cave`).
@@ -4267,6 +4457,8 @@ var World = class {
   cave = null;
   /** Cidade do Despertar (perfil com `town`), ou null. Área protegida; início e renascer sem tenda. */
   town = null;
+  /** Camps with seven goblins around the existing Campfire block (seed based). */
+  goblinCamps = [];
   /** Interiores das construções da cidade (ADR 0014): cômodos isolados e protegidos. Vazio sem cidade. */
   interiors = [];
   /** Buracos enchendo de água (estado de execução; ao carregar, `settleWater` reagenda). */
@@ -4303,6 +4495,8 @@ var World = class {
     if (this.town) this.interiors = interiorLayouts(this.town);
     if (this.profile.blocks.includes(Block.TENT)) this.interiors = [...this.interiors, tentLayout()];
     if (this.interiors.length) this.generator = new InteriorTerrain(this.generator, this.interiors);
+    this.goblinCamps.push(...planGoblinCamps(this));
+    if (this.goblinCamps.length) this.generator = new GoblinCampTerrain(this.generator, this.goblinCamps);
   }
   /**
    * Célula dentro da dungeon, da cidade (muralhas incluídas) ou de um interior — ou num chunk que tem pedaço da muralha
@@ -4426,25 +4620,94 @@ var World = class {
     const chunk = this.chunkAt(x, y);
     return chunk ? chunk.getGround(toLocal(x), toLocal(y)) : this.generator.groundAt(x, y);
   }
-  /** Objeto do nível 0 da célula (AIR se vazio). */
-  getObject(x, y) {
+  /** Leitura física das bases gravadas; as células projetadas não são duplicadas no save. */
+  rawObject(x, y) {
     if (!this.inBounds(x, y)) return Block.AIR;
     const chunk = this.chunkAt(x, y);
     return chunk ? chunk.getObject(toLocal(x), toLocal(y)) : this.generator.objectAt(x, y);
   }
-  /** Cubo empilhado no nível 1 (AIR se não houver). */
-  getUpper(x, y) {
+  rawUpper(x, y) {
     if (!this.inBounds(x, y)) return Block.AIR;
     const chunk = this.chunkAt(x, y);
     return chunk ? chunk.getLevel(toLocal(x), toLocal(y), 1) : this.generator.upperAt(x, y);
   }
+  /** Âncora V3 desta célula; o norte (y-1) pertence à base ao sul. */
+  marbleV3AnchorAt(x, y) {
+    if (this.profile.id !== "santuario" || !this.inBounds(x, y)) return null;
+    if (this.marbleV3Bases.has(chunkKey(x, y)) && this.rawObject(x, y) === Block.MARBLE_CELESTIAL && this.rawUpper(x, y) === Block.MARBLE_CELESTIAL) return [x, y];
+    if (this.rawObject(x, y) !== Block.AIR || this.rawUpper(x, y) !== Block.AIR) return null;
+    if (this.marbleV3Bases.has(chunkKey(x, y + 1)) && this.rawObject(x, y + 1) === Block.MARBLE_CELESTIAL && this.rawUpper(x, y + 1) === Block.MARBLE_CELESTIAL) return [x, y + 1];
+    return null;
+  }
+  isMarbleV3Cell(x, y) {
+    return this.marbleV3AnchorAt(x, y) !== null;
+  }
+  /** Objeto do nível 0, incluindo a célula norte ocupada por uma base V3. */
+  getObject(x, y) {
+    const actual = this.rawObject(x, y);
+    return actual !== Block.AIR ? actual : this.marbleV3AnchorAt(x, y) ? Block.MARBLE_CELESTIAL : Block.AIR;
+  }
+  /** Nível superior: a projeção V3 mantém os dois níveis físicos do painel. */
+  getUpper(x, y) {
+    const actual = this.rawUpper(x, y);
+    return actual !== Block.AIR ? actual : this.marbleV3AnchorAt(x, y) ? Block.MARBLE_CELESTIAL : Block.AIR;
+  }
   /** Bloco de um nível da pilha (0 = objeto no chão). O gerador só preenche os níveis 0 e 1. */
   getLevel(x, y, level) {
+    if (!Number.isInteger(level) || level < 0 || level >= MAX_STACK) return Block.AIR;
     if (level === 0) return this.getObject(x, y);
     if (level === 1) return this.getUpper(x, y);
     if (!this.inBounds(x, y)) return Block.AIR;
     const chunk = this.chunkAt(x, y);
     return chunk ? chunk.getLevel(toLocal(x), toLocal(y), level) : Block.AIR;
+  }
+  /**
+   * A ordem de colocação é necessária para diferenciar a extensão da parede
+   * para o norte (completa a antiga) e para o sul (preserva a antiga).
+   * Construções sem histórico têm ordem zero e mantêm a geometria legada.
+   */
+  getMarblePlacementOrder(x, y) {
+    return this.profile.id === "santuario" ? this.marblePlacements.get(chunkKey(x, y)) ?? 0 : 0;
+  }
+  /** Metadados de construção persistidos à parte dos ids dos blocos. */
+  marblePlacementOrders() {
+    if (this.profile.id !== "santuario") return [];
+    const result = [];
+    for (const [key, order] of this.marblePlacements) {
+      const [x, y] = key.split(",").map(Number);
+      if (this.getObject(x, y) === Block.MARBLE_CELESTIAL && this.getUpper(x, y) === Block.MARBLE_CELESTIAL)
+        result.push([x, y, order]);
+    }
+    return result;
+  }
+  /** Restaura somente ordens válidas de painéis existentes. */
+  loadMarblePlacementOrders(entries) {
+    this.marblePlacements.clear();
+    this.marblePlacementIndex = 0;
+    if (this.profile.id !== "santuario") return;
+    for (const entry of entries ?? []) {
+      if (!Array.isArray(entry) || entry.length !== 3) continue;
+      const [x, y, order] = entry;
+      if (![x, y, order].every(Number.isSafeInteger) || order <= 0 || !this.inBounds(x, y) || this.getObject(x, y) !== Block.MARBLE_CELESTIAL || this.getUpper(x, y) !== Block.MARBLE_CELESTIAL) continue;
+      this.marblePlacements.set(chunkKey(x, y), order);
+      this.marblePlacementIndex = Math.max(this.marblePlacementIndex, order);
+    }
+  }
+  /** Só bases V3 são serializadas; células virtuais são derivadas. */
+  marbleV3PlacementBases() {
+    if (this.profile.id !== "santuario") return [];
+    return [...this.marbleV3Bases].map((key) => key.split(",").map(Number)).filter(([x, y]) => this.rawObject(x, y) === Block.MARBLE_CELESTIAL && this.rawUpper(x, y) === Block.MARBLE_CELESTIAL);
+  }
+  /** Saves antigos sem V3 continuam com a geometria V2. */
+  loadMarbleV3PlacementBases(bases) {
+    this.marbleV3Bases.clear();
+    if (this.profile.id !== "santuario") return;
+    for (const entry of bases ?? []) {
+      if (!Array.isArray(entry) || entry.length !== 2) continue;
+      const [x, y] = entry;
+      if (![x, y].every(Number.isSafeInteger) || !this.inBounds(x, y) || !this.inBounds(x, y - 1) || this.rawObject(x, y) !== Block.MARBLE_CELESTIAL || this.rawUpper(x, y) !== Block.MARBLE_CELESTIAL || this.rawObject(x, y - 1) !== Block.AIR || this.rawUpper(x, y - 1) !== Block.AIR || this.marbleV3AnchorAt(x, y - 1)) continue;
+      this.marbleV3Bases.add(chunkKey(x, y));
+    }
   }
   /** Bloco visível no topo da célula e seu nível (null se vazia). */
   topBlock(x, y) {
@@ -4490,6 +4753,10 @@ var World = class {
       chunk.setGround(lx, ly, id);
     } else chunk.setLevel(lx, ly, level, id);
     if (level === 0) {
+      if (id !== Block.MARBLE_CELESTIAL) {
+        this.marblePlacements.delete(chunkKey(x, y));
+        this.marbleV3Bases.delete(chunkKey(x, y));
+      }
       if (isCrop(id)) this.crops.add(chunkKey(x, y));
       else this.crops.delete(chunkKey(x, y));
       if (isGrowingTree(id)) this.trees.add(chunkKey(x, y));
@@ -4548,8 +4815,18 @@ var World = class {
   }
   /** Quebra o topo da célula (empilhado → objeto → chão). Retorna o id removido ou null. */
   breakBlock(x, y) {
+    const anchor = this.marbleV3AnchorAt(x, y);
+    if (anchor && anchor[1] !== y) {
+      if (this.isProtected(x, y) || this.isProtected(anchor[0], anchor[1])) return null;
+      return this.breakBlock(anchor[0], anchor[1]);
+    }
     const target = this.breakTarget(x, y);
     if (target === "object") {
+      if (this.profile.id === "santuario" && this.getLevel(x, y, 0) === Block.MARBLE_CELESTIAL && this.getLevel(x, y, 1) === Block.MARBLE_CELESTIAL) {
+        this.setLevel(x, y, 1, Block.AIR);
+        this.setLevel(x, y, 0, Block.AIR);
+        return Block.MARBLE_CELESTIAL;
+      }
       const top = this.topBlock(x, y);
       if (top.id === Block.CHEST) this.chests.delete(chunkKey(x, y));
       if (top.id === Block.TENT || top.id === Block.TENT_PART) {
@@ -4580,6 +4857,13 @@ var World = class {
     const def = blockDef(id);
     if (!def.placeable || def.layer !== "object") return null;
     if (!this.profile.blocks.includes(id) || this.isProtected(x, y)) return null;
+    if (this.profile.id === "santuario" && id === Block.MARBLE_CELESTIAL) {
+      const available = (cx, cy) => {
+        const ground2 = this.getGround(cx, cy);
+        return this.inBounds(cx, cy) && !this.isProtected(cx, cy) && this.isGroundStandable(cx, cy) && ground2 !== Block.HOLE && ground2 !== Block.WATER && this.getObject(cx, cy) === Block.AIR && this.getUpper(cx, cy) === Block.AIR;
+      };
+      return available(x, y) && available(x, y - 1) ? 0 : null;
+    }
     if (this.getGround(x, y) === Block.HOLE) return def.shape === "cube" ? "ground" : null;
     if (this.getGround(x, y) === Block.WATER) return REPLACES_WATER.has(id) ? "ground" : null;
     if (!this.isGroundStandable(x, y)) return null;
@@ -4691,6 +4975,11 @@ var World = class {
     const level = this.placementLevel(x, y, id);
     if (level === null) return false;
     this.setLevel(x, y, level, id);
+    if (this.profile.id === "santuario" && id === Block.MARBLE_CELESTIAL && level === 0) {
+      this.setLevel(x, y, 1, id);
+      this.marblePlacements.set(chunkKey(x, y), ++this.marblePlacementIndex);
+      this.marbleV3Bases.add(chunkKey(x, y));
+    }
     if (id === Block.TENT) {
       for (const [cx, cy] of tentCells(x, y).slice(1)) this.setLevel(cx, cy, 0, Block.TENT_PART);
       this.tent = [x, y];
@@ -4705,14 +4994,14 @@ var World = class {
   }
   /** Células que um bloco ocupa ao ser colocado em (x, y) (tenda 2×2; os demais, 1). */
   footprint(id, x, y) {
-    return id === Block.TENT ? tentCells(x, y) : [[x, y]];
+    return id === Block.TENT ? tentCells(x, y) : id === Block.MARBLE_CELESTIAL && this.profile.id === "santuario" ? [[x, y], [x, y - 1]] : [[x, y]];
   }
   /**
    * Cantos possíveis para um objeto de várias células cobrir a célula (x, y) (tenda: 4 opções).
    * Quem coloca escolhe o que não pega ninguém; blocos de 1 célula têm só (x, y).
    */
   footprintAnchors(id, x, y) {
-    return id === Block.TENT ? [[x, y], [x - 1, y], [x, y + 1], [x - 1, y + 1]] : [[x, y]];
+    return id === Block.TENT ? [[x, y], [x - 1, y], [x, y + 1], [x - 1, y + 1]] : id === Block.MARBLE_CELESTIAL && this.profile.id === "santuario" ? [[x, y], [x, y + 1]] : [[x, y]];
   }
   /** Canto (TENT) da tenda que contém a célula, ou null. */
   tentAnchor(x, y) {
@@ -5008,11 +5297,14 @@ var World = class {
   }
   /**
    * Restaura um chunk salvo (substitui o gerado pela seed) e reconstrói as plantações dele.
-   * Camadas a mais que o motor atual são ignoradas; a menos ficam vazias.
+   * Camadas a mais que o motor atual (o 3º nível, aposentado com `MAX_STACK = 2`) são descartadas; a menos ficam
+   * vazias. Devolve quantos blocos foram descartados, para quem restaura avisar (jogo) ou registrar (servidor).
    */
   restoreChunk(cx, cy, ground2, levels) {
     const c = new Chunk(cx, cy);
     c.ground.set(ground2.subarray(0, c.ground.length));
+    let dropped = 0;
+    for (let i = c.levels.length; i < levels.length; i++) for (const b of levels[i]) if (b !== Block.AIR) dropped++;
     levels.forEach((l, i) => {
       if (i < c.levels.length) c.levels[i].set(l.subarray(0, c.levels[i].length));
     });
@@ -5037,12 +5329,14 @@ var World = class {
       for (let lx = 0; lx < CHUNK_SIZE; lx++) {
         const id = c.getObject(lx, ly);
         const key = chunkKey(cx * CHUNK_SIZE + lx, cy * CHUNK_SIZE + ly);
+        this.marblePlacements.delete(key);
         if (isCrop(id)) this.crops.add(key);
         if (isGrowingTree(id)) this.trees.add(key);
         if (c.getGround(lx, ly) === Block.HOLE) this.holeAge.set(key, 0);
         else this.holeAge.delete(key);
       }
     }
+    return dropped;
   }
 };
 
@@ -5114,6 +5408,8 @@ var Room = class {
   clock = 0;
   /** Algo mudou desde o último `snapshot` (o servidor só grava quando há o que gravar). */
   dirty = false;
+  /** Blocos do 3º nível (aposentado) descartados no último `restore`; o servidor registra no log. */
+  droppedOnRestore = 0;
   /**
    * Bichos da sala (Etapa 3): as mesmas `Entities` do jogo, sem personagem; cada jogador é um avatar na posição que
    * manda. Os animais e monstros nascem pela seed; não vão para o disco (renascem se o servidor reiniciar).
@@ -5333,6 +5629,10 @@ var Room = class {
       if (m.moving) s.m = 1;
       if (m.hp < m.maxHp) s.p = round2(Math.max(0, m.hp / m.maxHp));
       if (m.hurt > 0) s.h = 1;
+      if (m.kind === "goblin") {
+        s.v = GOBLIN_VISUALS.indexOf(m.visualState);
+        s.r = m.visualFrame;
+      }
       list.push(s);
     }
     for (const d of e.dying) {
@@ -5385,7 +5685,9 @@ var Room = class {
   /** Recarrega o que o servidor gravou (só se for desta sala e desta seed; senão, a sala começa do zero). */
   restore(s) {
     if (!s || ![1, 2, 3, ROOM_SNAPSHOT_VERSION].includes(s.v) || s.room !== this.id || s.seed !== this.seed) return false;
-    for (const c of s.chunks) this.world.restoreChunk(c.cx, c.cy, fromB64(c.ground), c.levels.map(fromB64));
+    let dropped = 0;
+    for (const c of s.chunks) dropped += this.world.restoreChunk(c.cx, c.cy, fromB64(c.ground), c.levels.map(fromB64));
+    this.droppedOnRestore = dropped;
     this.world.settleWater();
     this.world.loadHoleAges(s.holes);
     if (Number.isFinite(s.time)) this.time = (s.time % 1 + 1) % 1;
@@ -5398,7 +5700,8 @@ var Room = class {
       for (const a of s.animals) if (Number.isFinite(a?.x) && Number.isFinite(a?.y) && Math.abs(a.x) + Math.abs(a.y) < 2 ** 30) this.loadAround(a.x, a.y, 4);
       this.entities.restoreAnimals(s.animals, this.world);
     }
-    this.dirty = false;
+    this.entities.reconcileGoblinCamps(this.world);
+    this.dirty = dropped > 0;
     return true;
   }
 };
