@@ -48,6 +48,8 @@ function startServer(port = Number(process.env.PORT) || 3000, options = {}) {
     const room = new net.Room(def.id, def.name, def.seed);
     const snap = store.load(def.id);
     loaded[def.id] = !!snap && room.restore(snap);
+    // Limite de 2 níveis de blocos: salas antigas perdem o 3º nível ao carregar (a sala regrava limpa).
+    if (room.droppedOnRestore) console.warn(`sala ${def.id}: ${room.droppedOnRestore} blocos do 3º nível descartados ao carregar`);
     rooms.set(def.id, { room, sockets: new Map() });
   }
   let lastSave = null;
