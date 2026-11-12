@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.93.4 (c235e5b) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.93.7 (23c809d) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -967,6 +967,8 @@ var Item = {
   /** Espólios dos lobos (v0.91.0; sem uso ainda — futuras receitas). */
   WOLF_FANG: "wolf_fang",
   WOLF_PELT: "wolf_pelt",
+  /** Moeda de cobre (v0.93.7): espólio do goblin; sem uso ainda (futuras lojas e trocas). */
+  COPPER_COIN: "copper_coin",
   /** Fruta da macieira (comer vem com a comida, Fase P). As mudas saíram do jogo na v0.88.0 (`RETIRED_ITEMS`). */
   APPLE: "apple",
   /** Hortaliças: o próprio legume é o que se planta (e o que se colhe). */
@@ -994,6 +996,7 @@ var ITEMS = {
   queen_heart: { id: Item.QUEEN_HEART, name: "Cora\xE7\xE3o da Rainha", loot: true },
   wolf_fang: { id: Item.WOLF_FANG, name: "Presa de Lobo", loot: true },
   wolf_pelt: { id: Item.WOLF_PELT, name: "Pelagem de Lobo", loot: true },
+  copper_coin: { id: Item.COPPER_COIN, name: "Moeda de Cobre", loot: true },
   apple: { id: Item.APPLE, name: "Ma\xE7\xE3" },
   potato: { id: Item.POTATO, name: "Batata", plants: Block.POTATO_0 },
   tomato: { id: Item.TOMATO, name: "Tomate", plants: Block.TOMATO_0 },
@@ -1009,11 +1012,12 @@ var ITEMS = {
 var ANIMAL_PRODUCE = { cow: Item.MILK, chicken: Item.EGG };
 var VEGETABLES = [Item.POTATO, Item.TOMATO, Item.CARROT];
 var GRASS_VEGETABLE_CHANCE = 0.12;
-var LOOT_ITEMS = [Item.SILK, Item.FANG, Item.QUEEN_HEART, Item.WOLF_FANG, Item.WOLF_PELT];
+var LOOT_ITEMS = [Item.SILK, Item.FANG, Item.QUEEN_HEART, Item.WOLF_FANG, Item.WOLF_PELT, Item.COPPER_COIN];
 var WOLF_PELT_CHANCE = 0.55;
 var WOLF_FANG_CHANCE = 0.4;
+var GOBLIN_COIN_DROP = 2;
 function monsterDrops(kind, rand = Math.random) {
-  if (kind === "goblin") return [];
+  if (kind === "goblin") return [{ item: Item.COPPER_COIN, count: GOBLIN_COIN_DROP }];
   if (isWolf(kind)) {
     const out = [];
     if (rand() < WOLF_PELT_CHANCE) out.push({ item: Item.WOLF_PELT, count: 1 });
