@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.93.7 (23c809d) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.93.58 (c6c2569) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -33,7 +33,17 @@ __export(index_exports, {
 module.exports = __toCommonJS(index_exports);
 
 // src/config.ts
+var import_meta = {};
 var DAY_LENGTH_S = 480;
+var DEFAULT_SUBDIV = 1;
+function gridSubdiv() {
+  if (typeof window === "undefined") return DEFAULT_SUBDIV;
+  const dev = !!import_meta.env?.DEV;
+  if (!dev) return DEFAULT_SUBDIV;
+  const g = new URLSearchParams(window.location.search).get("grade");
+  return g === "1" ? 1 : g === "2" ? 2 : DEFAULT_SUBDIV;
+}
+var SUBDIV = gridSubdiv();
 var TILE = 32;
 var CUBE_FRONT = 18;
 var MAX_STACK = 2;
@@ -66,6 +76,14 @@ var Block = {
   /** Madeira de bétula (v0.89.0): tora (da Bétula derrubada) e tábuas (da tora). */
   BIRCH_LOG: 232,
   BIRCH_PLANKS: 233,
+  // --- paredes (ADR 0027, v0.93.15): bloco de nível único, sólido, altura de `WORLD_SCALE.wall`; forma por autotile (`world/walls.ts`) ---
+  /** Parede de Tábuas (madeira; o machado quebra). Sem receita nem perfil ainda (arte e render vêm na W1/W3). */
+  WALL_PLANKS: 240,
+  /** Parede de Pedra (a picareta quebra). */
+  WALL_STONE: 241,
+  /** Porta de parede (v0.93.25): bloco dentro de uma fileira leste–oeste, entre duas paredes; o id guarda o estado (fechada sólida, aberta passável). */
+  WALL_DOOR_PLANKS: 242,
+  WALL_DOOR_PLANKS_OPEN: 243,
   // --- porta (objeto de 3 níveis de altura; o id guarda o estado) ---
   OAK_DOOR: 28,
   /** Porta aberta: mesma porta, passável. Só existe no mundo (a hotbar coloca a fechada). */
@@ -291,6 +309,10 @@ var defs = [
   object(Block.BIRCH_LOG, "Tora de B\xE9tula", { organic: "wood" }),
   object(Block.BIRCH_PLANKS, "T\xE1bua de B\xE9tula", { organic: "wood" }),
   // Porta: ocupa a célula inteira (nada empilha em cima); fechada bloqueia, aberta deixa passar.
+  object(Block.WALL_PLANKS, "Parede de T\xE1buas", { shape: "wall", organic: "wood" }),
+  object(Block.WALL_STONE, "Parede de Pedra", { shape: "wall", stone: true }),
+  object(Block.WALL_DOOR_PLANKS, "Porta de Parede (T\xE1buas)", { shape: "wall-door", organic: "wood" }),
+  object(Block.WALL_DOOR_PLANKS_OPEN, "Porta de Parede (T\xE1buas, aberta)", { shape: "wall-door", solid: false, placeable: false, organic: "wood" }),
   object(Block.OAK_DOOR, "Porta de Carvalho", { shape: "door", organic: "wood" }),
   object(Block.TENT, "Tenda", { shape: "rock", organic: "wood" }),
   // madeira: o machado quebra
@@ -477,6 +499,18 @@ var TREE_NEXT = {
 function isGrowingTree(id) {
   return TREE_NEXT[id] !== void 0;
 }
+var WALL_BLOCKS = [Block.WALL_PLANKS, Block.WALL_STONE];
+function isWall(id) {
+  return blockDef(id).shape === "wall";
+}
+var WALL_DOOR_BLOCKS = [Block.WALL_DOOR_PLANKS];
+function isWallDoor(id) {
+  return blockDef(id).shape === "wall-door";
+}
+function isWallLike(id) {
+  const s = blockDef(id).shape;
+  return s === "wall" || s === "wall-door";
+}
 function isDoor(id) {
   return id === Block.OAK_DOOR || id === Block.OAK_DOOR_OPEN;
 }
@@ -486,6 +520,8 @@ function isGate(id) {
 var TOGGLES = {
   [Block.OAK_DOOR]: Block.OAK_DOOR_OPEN,
   [Block.OAK_DOOR_OPEN]: Block.OAK_DOOR,
+  [Block.WALL_DOOR_PLANKS]: Block.WALL_DOOR_PLANKS_OPEN,
+  [Block.WALL_DOOR_PLANKS_OPEN]: Block.WALL_DOOR_PLANKS,
   [Block.FENCE_GATE]: Block.FENCE_GATE_OPEN,
   [Block.FENCE_GATE_OPEN]: Block.FENCE_GATE
 };
@@ -496,7 +532,7 @@ function toggled(id) {
   return TOGGLES[id] ?? null;
 }
 function isOpen(id) {
-  return id === Block.OAK_DOOR_OPEN || id === Block.FENCE_GATE_OPEN;
+  return id === Block.OAK_DOOR_OPEN || id === Block.FENCE_GATE_OPEN || id === Block.WALL_DOOR_PLANKS_OPEN;
 }
 
 // src/world/random.ts
@@ -827,12 +863,48 @@ function buildDungeon(seed, x0, y0, side, size = dungeonSize(seed)) {
   return decorateDungeon(seed, buildMaze(seed, size[0], size[1], side), x0, y0);
 }
 var DUNGEON_ORIGIN = [-1e5, -1e5];
-var DUNGEON_RIM = 6;
-var CAVE_MIN_CASTLE_DIST = 10 * CHUNK_SIZE;
-var CAVE_W = 5;
-var CAVE_D = 3;
+var DUNGEON_RIM = 6 * SUBDIV;
+var CAVE_MIN_CASTLE_DIST = 10 * CHUNK_SIZE * SUBDIV;
+var CAVE_W = 5 * SUBDIV;
+var CAVE_D = 3 * SUBDIV;
+function upsampleDungeon(l, s) {
+  if (s === 1) return l;
+  const W = l.w * s;
+  const H = l.h * s;
+  const ground2 = new Uint8Array(W * H);
+  const objects = new Uint8Array(W * H);
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const j = Math.floor(y / s) * l.w + Math.floor(x / s);
+      const i = y * W + x;
+      ground2[i] = l.ground[j];
+      const o = l.objects[j];
+      if (o === Block.AIR) continue;
+      if (o === Block.DUNGEON_MOUNTAIN || o === Block.DUNGEON_WALL || blockDef(o).shape === "cube") objects[i] = o;
+      else if (x % s === 0 && y % s === s - 1) objects[i] = o;
+    }
+  }
+  const sc = (r) => ({ x0: r.x0 * s, y0: r.y0 * s, x1: (r.x1 + 1) * s - 1, y1: (r.y1 + 1) * s - 1 });
+  const pt = ([x, y]) => [x * s, y * s];
+  return {
+    w: W,
+    h: H,
+    area: sc(l.area),
+    interior: sc(l.interior),
+    side: l.side,
+    gate: l.gate.map(pt),
+    doorstep: pt(l.doorstep),
+    chambers: l.chambers.map(sc),
+    bossRoom: sc(l.bossRoom),
+    bossHome: [l.bossHome[0] * s + (s >> 1), l.bossHome[1] * s + (s >> 1)],
+    spawns: l.spawns.map((m) => ({ ...m, x: m.x * s, y: m.y * s })),
+    ground: ground2,
+    objects,
+    scale: s
+  };
+}
 function isolatedDungeon(seed) {
-  return buildDungeon(seed, DUNGEON_ORIGIN[0], DUNGEON_ORIGIN[1], "south");
+  return upsampleDungeon(buildDungeon(seed, DUNGEON_ORIGIN[0], DUNGEON_ORIGIN[1], "south"), SUBDIV);
 }
 function dungeonGuard(l) {
   return { x0: l.area.x0 - DUNGEON_RIM, y0: l.area.y0 - DUNGEON_RIM, x1: l.area.x1 + DUNGEON_RIM, y1: l.area.y1 + DUNGEON_RIM };
@@ -840,21 +912,23 @@ function dungeonGuard(l) {
 function dungeonEntry(l) {
   const c = l.gate[l.gate.length - 2];
   const inward = { north: [0, 1], south: [0, -1], west: [1, 0], east: [-1, 0] }[l.side];
-  return [c[0] + inward[0], c[1] + inward[1]];
+  const s = l.scale ?? 1;
+  return [c[0] + inward[0] * s, c[1] + inward[1] * s];
 }
 function isDungeonExit(l, x, y) {
-  return l.gate.slice(0, 3).some(([gx, gy]) => gx === x && gy === y);
+  const s = l.scale ?? 1;
+  return l.gate.slice(0, 3).some(([gx, gy]) => x >= gx && x < gx + s && y >= gy && y < gy + s);
 }
 function caveAt(x, y) {
   const footprint = { x0: x, y0: y - CAVE_D + 1, x1: x + CAVE_W - 1, y1: y };
-  const outside = [x + (CAVE_W >> 1), y + 1];
+  const outside = [x + (CAVE_W / SUBDIV >> 1) * SUBDIV, y + 1];
   return {
     x,
     y,
     footprint,
     outside,
-    guard: { x0: footprint.x0 - 1, y0: footprint.y0 - 1, x1: footprint.x1 + 1, y1: footprint.y1 },
-    front: { x0: outside[0] - 2, y0: outside[1], x1: outside[0] + 2, y1: outside[1] + 2 }
+    guard: { x0: footprint.x0 - SUBDIV, y0: footprint.y0 - SUBDIV, x1: footprint.x1 + SUBDIV, y1: footprint.y1 },
+    front: { x0: outside[0] - 2 * SUBDIV, y0: outside[1], x1: outside[0] + 3 * SUBDIV - 1, y1: outside[1] + 3 * SUBDIV - 1 }
   };
 }
 function planCave(base, castle, avoid) {
@@ -864,7 +938,7 @@ function planCave(base, castle, avoid) {
   let fallback = null;
   for (let t = 0; t < 96; t++) {
     const a = a0 + t * 0.7;
-    const dist = CAVE_MIN_CASTLE_DIST + 8 + hash2(seed, 7002, t) * 80 + Math.floor(t / 9) * 24;
+    const dist = CAVE_MIN_CASTLE_DIST + (8 + hash2(seed, 7002, t) * 80 + Math.floor(t / 9) * 24) * SUBDIV;
     const ox = Math.round(castle[0] + Math.cos(a) * dist);
     const oy = Math.round(castle[1] + Math.sin(a) * dist);
     const cave = caveAt(ox - (CAVE_W >> 1), oy);
@@ -886,7 +960,8 @@ var DungeonTerrain = class {
     this.cave = cave;
     this.guard = dungeonGuard(layout);
     const [dx, dy] = layout.doorstep;
-    this.landing = layout.side === "north" || layout.side === "south" ? { x0: dx - 1, y0: dy, x1: dx + 1, y1: dy } : { x0: dx, y0: dy - 1, x1: dx, y1: dy + 1 };
+    const s = layout.scale ?? 1;
+    this.landing = layout.side === "north" || layout.side === "south" ? { x0: dx - s, y0: dy, x1: dx + 2 * s - 1, y1: dy + s - 1 } : { x0: dx, y0: dy - s, x1: dx + s - 1, y1: dy + 2 * s - 1 };
   }
   base;
   layout;
@@ -1151,7 +1226,7 @@ function toolDrops(tool, id, rand = Math.random) {
   return dropsFor(id, rand);
 }
 var TOOL_ORDER = [Tool.SWORD, Tool.HOE, Tool.PICKAXE, Tool.SHOVEL, Tool.AXE];
-var COLLECTABLE = /* @__PURE__ */ new Set([...MATERIALS, Block.OAK_DOOR, Block.TENT, Block.CHEST, Block.CAMPFIRE, Block.CAULDRON, Block.OVEN, Block.CHAIR, Block.FENCE]);
+var COLLECTABLE = /* @__PURE__ */ new Set([...MATERIALS, Block.OAK_DOOR, Block.TENT, Block.CHEST, Block.CAMPFIRE, Block.CAULDRON, Block.OVEN, Block.CHAIR, Block.FENCE, Block.WALL_PLANKS, Block.WALL_STONE, Block.WALL_DOOR_PLANKS]);
 var ADULT_TREES = /* @__PURE__ */ new Set([Block.OAK_TREE, Block.APPLE_TREE, Block.APPLE_TREE_BARE]);
 function blockDrops(id, rand = Math.random) {
   if (ADULT_TREES.has(id)) return [{ item: blockStack(Block.OAK_LOG), count: 2 + (rand() < 0.5 ? 1 : 0) }];
@@ -1159,6 +1234,7 @@ function blockDrops(id, rand = Math.random) {
   if (id === Block.BIRCH_TREE) return [{ item: blockStack(Block.BIRCH_LOG), count: 2 + (rand() < 0.5 ? 1 : 0) }];
   if (isDoor(id)) return [{ item: blockStack(Block.OAK_DOOR), count: 1 }];
   if (isGate(id)) return [{ item: blockStack(Block.FENCE_GATE), count: 1 }];
+  if (isWallDoor(id)) return [{ item: blockStack(Block.WALL_DOOR_PLANKS), count: 1 }];
   if (id === Block.ROCK_BOULDER) return [{ item: blockStack(Block.STONE), count: 1 + Math.floor(rand() * 3) }];
   return COLLECTABLE.has(id) ? [{ item: blockStack(id), count: 1 }] : [];
 }
@@ -1193,6 +1269,28 @@ var RECIPES = [
     profession: "builder",
     inputs: [{ item: blockStack(Block.OAK_PLANKS), count: 4 }],
     output: { item: blockStack(Block.OAK_DOOR), count: 1 }
+  },
+  // Paredes autotile (W5, dono do produto 13/11): custos provisórios, ajustáveis olhando o ritmo do jogo.
+  {
+    id: "plank-wall",
+    name: "Parede de T\xE1buas",
+    profession: "builder",
+    inputs: [{ item: blockStack(Block.OAK_PLANKS), count: 2 }],
+    output: { item: blockStack(Block.WALL_PLANKS), count: 2 }
+  },
+  {
+    id: "stone-wall",
+    name: "Parede de Pedra",
+    profession: "builder",
+    inputs: [{ item: blockStack(Block.STONE), count: 2 }],
+    output: { item: blockStack(Block.WALL_STONE), count: 2 }
+  },
+  {
+    id: "plank-wall-door",
+    name: "Porta de Parede (T\xE1buas)",
+    profession: "builder",
+    inputs: [{ item: blockStack(Block.OAK_PLANKS), count: 4 }],
+    output: { item: blockStack(Block.WALL_DOOR_PLANKS), count: 1 }
   },
   ...[
     ["stone-brick", "Tijolo de Pedra", Block.STONE_BRICK],
@@ -1352,7 +1450,7 @@ function applyAction(world, a) {
 }
 
 // src/net/protocol.ts
-var PROTOCOL_VERSION = 20;
+var PROTOCOL_VERSION = 21;
 var MAX_PLAYERS = 10;
 var ROOMS = [
   { id: 1, name: "Sala 1", seed: 20261106 }
@@ -1394,7 +1492,7 @@ function parseClientMessage(text) {
   switch (o.t) {
     case "hello":
       if (!Number.isInteger(o.v) || typeof o.name !== "string" || !Number.isInteger(o.room)) return null;
-      return { t: "hello", v: o.v, name: o.name, room: o.room, appearance: parseAppearance(o.appearance) };
+      return { t: "hello", v: o.v, sub: Number.isInteger(o.sub) && o.sub >= 1 ? o.sub : 1, name: o.name, room: o.room, appearance: parseAppearance(o.appearance) };
     case "bag": {
       const bag = parseBag(o.bag);
       return bag ? { t: "bag", bag } : null;
@@ -1499,17 +1597,22 @@ var REGEN = { delay: 6, every: 1.5, fraction: 0.05 };
 var HUNGER = { max: 100, perSecond: 100 / 720, regenMin: 30, starveEvery: 4, starveDamage: 2 };
 
 // src/game/walker.ts
+function scaleSpec(spec) {
+  return scaleSpecBy(spec, SUBDIV);
+}
+function scaleSpecBy(spec, s) {
+  if (s === 1) return spec;
+  return { ...spec, speed: spec.speed * s, halfW: Math.min(spec.halfW * s, spec.maxHalfW ?? Infinity), halfD: spec.halfD * s };
+}
 var Z_SMOOTH = 14;
 var Walker = class {
-  /** Especificação física (mutável: o filhote cresce). */
   constructor(x, y, spec) {
     this.x = x;
     this.y = y;
-    this.spec = spec;
+    this.spec = scaleSpec(spec);
   }
   x;
   y;
-  spec;
   facing = "down";
   moving = false;
   /** Tempo acumulado de caminhada (dirige o quadro da animação). */
@@ -1517,6 +1620,8 @@ var Walker = class {
   /** Nível lógico (inteiro) e exibido (suavizado). */
   z = 0;
   visualZ = 0;
+  /** Especificação física (mutável: o filhote cresce), já em células da grade atual. */
+  spec;
   /**
    * Anda na direção (ix, iy) em coordenadas de tela, magnitude 0..1.
    * Retorna a distância efetivamente percorrida.
@@ -1601,7 +1706,7 @@ var Walker = class {
 };
 
 // src/game/wanderer.ts
-var DEFAULT_PACE = { idle: [1.5, 5], walk: [1, 3.5], leash: 7 };
+var DEFAULT_PACE = { idle: [1.5, 5], walk: [1, 3.5], leash: 7 * SUBDIV };
 var Wanderer = class extends Walker {
   constructor(x, y, spec, homeX, homeY, rand, pace = DEFAULT_PACE) {
     super(x, y, spec);
@@ -1654,7 +1759,7 @@ var Wanderer = class extends Walker {
 var LOVE_SECONDS = 25;
 var BREED_COOLDOWN = 45;
 var COURTSHIP_SECONDS = 2.6;
-var FOLLOW_DISTANCE = 1.6;
+var FOLLOW_DISTANCE = 1.6 * SUBDIV;
 var Breeder = class extends Wanderer {
   constructor(species, breed, x, y, homeX, homeY, rand, baby, pace) {
     super(x, y, { ...baby ? breed.baby : breed.adult }, homeX, homeY, rand, pace);
@@ -1701,7 +1806,7 @@ var Breeder = class extends Wanderer {
       this.age += dt;
       if (this.age >= this.breed.growUpSeconds) {
         this.baby = false;
-        Object.assign(this.spec, this.breed.adult);
+        Object.assign(this.spec, scaleSpec(this.breed.adult));
       }
     }
     if (this.courtship > 0) {
@@ -1743,7 +1848,7 @@ var Breeder = class extends Wanderer {
    */
   approachPartner(dt, world, blocked) {
     const p = this.partner;
-    if (Math.hypot(p.x - this.x, p.y - this.y) < 0.9) {
+    if (Math.hypot(p.x - this.x, p.y - this.y) < 0.9 * SUBDIV) {
       this.move(dt, 0, 0, world, blocked);
       return;
     }
@@ -1827,7 +1932,7 @@ var FarmAnimal = class extends Breeder {
       homeY,
       rand,
       baby,
-      { idle: f.idle, walk: f.walk, leash: f.leash }
+      { idle: f.idle, walk: f.walk, leash: f.leash * SUBDIV }
     );
     this.kind = kind;
   }
@@ -1912,7 +2017,8 @@ var NPCS = [
   {
     id: "bento",
     name: "Bento",
-    who: "Padeiro (colete marrom)",
+    who: "Padeiro e mercador (colete marrom) \u2014 mora no Mercado",
+    role: "merchant",
     lines: [
       "Trigo, ovos, leite e ma\xE7\xE3s: com isso se faz muita coisa boa no caldeir\xE3o e no forno. P\xE3o alimenta bem!",
       "Ovelha e vaca gostam de trigo, galinha prefere semente e o cavalo adora cenoura. Alimente e veja os cora\xE7\xF5es!"
@@ -1988,11 +2094,12 @@ function npcDef(id) {
   return BY_ID.get(id);
 }
 var SMITH = "black";
+var MERCHANT = "bento";
 
 // src/game/villager.ts
 var Villager = class extends Wanderer {
   constructor(x, y, npc, onStreet, rand = Math.random) {
-    super(x, y, { speed: 1.4, halfW: 0.26, halfD: 0.14, stepHeight: 0 }, x, y, rand, { idle: [2, 7], walk: [1, 3], leash: npcDef(npc).role ? 3 : 6 });
+    super(x, y, { speed: 1.4, halfW: 0.26, halfD: 0.14, stepHeight: 0 }, x, y, rand, { idle: [2, 7], walk: [1, 3], leash: (npcDef(npc).role ? 3 : 6) * SUBDIV });
     this.npc = npc;
     this.onStreet = onStreet;
     this.role = npcDef(npc).role ?? null;
@@ -2110,40 +2217,119 @@ var TENT_INTERIOR = {
     // 6  capacho entre os postes
   ]
 };
-var INTERIOR_DEFS = [SMITHY_INTERIOR];
+var MARKET_INTERIOR = {
+  id: "market",
+  name: "Mercado",
+  buildings: [Block.SHOP_POTION, Block.SHOP_GOODS, Block.SHOP_TOOLS],
+  map: [
+    "########################",
+    // 0  parede do fundo
+    "########################",
+    // 1  janelas, cortinas e prateleiras
+    "########################",
+    // 2
+    "########################",
+    // 3  prateleiras
+    "##....................##",
+    // 4  corredor atrás dos balcões (o mercador anda aqui)
+    "##..####..####..####..##",
+    // 5  balcões
+    "##..####..####..####..##",
+    // 6
+    "##....................##",
+    // 7
+    "##.#####..####..#####.##",
+    // 8  caixotes de legumes, queijos, leite e pães
+    "##.#####..####..#####.##",
+    // 9
+    "##....................##",
+    // 10
+    "####..#####..#####..####",
+    // 11 muro da frente: as três entradas
+    "####EE#####EE#####EE####"
+    // 12 capachos de saída
+  ],
+  keeper: { at: [11, 4], rows: [4, 4] }
+};
+var INTERIOR_DEFS = [SMITHY_INTERIOR, MARKET_INTERIOR];
 var INTERIOR_ORIGIN = [0, -1e5];
-var INTERIOR_SPACING = 64;
-var INTERIOR_MARGIN = 2;
-function layoutFor(def, k, outside) {
+var INTERIOR_SPACING = 64 * SUBDIV;
+var INTERIOR_MARGIN = 2 * SUBDIV;
+function scaleInteriorDef(def, s) {
+  if (s === 1) return def;
+  const map = def.map.flatMap((row) => {
+    const wide = [...row].map((c) => c.repeat(s)).join("");
+    return Array.from({ length: s }, () => wide);
+  });
+  const keeper = def.keeper ? { at: [def.keeper.at[0] * s, def.keeper.at[1] * s], rows: [def.keeper.rows[0] * s, (def.keeper.rows[1] + 1) * s - 1] } : void 0;
+  return { ...def, map, keeper };
+}
+function matsOf(map) {
+  const seen = /* @__PURE__ */ new Set();
+  const out = [];
+  for (let y = 0; y < map.length; y++) {
+    for (let x = 0; x < map[y].length; x++) {
+      if (map[y][x] !== "E" || seen.has(`${x},${y}`)) continue;
+      const rect = { x0: x, y0: y, x1: x, y1: y };
+      const stack = [[x, y]];
+      seen.add(`${x},${y}`);
+      while (stack.length) {
+        const [cx, cy] = stack.pop();
+        rect.x0 = Math.min(rect.x0, cx);
+        rect.x1 = Math.max(rect.x1, cx);
+        rect.y0 = Math.min(rect.y0, cy);
+        rect.y1 = Math.max(rect.y1, cy);
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          const nx = cx + dx, ny = cy + dy;
+          if (map[ny]?.[nx] === "E" && !seen.has(`${nx},${ny}`)) {
+            seen.add(`${nx},${ny}`);
+            stack.push([nx, ny]);
+          }
+        }
+      }
+      out.push({ at: [rect.x0, rect.y0], rect });
+    }
+  }
+  return out.sort((a, b) => a.at[0] - b.at[0]);
+}
+function layoutFor(base, k, outsides) {
+  const def = scaleInteriorDef(base, SUBDIV);
   const w = def.map[0].length;
   const h = def.map.length;
   const x0 = INTERIOR_ORIGIN[0] + k * INTERIOR_SPACING;
   const y0 = INTERIOR_ORIGIN[1];
-  const row = def.map.findIndex((r) => r.includes("E"));
-  const exit = [x0 + def.map[row].indexOf("E"), y0 + row];
   const area = { x0, y0, x1: x0 + w - 1, y1: y0 + h - 1 };
+  const doors = matsOf(def.map).map((m, i) => ({
+    // capacho sem porta própria (a construção não existe): sai pela primeira porta que existir
+    outside: outsides[i] ?? outsides.find((o) => o) ?? null,
+    entry: [x0 + m.at[0], y0 + m.at[1] - 1],
+    exit: [x0 + m.at[0], y0 + m.at[1]],
+    mat: { x0: x0 + m.rect.x0, y0: y0 + m.rect.y0, x1: x0 + m.rect.x1, y1: y0 + m.rect.y1 }
+  }));
   return {
     def,
     w,
     h,
     area,
     guard: { x0: x0 - INTERIOR_MARGIN, y0: y0 - INTERIOR_MARGIN, x1: area.x1 + INTERIOR_MARGIN, y1: area.y1 + INTERIOR_MARGIN },
-    entry: [exit[0], exit[1] - 1],
-    exit,
-    outside,
+    doors,
+    entry: doors[0].entry,
+    exit: doors[0].exit,
+    outside: doors[0].outside,
     keeper: def.keeper ? { at: [x0 + def.keeper.at[0], y0 + def.keeper.at[1]], rows: [y0 + def.keeper.rows[0], y0 + def.keeper.rows[1]] } : null
   };
 }
 function interiorLayouts(town) {
   const out = [];
   INTERIOR_DEFS.forEach((def, k) => {
-    const b = town.buildings.find((x) => x.id === def.building && x.door);
-    if (b) out.push(layoutFor(def, k, b.door));
+    const ids = def.buildings ?? (def.building !== void 0 ? [def.building] : []);
+    const outsides = ids.map((id) => town.buildings.find((x) => x.id === id && x.door)?.door ?? null);
+    if (outsides.some((o) => o)) out.push(layoutFor(def, k, outsides));
   });
   return out;
 }
 function tentLayout() {
-  return layoutFor(TENT_INTERIOR, INTERIOR_DEFS.length, null);
+  return layoutFor(TENT_INTERIOR, INTERIOR_DEFS.length, [null]);
 }
 function interiorFloor(l, x, y) {
   if (!inRect(l.area, x, y)) return false;
@@ -2204,7 +2390,7 @@ var InteriorTerrain = class {
 };
 
 // src/game/monster.ts
-var WOLF_SIGHT = 3;
+var WOLF_SIGHT = 3 * SUBDIV;
 var GOBLIN_SIGHT = WOLF_SIGHT;
 var GOBLIN_ATTACK_SECONDS = 0.55;
 var GOBLIN_ALERT_SECONDS = 0.48;
@@ -2229,6 +2415,10 @@ var MONSTERS = {
     open: true
   }
 };
+if (SUBDIV !== 1) for (const d of Object.values(MONSTERS)) {
+  d.sight *= SUBDIV;
+  d.leash *= SUBDIV;
+}
 var HURT_SECONDS = 0.35;
 var Monster = class extends Walker {
   constructor(kind, x, y, bounds, rand = Math.random, homeX = x, homeY = y) {
@@ -2297,7 +2487,7 @@ var Monster = class extends Walker {
   }
   /** Distância de mordida (centro a centro). */
   get reach() {
-    return 0.7 + this.spec.halfW;
+    return 0.7 * SUBDIV + this.spec.halfW;
   }
   /** Encostado na personagem e pronto para morder? Se sim, consome a espera e devolve true. */
   tryBite(target) {
@@ -2384,12 +2574,12 @@ var TOWN_H = 132;
 var TOWN_X0 = -TOWN_W / 2;
 var TOWN_Y0 = -TOWN_H;
 var TOWN_SEED = 233152122;
-var TOWN_MARGIN = 8;
-var TOWN_CLEAR = 3;
-var ROAD_LEN = 14;
-var TOWN_SOUTH_FIELD = 28;
+var TOWN_MARGIN = 8 * SUBDIV;
+var TOWN_CLEAR = 3 * SUBDIV;
+var ROAD_LEN = 14 * SUBDIV;
+var TOWN_SOUTH_FIELD = 28 * SUBDIV;
 var WALL = 2;
-var TOWN_WALL = WALL;
+var TOWN_WALL = WALL * SUBDIV;
 var TOWN_SIZES = {
   [Block.CASTLE]: [26, 17, 17],
   [Block.GUILD]: [9, 9, 9],
@@ -2430,7 +2620,60 @@ var DECOR = 7;
 var YARD = 8;
 var cached = null;
 function townLayout() {
-  return cached ??= buildTown();
+  return cached ??= SUBDIV > 1 ? upsampleTown(buildTown(), SUBDIV) : buildTown();
+}
+function upsampleTown(l, s) {
+  if (s === 1) return l;
+  const W = l.w * s;
+  const H = l.h * s;
+  const ground2 = new Uint8Array(W * H);
+  const objects = new Uint8Array(W * H);
+  const upper = new Uint8Array(W * H);
+  const street = new Uint8Array(W * H);
+  const buildingAt = new Int16Array(W * H).fill(-1);
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const cx = Math.floor(x / s);
+      const cy = Math.floor(y / s);
+      const j = cy * l.w + cx;
+      const i = y * W + x;
+      ground2[i] = l.ground[j];
+      upper[i] = l.upper[j];
+      street[i] = l.street[j];
+      buildingAt[i] = l.buildingAt[j];
+      const o = l.objects[j];
+      if (o === Block.AIR) continue;
+      const corner = x % s === 0 && y % s === s - 1;
+      if (o === Block.TOWN_PART || o === Block.HEDGE || blockDef(o).shape === "cube") objects[i] = o;
+      else if (l.buildingAt[j] >= 0) objects[i] = corner ? o : Block.TOWN_PART;
+      else if (corner) objects[i] = o;
+    }
+  }
+  const a = l.area;
+  const sc = (r) => ({ x0: r.x0 * s, y0: r.y0 * s, x1: (r.x1 + 1) * s - 1, y1: (r.y1 + 1) * s - 1 });
+  const pt = ([x, y]) => [x * s, y * s];
+  return {
+    w: W,
+    h: H,
+    area: sc(a),
+    gate: sc(l.gate),
+    start: pt(l.start),
+    doorstep: pt(l.doorstep),
+    castleDoor: pt(l.castleDoor),
+    buildings: l.buildings.map((b) => ({
+      ...b,
+      x: b.x * s,
+      y: (b.y + 1) * s - 1,
+      w: b.w * s,
+      d: b.d * s,
+      door: b.door ? pt(b.door) : null
+    })),
+    ground: ground2,
+    objects,
+    upper,
+    buildingAt,
+    street
+  };
 }
 function buildTown() {
   const W = TOWN_W;
@@ -2530,9 +2773,9 @@ function buildTown() {
     place(Block.GUILD, W / 2 - 28, MID - 8, "Guilda dos Aventureiros", true),
     place(Block.INN, W / 2 + 20, MID - 4, "Hospedaria", true),
     place(Block.SMITHY, 30, MID + 18, "Ferreiro", true),
-    place(Block.SHOP_POTION, W / 2 + 22, MID + 18, "Loja de Po\xE7\xF5es", true),
-    place(Block.SHOP_GOODS, W / 2 + 27, MID + 18, "Armaz\xE9m", true),
-    place(Block.SHOP_TOOLS, W / 2 + 32, MID + 18, "Loja de Ferramentas", true)
+    place(Block.SHOP_POTION, W / 2 + 22, MID + 18, "Mercado", true),
+    place(Block.SHOP_GOODS, W / 2 + 27, MID + 18, "Mercado", true),
+    place(Block.SHOP_TOOLS, W / 2 + 32, MID + 18, "Mercado", true)
   ];
   for (const b of required) {
     const x0 = b.x - TOWN_X0;
@@ -2967,12 +3210,12 @@ var TownTerrain = class {
 };
 
 // src/world/wolves.ts
-var WOLF_REGION = 40;
+var WOLF_REGION = 40 * SUBDIV;
 var WOLF_REGIONS = 3;
 var WOLF_DEN_CHANCE = 0.5;
-var WOLF_TOWN_CLEARANCE = 28;
-var WOLF_ROAM = 12;
-var SLOTS = [[0, 0], [2, 1], [-1, 2]];
+var WOLF_TOWN_CLEARANCE = 28 * SUBDIV;
+var WOLF_ROAM = 12 * SUBDIV;
+var SLOTS = [[0, 0], [2 * SUBDIV, SUBDIV], [-SUBDIV, 2 * SUBDIV]];
 function open(world, x, y) {
   const g = world.generator.groundAt(x, y);
   if (g === Block.WATER || g === Block.HOLE || g === Block.VOID || blockDef(g).liquid) return false;
@@ -2996,8 +3239,9 @@ function wolfPacks(world) {
       const kind = WOLF_KINDS[Math.floor(hash2(seed, rx * 31 + 5, ry * 17 + 9) * WOLF_KINDS.length)];
       const count = 1 + Math.floor(hash2(seed, rx * 5 + 3, ry * 11 + 7) * 3);
       for (let k = 0; k < 12; k++) {
-        const hx = rx * WOLF_REGION + 4 + Math.floor(hash2(seed, rx * 3 + k, ry * 19 + 1) * (WOLF_REGION - 8));
-        const hy = ry * WOLF_REGION + 4 + Math.floor(hash2(seed, rx * 23 + 2, ry * 3 + k) * (WOLF_REGION - 8));
+        const m = 4 * SUBDIV;
+        const hx = rx * WOLF_REGION + m + Math.floor(hash2(seed, rx * 3 + k, ry * 19 + 1) * (WOLF_REGION - 2 * m));
+        const hy = ry * WOLF_REGION + m + Math.floor(hash2(seed, rx * 23 + 2, ry * 3 + k) * (WOLF_REGION - 2 * m));
         if (hx >= keepOut.x0 && hx <= keepOut.x1 && hy >= keepOut.y0 && hy <= keepOut.y1) continue;
         const cells = SLOTS.slice(0, count).map(([dx, dy]) => [hx + dx, hy + dy]);
         if (!cells.every(([x, y]) => open(world, x, y))) continue;
@@ -3012,7 +3256,7 @@ function wolfPacks(world) {
 // src/world/goblins.ts
 var GOBLIN_PACK_SIZE = 7;
 var GOBLIN_CAMP_COUNT = 4;
-var GOBLIN_CAMP_ROAM = 11;
+var GOBLIN_CAMP_ROAM = 11 * SUBDIV;
 var GOBLIN_CAMP_SLOTS = [
   [0, -3],
   [2, -2],
@@ -3021,7 +3265,7 @@ var GOBLIN_CAMP_SLOTS = [
   [0, 3],
   [-2, 2],
   [-3, 0]
-];
+].map(([dx, dy]) => [dx * SUBDIV, dy * SUBDIV]);
 function goblinRoam(x, y) {
   return {
     x0: x - GOBLIN_CAMP_ROAM,
@@ -3049,10 +3293,10 @@ function planGoblinCamps(world) {
   const camps = [];
   for (let i = 0; i < 1800 && camps.length < GOBLIN_CAMP_COUNT; i++) {
     const angle = hash2(world.seed, 113 + i, 274) * Math.PI * 2;
-    const extra = 36 + hash2(world.seed, 938 + i, 181) * Math.min(220, 56 + Math.floor(i / 15) * 8);
+    const extra = (36 + hash2(world.seed, 938 + i, 181) * Math.min(220, 56 + Math.floor(i / 15) * 8)) * SUBDIV;
     const x = Math.round(mx + Math.cos(angle) * (rx + extra));
     const y = Math.round(my + Math.sin(angle) * (ry + extra));
-    if (camps.some((c) => Math.hypot(c.x - x, c.y - y) < 32)) continue;
+    if (camps.some((c) => Math.hypot(c.x - x, c.y - y) < 32 * SUBDIV)) continue;
     if (!open2(world, x, y)) continue;
     const slots = GOBLIN_CAMP_SLOTS.map(([dx, dy]) => [x + dx, y + dy]);
     if (!slots.every(([sx, sy]) => open2(world, sx, sy))) continue;
@@ -3121,10 +3365,10 @@ function canSit(body) {
   return SIT_BODIES.includes(body);
 }
 var FLOW_EVERY = 0.25;
-var RESPAWN_CLEARANCE = 10;
-var ACTIVE_RADIUS = 48;
+var RESPAWN_CLEARANCE = 10 * SUBDIV;
+var ACTIVE_RADIUS = 48 * SUBDIV;
 var FLOCK_SIZE = 4;
-var SWORD_REACH = 1.45;
+var SWORD_REACH = 1.45 * SUBDIV;
 var SWORD_ARC_COS = 0.3;
 var FACING_VEC = { down: [0, 1], up: [0, -1], left: [-1, 0], right: [1, 0] };
 var PICK_BOX = {
@@ -3135,8 +3379,8 @@ var PICK_BOX = {
 };
 var LOVE_FRAMES = 16;
 var LOVE_SCALE = { sheep: 1, cow: 1.05, chicken: 0.7, horse: 1.25 };
-var PAIR_RANGE = 6;
-var COURT_DISTANCE = 1.5;
+var PAIR_RANGE = 6 * SUBDIV;
+var COURT_DISTANCE = 1.5 * SUBDIV;
 var MAX_SHEEP = 16;
 var MAX_PER_SPECIES = { sheep: MAX_SHEEP, horse: 6, cow: 10, chicken: 12 };
 function heroActorKind(body, equipped, attackTool, attacking) {
@@ -3190,7 +3434,7 @@ var Entities = class {
     const grass = /* @__PURE__ */ new Set([Block.GRASS]);
     for (let i = 0; i < 400 && this.npcs.length < FLOCK_SIZE; i++) {
       const a = hash2(world.seed, i, 71) * Math.PI * 2;
-      const r = 2 + hash2(world.seed, i, 72) * 6;
+      const r = (2 + hash2(world.seed, i, 72) * 6) * SUBDIV;
       const cx = Math.floor(x + Math.cos(a) * r);
       const cy = Math.floor(y + Math.sin(a) * r);
       if (!world.isWalkable(cx, cy) || !grass.has(world.getGround(cx, cy))) continue;
@@ -3208,7 +3452,7 @@ var Entities = class {
     let placed = 0;
     for (let i = 0; i < 400 && placed < count; i++) {
       const a = hash2(world.seed, i, salt) * Math.PI * 2;
-      const r = 3 + hash2(world.seed, i, salt + 1) * 6;
+      const r = (3 + hash2(world.seed, i, salt + 1) * 6) * SUBDIV;
       const cx = Math.floor(x + Math.cos(a) * r);
       const cy = Math.floor(y + Math.sin(a) * r);
       if (!world.isWalkable(cx, cy) || world.getGround(cx, cy) !== Block.GRASS) continue;
@@ -3229,7 +3473,8 @@ var Entities = class {
     if (!t) return;
     const a = t.area;
     const onStreet = (cx, cy) => cx > a.x0 && cx < a.x1 && cy > a.y0 && cy < t.gate.y0 && t.street[(cy - a.y0) * t.w + (cx - a.x0)] === 1;
-    const common = NPC_IDS.filter((id) => id !== SMITH);
+    const market = world.interiors.find((l) => l.def.id === "market");
+    const common = NPC_IDS.filter((id) => id !== SMITH && !(id === MERCHANT && market?.keeper));
     const homes = homesFor(world, common.length, onStreet);
     const people = common.map((npc, i) => ({ at: homes[i], npc, walk: onStreet }));
     const forge = world.interiors.find((l) => l.def.building === Block.SMITHY);
@@ -3240,6 +3485,11 @@ var Entities = class {
       people.push({ at: k.at, npc: SMITH, walk });
     } else if (smithy?.door) {
       people.push({ at: smithy.door, npc: SMITH, walk: onStreet });
+    }
+    if (market?.keeper) {
+      const k = market.keeper;
+      const walk = (cx, cy) => cy >= k.rows[0] && cy <= k.rows[1] && interiorFloor(market, cx, cy);
+      people.push({ at: k.at, npc: MERCHANT, walk });
     }
     people.forEach(({ at: [hx, hy], npc, walk }) => {
       for (let r = 0; r <= 12; r++) {
@@ -3266,10 +3516,11 @@ var Entities = class {
     if (world.profile.sheep) {
       const [gx, gy] = world.outsideGate();
       const town = !!world.town;
-      this.spawnFlock(world, gx, gy + (town ? 8 : 0));
-      this.spawnHorse(world, gx + 9, gy + (town ? 10 : 2));
-      this.spawnAnimals(world, "cow", gx - 9, gy + (town ? 10 : 2), 2, 91);
-      this.spawnAnimals(world, "chicken", gx - 6, gy + (town ? 6 : 1), 4, 97);
+      const s = SUBDIV;
+      this.spawnFlock(world, gx, gy + (town ? 8 : 0) * s);
+      this.spawnHorse(world, gx + 9 * s, gy + (town ? 10 : 2) * s);
+      this.spawnAnimals(world, "cow", gx - 9 * s, gy + (town ? 10 : 2) * s, 2, 91);
+      this.spawnAnimals(world, "chicken", gx - 6 * s, gy + (town ? 6 : 1) * s, 4, 97);
     }
     this.spawnMonsters(world);
     this.spawnWolves(world);
@@ -3641,7 +3892,8 @@ var Entities = class {
   animalAt(wx, wy) {
     let hit = null;
     for (const s of this.breeders()) {
-      const [h, half] = PICK_BOX[s.species][s.baby ? 1 : 0];
+      const [h0, half0] = PICK_BOX[s.species][s.baby ? 1 : 0];
+      const h = h0 * SUBDIV, half = half0 * SUBDIV;
       const lift = s.visualZ * CUBE_FRONT / TILE;
       if (Math.abs(wx - s.x) < half && wy > s.y - lift - h && wy < s.y - lift + 0.2) {
         if (!hit || s.y > hit.y) hit = s;
@@ -3784,7 +4036,7 @@ var Entities = class {
     return out;
   }
 };
-var HOME_SPACING = 16;
+var HOME_SPACING = 16 * SUBDIV;
 function homesFor(world, n, onStreet) {
   const t = world.town;
   const [sx, sy] = t.start;
@@ -3839,7 +4091,7 @@ var Player = class extends Walker {
   /** Sentado num assento (cadeira, banco); null = de pé. */
   seat = null;
   constructor(x, y) {
-    super(x, y, { speed: 4.2, halfW: 0.27, halfD: 0.15, stepHeight: STEP_HEIGHT });
+    super(x, y, { speed: 4.2, halfW: 0.27, halfD: 0.15, stepHeight: STEP_HEIGHT, maxHalfW: 0.45 });
   }
   get attacking() {
     return this.attackTime > 0;
@@ -4045,6 +4297,121 @@ function toLocal(v) {
 }
 function chunkKey(cx, cy) {
   return `${cx},${cy}`;
+}
+
+// src/net/b64.ts
+function toB64(a) {
+  let s = "";
+  for (let i = 0; i < a.length; i++) s += String.fromCharCode(a[i]);
+  return btoa(s);
+}
+function fromB64(s) {
+  return Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+}
+
+// src/world/subdiv.ts
+function rescaleFactor(from, to) {
+  if (!Number.isInteger(from) || !Number.isInteger(to) || from < 1 || to < from || to % from !== 0) {
+    throw new Error(`grade ${from} \u2192 ${to} n\xE3o suportada`);
+  }
+  return to / from;
+}
+function repeatsWhenRescaled(id) {
+  if (id === Block.AIR || id === Block.TENT || id === Block.TENT_PART || id === Block.TOWN_PART) return true;
+  const shape = blockDef(id).shape;
+  return shape === "cube" || shape === "wall" || shape === "wall-door" || shape === "door" || shape === "fence" || shape === "crop";
+}
+function rescaleChunk(c, f) {
+  if (f === 1) return [c];
+  const out = /* @__PURE__ */ new Map();
+  const target = (gx, gy) => {
+    const tcx = Math.floor(gx / CHUNK_SIZE);
+    const tcy = Math.floor(gy / CHUNK_SIZE);
+    const k = `${tcx},${tcy}`;
+    let t = out.get(k);
+    if (!t) {
+      t = { cx: tcx, cy: tcy, ground: new Uint8Array(CHUNK_SIZE * CHUNK_SIZE), levels: c.levels.map(() => new Uint8Array(CHUNK_SIZE * CHUNK_SIZE)) };
+      out.set(k, t);
+    }
+    return { t, i: (gy - tcy * CHUNK_SIZE) * CHUNK_SIZE + (gx - tcx * CHUNK_SIZE) };
+  };
+  for (let ly = 0; ly < CHUNK_SIZE; ly++) {
+    for (let lx = 0; lx < CHUNK_SIZE; lx++) {
+      const src = ly * CHUNK_SIZE + lx;
+      for (let dy = 0; dy < f; dy++) {
+        for (let dx = 0; dx < f; dx++) {
+          const { t, i } = target((c.cx * CHUNK_SIZE + lx) * f + dx, (c.cy * CHUNK_SIZE + ly) * f + dy);
+          t.ground[i] = c.ground[src];
+          const corner = dx === 0 && dy === f - 1;
+          c.levels.forEach((l, k) => {
+            t.levels[k][i] = repeatsWhenRescaled(l[src]) || corner ? l[src] : Block.AIR;
+          });
+        }
+      }
+    }
+  }
+  return [...out.values()];
+}
+function rescaleChunkRecords(list, f) {
+  if (f === 1) return [...list];
+  return list.flatMap((r) => rescaleChunk({ cx: r.cx, cy: r.cy, ground: fromB64(r.ground), levels: r.levels.map(fromB64) }, f)).map((c) => ({ cx: c.cx, cy: c.cy, ground: toB64(c.ground), levels: c.levels.map(toB64) }));
+}
+function rescaleXY(x, y, f) {
+  return [x * f, y * f];
+}
+function rescaleCell(x, y, f) {
+  return [x * f, y * f + f - 1];
+}
+function rescaleCellKey(key, f) {
+  const [x, y] = key.split(",").map(Number);
+  const [nx, ny] = rescaleCell(x, y, f);
+  return `${nx},${ny}`;
+}
+function rescaleHoles(holes, f) {
+  if (f === 1) return holes.map((h) => [...h]);
+  return holes.flatMap(([x, y, s]) => {
+    const out = [];
+    for (let dy = 0; dy < f; dy++) for (let dx = 0; dx < f; dx++) out.push([x * f + dx, y * f + dy, s]);
+    return out;
+  });
+}
+
+// src/world/walls.ts
+function wallNeighbors(isWall2, x, y) {
+  return {
+    n: isWall2(x, y - 1),
+    e: isWall2(x + 1, y),
+    s: isWall2(x, y + 1),
+    w: isWall2(x - 1, y),
+    ne: isWall2(x + 1, y - 1),
+    se: isWall2(x + 1, y + 1),
+    sw: isWall2(x - 1, y + 1),
+    nw: isWall2(x - 1, y - 1)
+  };
+}
+function wallFront(nb) {
+  if (nb.s && !nb.e && !nb.w) return null;
+  if (nb.w && nb.e) return "mid";
+  if (nb.e) return "left";
+  if (nb.w) return "right";
+  return nb.n ? "end" : "single";
+}
+var CAP_N = 1;
+var CAP_E = 2;
+var CAP_S = 4;
+var CAP_W = 8;
+function wallCapMask(nb) {
+  return (nb.n ? CAP_N : 0) | (nb.e ? CAP_E : 0) | (nb.s ? CAP_S : 0) | (nb.w ? CAP_W : 0);
+}
+var INNER_NE = 1;
+var INNER_SE = 2;
+var INNER_SW = 4;
+var INNER_NW = 8;
+function wallInnerCorners(nb) {
+  return (nb.n && nb.e && !nb.ne ? INNER_NE : 0) | (nb.s && nb.e && !nb.se ? INNER_SE : 0) | (nb.s && nb.w && !nb.sw ? INNER_SW : 0) | (nb.n && nb.w && !nb.nw ? INNER_NW : 0);
+}
+function wallPiece(nb) {
+  return { front: wallFront(nb), cap: wallCapMask(nb), inner: wallInnerCorners(nb) };
 }
 
 // src/world/chunk.ts
@@ -4296,18 +4663,22 @@ var WorldGenerator = class {
     this.climateOy = Math.floor(hash2(this.seed, 3, 4) * 2e4) - 1e4;
   }
   elevation(x, y) {
+    x /= SUBDIV;
+    y /= SUBDIV;
     const continent = this.terrain.fbm2(x / 420 + 11.3, y / 420 - 7.1, 3) * 0.45;
     const local = this.terrain.fbm2(x / 70, y / 70, 5);
     return local * 0.8 + continent;
   }
   biomeAt(x, y) {
-    x += this.climateOx;
-    y += this.climateOy;
+    x = x / SUBDIV + this.climateOx;
+    y = y / SUBDIV + this.climateOy;
     const t = this.climate.fbm2(x / 480 + 31.7, y / 480 + 5.2, 3);
     const m = this.climate.fbm2(x / 300 - 913.1, y / 300 + 77.7, 3);
     return pickBiome(t * 1.9, m * 1.9);
   }
   isRiver(x, y) {
+    x /= SUBDIV;
+    y /= SUBDIV;
     return Math.abs(this.terrain.fbm2(x / 230 + 400, y / 230 - 400, 3)) < 0.022;
   }
   /**
@@ -4324,15 +4695,16 @@ var WorldGenerator = class {
     if (e < BEACH_LEVEL) return { ground: Block.SAND, object: Block.AIR, upper: Block.AIR };
     let ground2 = biome.ground;
     if (e > MOUNTAIN_LEVEL - 0.05 && biome.key !== "desert") ground2 = Block.DIRT;
-    else if (biome.key !== "desert" && Math.abs(this.detail.fbm2(x / 90 - 300, y / 90 + 300, 2)) < 0.012) {
+    else if (biome.key !== "desert" && Math.abs(this.detail.fbm2(x / SUBDIV / 90 - 300, y / SUBDIV / 90 + 300, 2)) < 0.012) {
       return { ground: Block.PATH, object: Block.AIR, upper: Block.AIR };
     }
     if (e > MOUNTAIN_LEVEL) {
       return { ground: ground2, object: Block.STONE, upper: e > HIGH_MOUNTAIN ? Block.STONE : Block.AIR };
     }
     const r = hash2(this.seed, x, y);
-    const forest = this.detail.fbm2(x / 38 + 50, y / 38 - 50, 2);
-    const density = biome.treeDensity * (forest > 0.05 ? 1 : 0.12);
+    const forest = this.detail.fbm2(x / SUBDIV / 38 + 50, y / SUBDIV / 38 - 50, 2);
+    const area = SUBDIV * SUBDIV;
+    const density = biome.treeDensity * (forest > 0.05 ? 1 : 0.12) / area;
     let object2 = Block.AIR;
     if (r < density) {
       object2 = biome.tree;
@@ -4343,8 +4715,8 @@ var WorldGenerator = class {
           break;
         }
       }
-    } else if (r > 0.994) object2 = Block.ROCK_BOULDER;
-    else if (hash2(this.seed, x, y + 7919) < biome.decoChance) {
+    } else if (r > (area === 1 ? 0.994 : 1 - 6e-3 / area)) object2 = Block.ROCK_BOULDER;
+    else if (hash2(this.seed, x, y + 7919) < biome.decoChance / area) {
       object2 = biome.decorations[Math.floor(hash2(this.seed, x - 31, y) * biome.decorations.length)];
     }
     return { ground: ground2, object: object2, upper: Block.AIR };
@@ -4383,7 +4755,8 @@ var WORLD_PROFILES = {
     terrain: { kind: "procedural" },
     bounds: null,
     character: "heroine",
-    blocks: HOTBAR_BLOCKS,
+    // Paredes e porta de parede (W5): no Mundo desde a v0.93.56; na grade fina de teste (`?grade=2`) ainda não (altura e arte novas na W5-grade).
+    blocks: SUBDIV === 1 ? [...HOTBAR_BLOCKS, ...WALL_BLOCKS, ...WALL_DOOR_BLOCKS] : HOTBAR_BLOCKS,
     tools: true,
     farming: true,
     sheep: true,
@@ -4402,7 +4775,8 @@ var WORLD_PROFILES = {
     // 10 chunks: 5 × 2 (80 × 32 blocos), centrados na origem.
     bounds: { cx0: -3, cy0: -1, cx1: 1, cy1: 0 },
     character: "goddess",
-    blocks: CELESTIAL_BLOCKS,
+    // 18 blocos celestiais + paredes autotile e a porta de parede (ADR 0027; só o Santuário por ora, W5 leva ao Mundo).
+    blocks: [...CELESTIAL_BLOCKS, ...WALL_BLOCKS, ...WALL_DOOR_BLOCKS],
     tools: false,
     farming: false,
     sheep: false,
@@ -4446,12 +4820,6 @@ var World = class {
   crops = /* @__PURE__ */ new Set();
   /** Árvores plantadas crescendo e macieiras colhidas (avançam em `tick`). */
   trees = /* @__PURE__ */ new Set();
-  /** Ordem das colocações de mármore no Santuário: 0 = construção antiga sem histórico. */
-  marblePlacements = /* @__PURE__ */ new Map();
-  marblePlacementIndex = 0;
-  /** V3: novas bases ocupam a própria célula e a célula norte.
-   * Painéis antigos preservam sua geometria V2. */
-  marbleV3Bases = /* @__PURE__ */ new Set();
   /**
    * Covil deste mundo (perfil com `dungeon`), ou null: labirinto isolado do mapa (ADR 0019), protegido; só se luta lá
    * dentro. No mundo fica só a entrada, a caverna (`cave`).
@@ -4531,9 +4899,18 @@ var World = class {
   interiorAt(x, y) {
     return this.interiors.find((l) => inRect(l.area, x, y)) ?? null;
   }
-  /** Interior cuja porta fica diante desta célula da rua (andar para cima nela = entrar), ou null. */
+  /** Porta (e cômodo) cuja entrada fica diante desta célula da rua (andar para cima nela = entrar), ou null. */
+  interiorDoorAt(x, y) {
+    for (const room of this.interiors) {
+      for (const door of room.doors) {
+        if (door.outside && y === door.outside[1] && x >= door.outside[0] && x < door.outside[0] + SUBDIV) return { room, door };
+      }
+    }
+    return null;
+  }
+  /** Interior cuja porta fica diante desta célula da rua, ou null. */
   interiorEntrance(x, y) {
-    return this.interiors.find((l) => l.outside?.[0] === x && l.outside?.[1] === y) ?? null;
+    return this.interiorDoorAt(x, y)?.room ?? null;
   }
   /** Cômodo da tenda (mundos com tenda), ou null. */
   get tentRoom() {
@@ -4550,7 +4927,7 @@ var World = class {
   }
   /** Diante da boca da caverna (andar para cima aqui = entrar no covil)? */
   isCaveDoor(x, y) {
-    return !!this.cave && this.cave.outside[0] === x && this.cave.outside[1] === y;
+    return !!this.cave && y === this.cave.outside[1] && x >= this.cave.outside[0] && x < this.cave.outside[0] + SUBDIV;
   }
   /** Dentro do covil (labirinto), sem o anel em volta? */
   inDungeon(x, y) {
@@ -4624,37 +5001,17 @@ var World = class {
     const chunk = this.chunkAt(x, y);
     return chunk ? chunk.getGround(toLocal(x), toLocal(y)) : this.generator.groundAt(x, y);
   }
-  /** Leitura física das bases gravadas; as células projetadas não são duplicadas no save. */
-  rawObject(x, y) {
+  /** Objeto do nível 0 (chunk carregado ou gerador). */
+  getObject(x, y) {
     if (!this.inBounds(x, y)) return Block.AIR;
     const chunk = this.chunkAt(x, y);
     return chunk ? chunk.getObject(toLocal(x), toLocal(y)) : this.generator.objectAt(x, y);
   }
-  rawUpper(x, y) {
+  /** Nível superior (1). */
+  getUpper(x, y) {
     if (!this.inBounds(x, y)) return Block.AIR;
     const chunk = this.chunkAt(x, y);
     return chunk ? chunk.getLevel(toLocal(x), toLocal(y), 1) : this.generator.upperAt(x, y);
-  }
-  /** Âncora V3 desta célula; o norte (y-1) pertence à base ao sul. */
-  marbleV3AnchorAt(x, y) {
-    if (this.profile.id !== "santuario" || !this.inBounds(x, y)) return null;
-    if (this.marbleV3Bases.has(chunkKey(x, y)) && this.rawObject(x, y) === Block.MARBLE_CELESTIAL && this.rawUpper(x, y) === Block.MARBLE_CELESTIAL) return [x, y];
-    if (this.rawObject(x, y) !== Block.AIR || this.rawUpper(x, y) !== Block.AIR) return null;
-    if (this.marbleV3Bases.has(chunkKey(x, y + 1)) && this.rawObject(x, y + 1) === Block.MARBLE_CELESTIAL && this.rawUpper(x, y + 1) === Block.MARBLE_CELESTIAL) return [x, y + 1];
-    return null;
-  }
-  isMarbleV3Cell(x, y) {
-    return this.marbleV3AnchorAt(x, y) !== null;
-  }
-  /** Objeto do nível 0, incluindo a célula norte ocupada por uma base V3. */
-  getObject(x, y) {
-    const actual = this.rawObject(x, y);
-    return actual !== Block.AIR ? actual : this.marbleV3AnchorAt(x, y) ? Block.MARBLE_CELESTIAL : Block.AIR;
-  }
-  /** Nível superior: a projeção V3 mantém os dois níveis físicos do painel. */
-  getUpper(x, y) {
-    const actual = this.rawUpper(x, y);
-    return actual !== Block.AIR ? actual : this.marbleV3AnchorAt(x, y) ? Block.MARBLE_CELESTIAL : Block.AIR;
   }
   /** Bloco de um nível da pilha (0 = objeto no chão). O gerador só preenche os níveis 0 e 1. */
   getLevel(x, y, level) {
@@ -4664,54 +5021,6 @@ var World = class {
     if (!this.inBounds(x, y)) return Block.AIR;
     const chunk = this.chunkAt(x, y);
     return chunk ? chunk.getLevel(toLocal(x), toLocal(y), level) : Block.AIR;
-  }
-  /**
-   * A ordem de colocação é necessária para diferenciar a extensão da parede
-   * para o norte (completa a antiga) e para o sul (preserva a antiga).
-   * Construções sem histórico têm ordem zero e mantêm a geometria legada.
-   */
-  getMarblePlacementOrder(x, y) {
-    return this.profile.id === "santuario" ? this.marblePlacements.get(chunkKey(x, y)) ?? 0 : 0;
-  }
-  /** Metadados de construção persistidos à parte dos ids dos blocos. */
-  marblePlacementOrders() {
-    if (this.profile.id !== "santuario") return [];
-    const result = [];
-    for (const [key, order] of this.marblePlacements) {
-      const [x, y] = key.split(",").map(Number);
-      if (this.getObject(x, y) === Block.MARBLE_CELESTIAL && this.getUpper(x, y) === Block.MARBLE_CELESTIAL)
-        result.push([x, y, order]);
-    }
-    return result;
-  }
-  /** Restaura somente ordens válidas de painéis existentes. */
-  loadMarblePlacementOrders(entries) {
-    this.marblePlacements.clear();
-    this.marblePlacementIndex = 0;
-    if (this.profile.id !== "santuario") return;
-    for (const entry of entries ?? []) {
-      if (!Array.isArray(entry) || entry.length !== 3) continue;
-      const [x, y, order] = entry;
-      if (![x, y, order].every(Number.isSafeInteger) || order <= 0 || !this.inBounds(x, y) || this.getObject(x, y) !== Block.MARBLE_CELESTIAL || this.getUpper(x, y) !== Block.MARBLE_CELESTIAL) continue;
-      this.marblePlacements.set(chunkKey(x, y), order);
-      this.marblePlacementIndex = Math.max(this.marblePlacementIndex, order);
-    }
-  }
-  /** Só bases V3 são serializadas; células virtuais são derivadas. */
-  marbleV3PlacementBases() {
-    if (this.profile.id !== "santuario") return [];
-    return [...this.marbleV3Bases].map((key) => key.split(",").map(Number)).filter(([x, y]) => this.rawObject(x, y) === Block.MARBLE_CELESTIAL && this.rawUpper(x, y) === Block.MARBLE_CELESTIAL);
-  }
-  /** Saves antigos sem V3 continuam com a geometria V2. */
-  loadMarbleV3PlacementBases(bases) {
-    this.marbleV3Bases.clear();
-    if (this.profile.id !== "santuario") return;
-    for (const entry of bases ?? []) {
-      if (!Array.isArray(entry) || entry.length !== 2) continue;
-      const [x, y] = entry;
-      if (![x, y].every(Number.isSafeInteger) || !this.inBounds(x, y) || !this.inBounds(x, y - 1) || this.rawObject(x, y) !== Block.MARBLE_CELESTIAL || this.rawUpper(x, y) !== Block.MARBLE_CELESTIAL || this.rawObject(x, y - 1) !== Block.AIR || this.rawUpper(x, y - 1) !== Block.AIR || this.marbleV3AnchorAt(x, y - 1)) continue;
-      this.marbleV3Bases.add(chunkKey(x, y));
-    }
   }
   /** Bloco visível no topo da célula e seu nível (null se vazia). */
   topBlock(x, y) {
@@ -4757,10 +5066,6 @@ var World = class {
       chunk.setGround(lx, ly, id);
     } else chunk.setLevel(lx, ly, level, id);
     if (level === 0) {
-      if (id !== Block.MARBLE_CELESTIAL) {
-        this.marblePlacements.delete(chunkKey(x, y));
-        this.marbleV3Bases.delete(chunkKey(x, y));
-      }
       if (isCrop(id)) this.crops.add(chunkKey(x, y));
       else this.crops.delete(chunkKey(x, y));
       if (isGrowingTree(id)) this.trees.add(chunkKey(x, y));
@@ -4819,18 +5124,8 @@ var World = class {
   }
   /** Quebra o topo da célula (empilhado → objeto → chão). Retorna o id removido ou null. */
   breakBlock(x, y) {
-    const anchor = this.marbleV3AnchorAt(x, y);
-    if (anchor && anchor[1] !== y) {
-      if (this.isProtected(x, y) || this.isProtected(anchor[0], anchor[1])) return null;
-      return this.breakBlock(anchor[0], anchor[1]);
-    }
     const target = this.breakTarget(x, y);
     if (target === "object") {
-      if (this.profile.id === "santuario" && this.getLevel(x, y, 0) === Block.MARBLE_CELESTIAL && this.getLevel(x, y, 1) === Block.MARBLE_CELESTIAL) {
-        this.setLevel(x, y, 1, Block.AIR);
-        this.setLevel(x, y, 0, Block.AIR);
-        return Block.MARBLE_CELESTIAL;
-      }
       const top = this.topBlock(x, y);
       if (top.id === Block.CHEST) this.chests.delete(chunkKey(x, y));
       if (top.id === Block.TENT || top.id === Block.TENT_PART) {
@@ -4861,19 +5156,13 @@ var World = class {
     const def = blockDef(id);
     if (!def.placeable || def.layer !== "object") return null;
     if (!this.profile.blocks.includes(id) || this.isProtected(x, y)) return null;
-    if (this.profile.id === "santuario" && id === Block.MARBLE_CELESTIAL) {
-      const available = (cx, cy) => {
-        const ground2 = this.getGround(cx, cy);
-        return this.inBounds(cx, cy) && !this.isProtected(cx, cy) && this.isGroundStandable(cx, cy) && ground2 !== Block.HOLE && ground2 !== Block.WATER && this.getObject(cx, cy) === Block.AIR && this.getUpper(cx, cy) === Block.AIR;
-      };
-      return available(x, y) && available(x, y - 1) ? 0 : null;
-    }
     if (this.getGround(x, y) === Block.HOLE) return def.shape === "cube" ? "ground" : null;
     if (this.getGround(x, y) === Block.WATER) return REPLACES_WATER.has(id) ? "ground" : null;
     if (!this.isGroundStandable(x, y)) return null;
     const base = blockDef(this.getObject(x, y));
     if (base.id === Block.AIR || base.shape === "decoration") {
       if (def.shape === "door" && !this.hasDoorFrame(x, y)) return null;
+      if (def.shape === "wall-door" && !this.canPlaceWallDoor(x, y)) return null;
       if (id === Block.TENT && !tentCells(x, y).every(([cx, cy]) => this.isFootprintFree(cx, cy))) return null;
       return 0;
     }
@@ -4954,6 +5243,13 @@ var World = class {
   hasDoorFrame(x, y) {
     return this.isDoorJamb(x - 1, y) && this.isDoorJamb(x + 1, y);
   }
+  /**
+   * Porta de parede (ADR 0027): só dentro de uma fileira leste–oeste, entre duas paredes comuns (não porta) e sem parede ao norte nem ao sul
+   * (a frente da porta precisa aparecer e a tampa é a da fileira).
+   */
+  canPlaceWallDoor(x, y) {
+    return isWall(this.getObject(x - 1, y)) && isWall(this.getObject(x + 1, y)) && !this.isWallAt(x, y - 1) && !this.isWallAt(x, y + 1);
+  }
   /** Porta ou portão da cerca (abre e fecha com um toque)? */
   isDoor(x, y) {
     return isOpenable(this.getObject(x, y));
@@ -4979,16 +5275,20 @@ var World = class {
     const level = this.placementLevel(x, y, id);
     if (level === null) return false;
     this.setLevel(x, y, level, id);
-    if (this.profile.id === "santuario" && id === Block.MARBLE_CELESTIAL && level === 0) {
-      this.setLevel(x, y, 1, id);
-      this.marblePlacements.set(chunkKey(x, y), ++this.marblePlacementIndex);
-      this.marbleV3Bases.add(chunkKey(x, y));
-    }
     if (id === Block.TENT) {
       for (const [cx, cy] of tentCells(x, y).slice(1)) this.setLevel(cx, cy, 0, Block.TENT_PART);
       this.tent = [x, y];
     }
     return true;
+  }
+  /** A célula tem uma parede (bloco de forma `wall` no nível 0)? */
+  isWallAt(x, y) {
+    return isWallLike(this.getObject(x, y));
+  }
+  /** Peça de autotile da parede em (x, y) (ADR 0027), ou null se a célula não é parede. */
+  wallPieceAt(x, y) {
+    if (!this.isWallAt(x, y)) return null;
+    return wallPiece(wallNeighbors((cx, cy) => this.isWallAt(cx, cy), x, y));
   }
   /** Célula livre (vazia ou com enfeite) em chão firme, fora da dungeon — para objetos de várias células. */
   isFootprintFree(x, y) {
@@ -4998,14 +5298,14 @@ var World = class {
   }
   /** Células que um bloco ocupa ao ser colocado em (x, y) (tenda 2×2; os demais, 1). */
   footprint(id, x, y) {
-    return id === Block.TENT ? tentCells(x, y) : id === Block.MARBLE_CELESTIAL && this.profile.id === "santuario" ? [[x, y], [x, y - 1]] : [[x, y]];
+    return id === Block.TENT ? tentCells(x, y) : [[x, y]];
   }
   /**
    * Cantos possíveis para um objeto de várias células cobrir a célula (x, y) (tenda: 4 opções).
    * Quem coloca escolhe o que não pega ninguém; blocos de 1 célula têm só (x, y).
    */
   footprintAnchors(id, x, y) {
-    return id === Block.TENT ? [[x, y], [x - 1, y], [x, y + 1], [x - 1, y + 1]] : id === Block.MARBLE_CELESTIAL && this.profile.id === "santuario" ? [[x, y], [x, y + 1]] : [[x, y]];
+    return id === Block.TENT ? [[x, y], [x - 1, y], [x, y + 1], [x - 1, y + 1]] : [[x, y]];
   }
   /** Canto (TENT) da tenda que contém a célula, ou null. */
   tentAnchor(x, y) {
@@ -5333,7 +5633,6 @@ var World = class {
       for (let lx = 0; lx < CHUNK_SIZE; lx++) {
         const id = c.getObject(lx, ly);
         const key = chunkKey(cx * CHUNK_SIZE + lx, cy * CHUNK_SIZE + ly);
-        this.marblePlacements.delete(key);
         if (isCrop(id)) this.crops.add(key);
         if (isGrowingTree(id)) this.trees.add(key);
         if (c.getGround(lx, ly) === Block.HOLE) this.holeAge.set(key, 0);
@@ -5344,20 +5643,10 @@ var World = class {
   }
 };
 
-// src/net/b64.ts
-function toB64(a) {
-  let s = "";
-  for (let i = 0; i < a.length; i++) s += String.fromCharCode(a[i]);
-  return btoa(s);
-}
-function fromB64(s) {
-  return Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
-}
-
 // src/net/room.ts
 var ROOM_START_TIME = 0.31;
 var TIME_SYNC_SECONDS = 30;
-var ROOM_SNAPSHOT_VERSION = 4;
+var ROOM_SNAPSHOT_VERSION = 5;
 var DROP_LIFETIME = 300;
 var TAKE_REACH = 3;
 var MOBS_EVERY = 0.1;
@@ -5366,6 +5655,22 @@ var CREATURE_STEP = 0.1;
 var LOAD_RADIUS = 28;
 var FEED_REACH = 3;
 var round2 = (v) => Math.round(v * 100) / 100;
+function rescaleRoomSnapshot(s, to) {
+  const f = rescaleFactor(s.sub ?? 1, to);
+  if (f === 1) return s;
+  return {
+    ...s,
+    sub: to,
+    chunks: rescaleChunkRecords(s.chunks ?? [], f),
+    chests: Object.fromEntries(Object.entries(s.chests ?? {}).map(([k, v]) => [rescaleCellKey(k, f), v])),
+    animals: s.animals?.map((a) => {
+      const [x, y] = rescaleXY(a.x, a.y, f);
+      const [hx, hy] = rescaleXY(a.hx, a.hy, f);
+      return { ...a, x, y, hx, hy };
+    }),
+    holes: s.holes && rescaleHoles(s.holes, f)
+  };
+}
 var bagKey = (name) => name.toLocaleLowerCase("pt-BR");
 var Room = class {
   constructor(id, name, seed, rand = Math.random) {
@@ -5442,7 +5747,7 @@ var Room = class {
   /** Pedido de entrada. Retorna o id do novo jogador e o que enviar (ou só um erro, para quem pediu). */
   join(hello) {
     const fail = (code, message) => ({ id: null, out: [{ to: 0, msg: { t: "error", code, message } }] });
-    if (hello.v !== PROTOCOL_VERSION) return fail("version", "Vers\xE3o do jogo diferente da do servidor: recarregue a p\xE1gina.");
+    if (hello.v !== PROTOCOL_VERSION || (hello.sub ?? 1) !== SUBDIV) return fail("version", "Vers\xE3o do jogo diferente da do servidor: recarregue a p\xE1gina.");
     const name = sanitizeName(hello.name);
     if (!name) return fail("name", "Nome inv\xE1lido: use de 2 a 16 letras ou n\xFAmeros.");
     if (this.players.size >= MAX_PLAYERS) return fail("full", `${this.name} cheia (m\xE1ximo ${MAX_PLAYERS} jogadores). Tente daqui a pouco.`);
@@ -5683,12 +5988,15 @@ var Room = class {
       bags: Object.fromEntries(this.bags),
       chests: Object.fromEntries(this.world.chests),
       animals: this.entities.saveAnimals(),
-      holes: this.world.holeAges()
+      holes: this.world.holeAges(),
+      sub: SUBDIV
     };
   }
   /** Recarrega o que o servidor gravou (só se for desta sala e desta seed; senão, a sala começa do zero). */
-  restore(s) {
-    if (!s || ![1, 2, 3, ROOM_SNAPSHOT_VERSION].includes(s.v) || s.room !== this.id || s.seed !== this.seed) return false;
+  restore(snap) {
+    if (!snap || ![1, 2, 3, 4, ROOM_SNAPSHOT_VERSION].includes(snap.v) || snap.room !== this.id || snap.seed !== this.seed) return false;
+    if ((snap.sub ?? 1) > SUBDIV) return false;
+    const s = rescaleRoomSnapshot(snap, SUBDIV);
     let dropped = 0;
     for (const c of s.chunks) dropped += this.world.restoreChunk(c.cx, c.cy, fromB64(c.ground), c.levels.map(fromB64));
     this.droppedOnRestore = dropped;

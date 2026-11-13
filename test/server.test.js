@@ -3,7 +3,8 @@ const assert = require('node:assert/strict');
 const WebSocket = require('ws');
 const { startServer } = require('../src/app');
 const net = require('../vendor/orvalis-net.cjs');
-const { mkdtempSync } = require('node:fs');
+const { mkdtempSync, readdirSync, readFileSync, writeFileSync } = require('node:fs');
+const { createStore } = require('../src/store');
 const { tmpdir } = require('node:os');
 const { join } = require('node:path');
 
@@ -134,5 +135,58 @@ test('sala fixa salva em disco: mundo e bolsa voltam depois de reiniciar; /salas
   assert.deepEqual(w.bag, { inventory: { wheat: 4 }, hotbar: null, x: 3.5, y: 4.5 });
   assert.ok(w.chunks.length > 0);
   b.ws.close();
+  await s.close();
+});
+
+test('grade: o hello com outra subdivisão é recusado como versão', async () => {
+  const { s, url } = await boot();
+  const c = client(url); await c.open;
+  c.send({ t: 'hello', v: net.PROTOCOL_VERSION, sub: 2, name: 'Ana', room: 1 });
+  assert.equal((await c.wait((m) => m.t === 'error')).code, 'version');
+  const d = client(url); await d.open;
+  d.send({ t: 'hello', v: net.PROTOCOL_VERSION, sub: 1, name: 'Bia', room: 1 });
+  await d.wait((m) => m.t === 'welcome');
+  for (const x of [c, d]) x.ws.close();
+  await s.close();
+});
+
+test('cópia de segurança: a primeira regravação de cada pacote guarda o arquivo antigo e nunca o sobrescreve', () => {
+  const dir = tempDir();
+  const store = createStore(dir);
+  store.save(1, { v: 4, marca: 'antiga' }, '0.93.7-aaaaaaa');
+  assert.deepEqual(readdirSync(dir).filter((f) => f.endsWith('.bak')), []); // não havia o que guardar
+  store.save(1, { v: 5, marca: 'nova' }, '0.93.58-c6c2569');
+  store.save(1, { v: 5, marca: 'mais nova' }, '0.93.58-c6c2569');
+  const baks = readdirSync(dir).filter((f) => f.endsWith('.bak'));
+  assert.deepEqual(baks, ['sala-1.json.antes-0.93.58-c6c2569.bak']);
+  assert.equal(JSON.parse(readFileSync(join(dir, baks[0]), 'utf8')).marca, 'antiga'); // o de antes do pacote novo, intacto
+  assert.equal(store.load(1).marca, 'mais nova');
+});
+
+test('arquivo de sala de grade mais fina não é aberto nem perdido: a sala começa limpa e o arquivo vira .bak', async () => {
+  const dir = tempDir();
+  const snap = { v: net.ROOM_SNAPSHOT_VERSION ?? 5, room: 1, seed: net.ROOMS[0].seed, time: 0.2, savedAt: 1, chunks: [], bags: {}, chests: {}, sub: 2 };
+  writeFileSync(join(dir, 'sala-1.json'), JSON.stringify(snap));
+  const { s } = await boot(dir);
+  // sala limpa (nada restaurado): enquanto ninguém mexe, o arquivo fino fica como está (nem regravado)
+  assert.equal(readdirSync(dir).filter((f) => f.endsWith('.bak')).length, 0);
+  s.rooms.get(1).room.dirty = true; // alguém mexeu: a próxima gravação guarda a cópia antes de regravar
+  s.saveAll();
+  await s.close();
+  const baks = readdirSync(dir).filter((f) => f.endsWith('.bak'));
+  assert.equal(baks.length, 1);
+  assert.equal(JSON.parse(readFileSync(join(dir, baks[0]), 'utf8')).sub, 2);
+});
+
+test('arquivo antigo (protocolo 20, sem sub) ainda abre: vale como grade 1', async () => {
+  const dir = tempDir();
+  const room = new net.Room(1, 'Sala 1', net.ROOMS[0].seed);
+  const old = JSON.parse(JSON.stringify(room.snapshot()));
+  delete old.sub;
+  old.v = 4;
+  old.time = 0.77;
+  writeFileSync(join(dir, 'sala-1.json'), JSON.stringify(old));
+  const { s } = await boot(dir);
+  assert.ok(Math.abs(s.rooms.get(1).room.time - 0.77) < 0.01);
   await s.close();
 });
