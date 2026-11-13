@@ -46,12 +46,12 @@ test('saúde mostra protocolo e pacote', async () => {
 test('dois jogadores na mesma sala: entrada, posição, ação aplicada para todos e recusa na cidade', async () => {
   const { s, url } = await boot();
   const a = client(url); await a.open;
-  a.send({ t: 'hello', v: net.PROTOCOL_VERSION, name: 'Ana', room: 1 });
+  a.send({ t: 'hello', v: net.PROTOCOL_VERSION, sub: 2, name: 'Ana', room: 1 });
   const wa = await a.wait((m) => m.t === 'welcome');
   assert.equal(wa.room, 1);
   assert.equal(wa.roomName, 'Sala 1');
   const b = client(url); await b.open;
-  b.send({ t: 'hello', v: net.PROTOCOL_VERSION, name: 'Beto', room: 1 });
+  b.send({ t: 'hello', v: net.PROTOCOL_VERSION, sub: 2, name: 'Beto', room: 1 });
   const wb = await b.wait((m) => m.t === 'welcome');
   assert.equal(wb.seed, wa.seed);
   // A sala tem hora própria (a mesma para todos) e o mundo vem nos chunks editados.
@@ -93,13 +93,13 @@ test('dois jogadores na mesma sala: entrada, posição, ação aplicada para tod
 test('erros: sala inexistente, nome e versão inválidos, origem não permitida', async () => {
   const { s, url } = await boot();
   const c = client(url); await c.open;
-  c.send({ t: 'hello', v: net.PROTOCOL_VERSION, name: 'Ana', room: 99 });
+  c.send({ t: 'hello', v: net.PROTOCOL_VERSION, sub: 2, name: 'Ana', room: 99 });
   assert.equal((await c.wait((m) => m.t === 'error')).code, 'room');
   const d = client(url); await d.open;
   d.send({ t: 'hello', v: net.PROTOCOL_VERSION + 1, name: 'Ana', room: 1 });
   assert.equal((await d.wait((m) => m.t === 'error')).code, 'version');
   const e = client(url); await e.open;
-  e.send({ t: 'hello', v: net.PROTOCOL_VERSION, name: '?', room: 1 });
+  e.send({ t: 'hello', v: net.PROTOCOL_VERSION, sub: 2, name: '?', room: 1 });
   assert.equal((await e.wait((m) => m.t === 'error')).code, 'name');
   const bad = client(url, 'https://site-estranho.example');
   await assert.rejects(bad.open);
@@ -113,7 +113,7 @@ test('sala fixa salva em disco: mundo e bolsa voltam depois de reiniciar; /salas
   const lista = await (await fetch(`http://127.0.0.1:${port}/salas`)).json();
   assert.deepEqual(lista, [{ numero: 1, nome: 'Sala 1', jogadores: 0, maximo: net.MAX_PLAYERS }]);
   const a = client(url); await a.open;
-  a.send({ t: 'hello', v: net.PROTOCOL_VERSION, name: 'Ana', room: 1 });
+  a.send({ t: 'hello', v: net.PROTOCOL_VERSION, sub: 2, name: 'Ana', room: 1 });
   await a.wait((m) => m.t === 'welcome');
   const room = s.rooms.get(1).room;
   const [gx, gy] = room.world.outsideGate();
@@ -130,7 +130,7 @@ test('sala fixa salva em disco: mundo e bolsa voltam depois de reiniciar; /salas
   ({ s, url } = await boot(dir));
   assert.equal(s.rooms.get(1).room.world.getObject(spot[0], spot[1]), 25);
   const b = client(url); await b.open;
-  b.send({ t: 'hello', v: net.PROTOCOL_VERSION, name: 'ana', room: 1 });
+  b.send({ t: 'hello', v: net.PROTOCOL_VERSION, sub: 2, name: 'ana', room: 1 });
   const w = await b.wait((m) => m.t === 'welcome');
   assert.deepEqual(w.bag, { inventory: { wheat: 4 }, hotbar: null, x: 3.5, y: 4.5 });
   assert.ok(w.chunks.length > 0);
@@ -141,10 +141,10 @@ test('sala fixa salva em disco: mundo e bolsa voltam depois de reiniciar; /salas
 test('grade: o hello com outra subdivisão é recusado como versão', async () => {
   const { s, url } = await boot();
   const c = client(url); await c.open;
-  c.send({ t: 'hello', v: net.PROTOCOL_VERSION, sub: 2, name: 'Ana', room: 1 });
+  c.send({ t: 'hello', v: net.PROTOCOL_VERSION, sub: 1, name: 'Ana', room: 1 });
   assert.equal((await c.wait((m) => m.t === 'error')).code, 'version');
   const d = client(url); await d.open;
-  d.send({ t: 'hello', v: net.PROTOCOL_VERSION, sub: 1, name: 'Bia', room: 1 });
+  d.send({ t: 'hello', v: net.PROTOCOL_VERSION, sub: 2, name: 'Bia', room: 1 });
   await d.wait((m) => m.t === 'welcome');
   for (const x of [c, d]) x.ws.close();
   await s.close();
@@ -165,7 +165,7 @@ test('cópia de segurança: a primeira regravação de cada pacote guarda o arqu
 
 test('arquivo de sala de grade mais fina não é aberto nem perdido: a sala começa limpa e o arquivo vira .bak', async () => {
   const dir = tempDir();
-  const snap = { v: net.ROOM_SNAPSHOT_VERSION ?? 5, room: 1, seed: net.ROOMS[0].seed, time: 0.2, savedAt: 1, chunks: [], bags: {}, chests: {}, sub: 2 };
+  const snap = { v: net.ROOM_SNAPSHOT_VERSION ?? 5, room: 1, seed: net.ROOMS[0].seed, time: 0.2, savedAt: 1, chunks: [], bags: {}, chests: {}, sub: 3 };
   writeFileSync(join(dir, 'sala-1.json'), JSON.stringify(snap));
   const { s } = await boot(dir);
   // sala limpa (nada restaurado): enquanto ninguém mexe, o arquivo fino fica como está (nem regravado)
@@ -175,7 +175,7 @@ test('arquivo de sala de grade mais fina não é aberto nem perdido: a sala come
   await s.close();
   const baks = readdirSync(dir).filter((f) => f.endsWith('.bak'));
   assert.equal(baks.length, 1);
-  assert.equal(JSON.parse(readFileSync(join(dir, baks[0]), 'utf8')).sub, 2);
+  assert.equal(JSON.parse(readFileSync(join(dir, baks[0]), 'utf8')).sub, 3);
 });
 
 test('arquivo antigo (protocolo 20, sem sub) ainda abre: vale como grade 1', async () => {
