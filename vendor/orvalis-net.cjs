@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.93.58 (c6c2569) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.93.59 (4dd45e2) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -35,9 +35,20 @@ module.exports = __toCommonJS(index_exports);
 // src/config.ts
 var import_meta = {};
 var DAY_LENGTH_S = 480;
-var DEFAULT_SUBDIV = 1;
+var DEFAULT_SUBDIV = 2;
+function sanctuaryPage() {
+  const fixed = import_meta.env?.VITE_WORLD;
+  if (fixed) return fixed === "santuario";
+  const parts = window.location.hostname.split(".");
+  if (parts.length > 2 && parts[0].toLowerCase() === "santuario") return true;
+  return new URLSearchParams(window.location.search).get("mundo")?.toLowerCase() === "santuario";
+}
 function gridSubdiv() {
-  if (typeof window === "undefined") return DEFAULT_SUBDIV;
+  if (typeof window === "undefined") {
+    const env = globalThis.process?.env?.ORVALIS_SUBDIV;
+    return env === "1" ? 1 : env === "2" ? 2 : DEFAULT_SUBDIV;
+  }
+  if (sanctuaryPage()) return 1;
   const dev = !!import_meta.env?.DEV;
   if (!dev) return DEFAULT_SUBDIV;
   const g = new URLSearchParams(window.location.search).get("grade");
@@ -2390,8 +2401,8 @@ var InteriorTerrain = class {
 };
 
 // src/game/monster.ts
-var WOLF_SIGHT = 3 * SUBDIV;
-var GOBLIN_SIGHT = WOLF_SIGHT;
+var WOLF_SIGHT = 3;
+var GOBLIN_SIGHT = WOLF_SIGHT * SUBDIV;
 var GOBLIN_ATTACK_SECONDS = 0.55;
 var GOBLIN_ALERT_SECONDS = 0.48;
 var GOBLIN_VISUALS = ["idle", "walk", "run", "alert", "attack", "hurt"];
@@ -2407,7 +2418,7 @@ var MONSTERS = {
   // Goblins guard a campfire in groups of seven; aggression only within 3 cells.
   goblin: {
     spec: { speed: 2.75, halfW: 0.34, halfD: 0.21, stepHeight: 1 },
-    sight: GOBLIN_SIGHT,
+    sight: WOLF_SIGHT,
     leash: 4,
     biteEvery: 1.2,
     respawn: 150,
@@ -3541,7 +3552,7 @@ var Entities = class {
     for (const camp of world.goblinCamps) {
       if (world.getObject(camp.x, camp.y) !== Block.CAMPFIRE) continue;
       const bounds = goblinRoam(camp.x, camp.y);
-      const existing = this.monsters.filter((m) => m.kind === "goblin" && Math.abs(m.homeX - (camp.x + 0.5)) <= 5 && Math.abs(m.homeY - (camp.y + 0.5)) <= 5);
+      const existing = this.monsters.filter((m) => m.kind === "goblin" && Math.abs(m.homeX - (camp.x + 0.5)) <= 5 * SUBDIV && Math.abs(m.homeY - (camp.y + 0.5)) <= 5 * SUBDIV);
       if (existing.length >= GOBLIN_PACK_SIZE) continue;
       for (const [x, y] of camp.slots) {
         if (!world.isWalkable(x, y)) continue;
@@ -3556,7 +3567,7 @@ var Entities = class {
    */
   reconcileGoblinCamps(world) {
     const allowed = new Set(world.goblinCamps.filter((c) => world.getObject(c.x, c.y) === Block.CAMPFIRE).map((c) => c.x + "," + c.y));
-    const known = (x, y) => world.goblinCamps.some((c) => Math.hypot(c.x + 0.5 - x, c.y + 0.5 - y) <= 5 && allowed.has(c.x + "," + c.y));
+    const known = (x, y) => world.goblinCamps.some((c) => Math.hypot(c.x + 0.5 - x, c.y + 0.5 - y) <= 5 * SUBDIV && allowed.has(c.x + "," + c.y));
     for (let i = this.monsters.length - 1; i >= 0; i--) {
       const m = this.monsters[i];
       if (m.kind === "goblin" && !known(m.homeX, m.homeY)) this.monsters.splice(i, 1);
@@ -3924,8 +3935,8 @@ var Entities = class {
       const dx = v.x - p.x;
       const dy = v.y - p.y;
       const d = Math.hypot(dx, dy);
-      if (d > (v.role ? 3.2 : 1.8) || d >= bestD) continue;
-      if (d < 0.4 || (dx * fx + dy * fy) / d >= 0.3) {
+      if (d > (v.role ? 3.2 : 1.8) * SUBDIV || d >= bestD) continue;
+      if (d < 0.4 * SUBDIV || (dx * fx + dy * fy) / d >= 0.3) {
         best = v;
         bestD = d;
       }
@@ -4755,8 +4766,8 @@ var WORLD_PROFILES = {
     terrain: { kind: "procedural" },
     bounds: null,
     character: "heroine",
-    // Paredes e porta de parede (W5): no Mundo desde a v0.93.56; na grade fina de teste (`?grade=2`) ainda não (altura e arte novas na W5-grade).
-    blocks: SUBDIV === 1 ? [...HOTBAR_BLOCKS, ...WALL_BLOCKS, ...WALL_DOOR_BLOCKS] : HOTBAR_BLOCKS,
+    // Paredes e porta de parede (W5): no Mundo desde a v0.93.56 (na grade fina: frente empilhada, `render/sanctuaryWallArt.ts`).
+    blocks: [...HOTBAR_BLOCKS, ...WALL_BLOCKS, ...WALL_DOOR_BLOCKS],
     tools: true,
     farming: true,
     sheep: true,
