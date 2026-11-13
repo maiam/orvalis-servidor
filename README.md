@@ -19,7 +19,7 @@ chão são da sala (quem pega primeiro leva). O servidor é autoritativo: as reg
 Limites: 16 kB por mensagem; 40 mensagens/s por conexão (acima são ignoradas; acima de 200/s a conexão cai).
 Origens permitidas: o jogo, o Santuário, este servidor e `localhost:5173` (troque com `ALLOWED_ORIGINS`,
 lista separada por vírgula). **Dados**: um arquivo `sala-<n>.json` por sala em `DATA_DIR` (padrão `~/orvalis-dados`, fora
-da pasta do código, que o deploy troca), gravado a cada 15 s quando algo mudou e ao desligar; carregado ao ligar.
+da pasta do código, que o deploy troca), gravado a cada 15 s quando algo mudou e ao desligar; carregado ao ligar. **Cópia de segurança:** antes da primeira regravação feita por um pacote novo do jogo, o arquivo que estava lá vira `sala-<n>.json.antes-<versão>-<commit>.bak` (uma por pacote, nunca sobrescrita) — a rede de segurança das migrações (formato e grade fina, ADR 0032 do jogo). Arquivo gravado numa grade **mais fina** que a do pacote não é aberto (a sala começa limpa) e o arquivo continua intacto até alguém mexer na sala.
 
 ## Rodar
 ```bash

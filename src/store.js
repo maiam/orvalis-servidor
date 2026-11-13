@@ -1,7 +1,7 @@
 // Gravação das salas fixas em disco (protocolo 8, ADR 0020 do jogo): um arquivo JSON por sala (`sala-<n>.json`), com o
 // `RoomSnapshot` do jogo (mundo editado, hora, bolsas). Grava em arquivo temporário e renomeia (nunca deixa um arquivo
 // pela metade). A pasta fica FORA da pasta do código: o deploy da Hostinger troca o código a cada merge.
-const { mkdirSync, readFileSync, renameSync, writeFileSync, existsSync, statSync } = require('node:fs');
+const { copyFileSync, mkdirSync, readFileSync, renameSync, writeFileSync, existsSync, statSync } = require('node:fs');
 const { homedir } = require('node:os');
 const { join } = require('node:path');
 
@@ -25,7 +25,18 @@ function createStore(dir = dataDir()) {
         return null;
       }
     },
-    save(id, snapshot) {
+    /**
+     * Grava a sala. Antes da primeira regravação feita por um pacote novo do jogo (`tag`, ex.: `0.93.58-c6c2569`), guarda uma cópia do
+     * arquivo que estava lá (`sala-N.json.antes-<tag>.bak`): é a rede de segurança das migrações (grade, formato) — o arquivo antigo
+     * nunca se perde por uma conversão ruim. Uma cópia por pacote, nunca sobrescrita.
+     */
+    save(id, snapshot, tag = 'sem-pacote') {
+      const bak = `${file(id)}.antes-${String(tag).replace(/[^\w.-]+/g, '_')}.bak`;
+      try {
+        if (existsSync(file(id)) && !existsSync(bak)) copyFileSync(file(id), bak);
+      } catch (e) {
+        console.error(`sala ${id}: não foi possível guardar a cópia de segurança`, e.message);
+      }
       const tmp = `${file(id)}.tmp`;
       writeFileSync(tmp, JSON.stringify(snapshot));
       renameSync(tmp, file(id));

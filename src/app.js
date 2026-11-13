@@ -16,6 +16,8 @@ const net = require('../vendor/orvalis-net.cjs');
 const { createStore } = require('./store');
 
 const PACKAGE = readFileSync(join(__dirname, '..', 'vendor', 'orvalis-net.cjs'), 'utf8').split('\n', 1)[0].replace(/^\/\/\s*/, '');
+/** Versão e commit do pacote do jogo (ex.: `0.93.58-c6c2569`): nomeia a cópia de segurança do arquivo de cada sala. */
+const PACKAGE_TAG = (PACKAGE.match(/v(\d+\.\d+\.\d+) \(([0-9a-f]+)\)/) || []).slice(1).join('-') || 'sem-pacote';
 /** De quanto em quanto tempo as salas com mudanças vão para o disco (ms). */
 const SAVE_EVERY_MS = 15000;
 /** Passo do relógio das salas (ms): 10×/s, o ritmo dos bichos na tela de cada jogador. */
@@ -57,7 +59,7 @@ function startServer(port = Number(process.env.PORT) || 3000, options = {}) {
     for (const [id, entry] of rooms) {
       if (!force && !entry.room.dirty) continue;
       try {
-        store.save(id, entry.room.snapshot());
+        store.save(id, entry.room.snapshot(), PACKAGE_TAG);
         lastSave = new Date().toISOString();
       } catch (e) {
         console.error(`sala ${id}: não foi possível gravar`, e.message);
