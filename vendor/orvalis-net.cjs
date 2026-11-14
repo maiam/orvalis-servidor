@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.93.66 (e39e5d9) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.93.68 (0b351e6) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
