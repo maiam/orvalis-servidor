@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.93.91 (6edeef7) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.93.92 (21d2b42) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -227,6 +227,10 @@ var Block = {
   V_GATE_GAP_CLOSED: 254,
   /** Cerca de Estacas (v0.93.90): 1 célula × 1 de altura (16 × 16 px), 4 estacas; o jogador fabrica (1 Tora → 4) e coloca. */
   FENCE_STAKE: 244,
+  /** Vitória-régia comum (folha ou flor; 4 variantes): enfeite sobre a água rasa de rios e lagos, não bloqueia (a água não se pisa). */
+  WATER_LILY: 246,
+  /** Vitória-régia gigante de borda levantada (4 variantes): idem, maior. */
+  VICTORIA: 247,
   // --- plantação de trigo: 16 estágios consecutivos (60 = semente ... 75 = maduro) ---
   WHEAT_0: 60,
   WHEAT_15: 75,
@@ -469,6 +473,8 @@ var defs = [
   object(Block.V_GATE_CLOSED, "Port\xE3o da Vila (fechado)", { shape: "building", breakable: false, placeable: false }),
   object(Block.V_GATE_GAP, "Port\xE3o da Vila", { shape: "building", solid: false, breakable: false, placeable: false }),
   object(Block.V_GATE_GAP_CLOSED, "Port\xE3o da Vila (fechado)", { shape: "building", breakable: false, placeable: false }),
+  object(Block.WATER_LILY, "Vit\xF3ria-r\xE9gia", { shape: "building", solid: false, breakable: false, placeable: false }),
+  object(Block.VICTORIA, "Vit\xF3ria-r\xE9gia Gigante", { shape: "building", solid: false, breakable: false, placeable: false }),
   object(Block.V_FLOWERS, "Capim e Flores", { shape: "building", solid: false, breakable: false, placeable: false }),
   // Santuário Celestial: todos são cubos de construção (as águas são blocos sólidos decorativos).
   object(Block.CLOUD_SOLID, "Nuvem S\xF3lida"),
@@ -592,6 +598,9 @@ function isWallDoor(id) {
 function isWallLike(id) {
   const s = blockDef(id).shape;
   return s === "wall" || s === "wall-door";
+}
+function isWaterPlant(id) {
+  return id === Block.WATER_LILY || id === Block.VICTORIA;
 }
 function isDoor(id) {
   return id === Block.OAK_DOOR || id === Block.OAK_DOOR_OPEN;
@@ -3307,6 +3316,7 @@ var TownTerrain = class {
     if (d > TOWN_MARGIN) return c;
     const g = blockDef(c.ground);
     const ground2 = g.liquid || c.ground === Block.HOLE ? Block.GRASS : c.ground;
+    if (isWaterPlant(c.object)) return { ground: ground2, object: Block.AIR, upper: c.upper };
     if (d <= TOWN_CLEAR) return { ground: ground2, object: Block.AIR, upper: Block.AIR };
     return { ground: ground2, object: c.object, upper: c.upper };
   }
@@ -5110,6 +5120,9 @@ var WATER_LEVEL = -0.26;
 var BEACH_LEVEL = -0.2;
 var MOUNTAIN_LEVEL = 0.36;
 var HIGH_MOUNTAIN = 0.43;
+var SHALLOW_DEPTH = 0.07;
+var LILY_CHANCE = 0.025;
+var VICTORIA_CHANCE = 6e-3;
 var WorldGenerator = class {
   seed;
   terrain;
@@ -5150,6 +5163,29 @@ var WorldGenerator = class {
     y /= SUBDIV;
     return Math.abs(this.terrain.fbm2(x / 230 + 400, y / 230 - 400, 3)) < 0.022;
   }
+  /** Célula de água (mar, lago ou rio)? */
+  isWater(x, y) {
+    const e = this.elevation(x, y);
+    return e < WATER_LEVEL || e < MOUNTAIN_LEVEL - 0.04 && this.isRiver(x, y);
+  }
+  /**
+   * Vitórias-régias (v0.93.92, arte do dono do produto): sorteadas na água RASA de rios e lagos (`e` logo abaixo da margem, ou rio), nunca no
+   * mar aberto. A âncora é a célula do canto inferior esquerdo da planta: só nasce se toda a área dela (2 × 2 a comum, 4 × 3 a gigante) for água.
+   * Função pura da seed, como o resto; o desenho (variante) sai da posição no render.
+   */
+  waterPlantAt(x, y, e) {
+    if (e < WATER_LEVEL - SHALLOW_DEPTH && !this.isRiver(x, y)) return Block.AIR;
+    const r = hash2(this.seed, x + 5521, y - 3301);
+    const area = SUBDIV * SUBDIV;
+    if (r < VICTORIA_CHANCE / area) return this.waterAreaFree(x, y, 4, 3) ? Block.VICTORIA : Block.AIR;
+    if (r < (VICTORIA_CHANCE + LILY_CHANCE) / area) return this.waterAreaFree(x, y, 2, 2) ? Block.WATER_LILY : Block.AIR;
+    return Block.AIR;
+  }
+  /** A área `w × h` com o canto inferior esquerdo em (x, y) (cresce para a direita e para cima) é toda água? */
+  waterAreaFree(x, y, w, h) {
+    for (let dy = 0; dy < h; dy++) for (let dx = 0; dx < w; dx++) if ((dx || dy) && !this.isWater(x + dx, y - dy)) return false;
+    return true;
+  }
   /**
    * Célula completa numa única avaliação de ruído (elevação, clima, rio, trilha).
    * `groundAt/objectAt/upperAt` derivam daqui — antes cada um recalculava o terreno
@@ -5158,7 +5194,7 @@ var WorldGenerator = class {
   cellAt(x, y) {
     const e = this.elevation(x, y);
     if (e < WATER_LEVEL || e < MOUNTAIN_LEVEL - 0.04 && this.isRiver(x, y)) {
-      return { ground: Block.WATER, object: Block.AIR, upper: Block.AIR };
+      return { ground: Block.WATER, object: this.waterPlantAt(x, y, e), upper: Block.AIR };
     }
     const biome = this.biomeAt(x, y);
     if (e < BEACH_LEVEL) return { ground: Block.SAND, object: Block.AIR, upper: Block.AIR };
@@ -5413,6 +5449,7 @@ var VillageTerrain = class {
     if (d > VILLAGE_MARGIN) return c;
     const g = blockDef(c.ground);
     const ground2 = g.liquid || c.ground === Block.HOLE ? Block.GRASS : c.ground;
+    if (isWaterPlant(c.object)) return { ground: ground2, object: Block.AIR, upper: c.upper };
     if (d <= VILLAGE_CLEAR) return { ground: ground2, object: Block.AIR, upper: Block.AIR };
     return { ground: ground2, object: c.object, upper: c.upper };
   }
@@ -6019,11 +6056,27 @@ var World = class {
     const level = this.placementLevel(x, y, id);
     if (level === null) return false;
     this.setLevel(x, y, level, id);
+    if (level === "ground") this.clearWaterPlantsCovering(x, y);
     if (id === Block.TENT) {
       for (const [cx, cy] of tentCells(x, y).slice(1)) this.setLevel(cx, cy, 0, Block.TENT_PART);
       this.tent = [x, y];
     }
     return true;
+  }
+  /**
+   * Remove as vitórias-régias cujo desenho cobre a célula (x, y): a âncora fica no canto inferior esquerdo e o desenho cresce para a direita
+   * (até 4 células) e para cima (até 3). Chamado quando a água da célula vira chão (Terra, Pedra ou Tora sobre a água).
+   */
+  clearWaterPlantsCovering(x, y) {
+    for (let dy = 0; dy < 3; dy++) {
+      for (let dx = 0; dx < 4; dx++) {
+        const ax = x - dx, ay = y + dy;
+        const id = this.getObject(ax, ay);
+        if (!isWaterPlant(id)) continue;
+        const [w, h] = id === Block.VICTORIA ? [4, 3] : [2, 2];
+        if (dx < w && dy < h) this.setLevel(ax, ay, 0, Block.AIR);
+      }
+    }
   }
   /** A célula tem uma parede (bloco de forma `wall` no nível 0)? */
   isWallAt(x, y) {
