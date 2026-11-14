@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.93.76 (8f4572c) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.93.80 (86c7993) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -1474,7 +1474,7 @@ function applyAction(world, a) {
 }
 
 // src/net/protocol.ts
-var PROTOCOL_VERSION = 24;
+var PROTOCOL_VERSION = 25;
 var MAX_PLAYERS = 10;
 var ROOMS = [
   { id: 1, name: "Sala 1", seed: 20261106 }
@@ -1489,7 +1489,7 @@ function sanitizeName(text) {
   if (n.length < NAME_MIN || n.length > NAME_MAX) return null;
   return /^[\p{L}\p{N} _-]+$/u.test(n) ? n : null;
 }
-var APPEARANCE_BODIES = ["heroine", "hero", "hood", "gino", "mila"];
+var APPEARANCE_BODIES = ["heroine", "hero", "hood", "gino", "mila", "grewn"];
 var DEFAULT_APPEARANCE = { body: "heroine" };
 var FACING_ORDER = ["down", "left", "right", "up"];
 var FACINGS = /* @__PURE__ */ new Set(["down", "left", "right", "up"]);
@@ -3490,7 +3490,7 @@ var GoblinCampTerrain = class {
 };
 
 // src/game/entities.ts
-var SIT_BODIES = ["heroine", "hero", "hood", "gino", "mila"];
+var SIT_BODIES = ["heroine", "hero", "hood", "gino", "mila", "grewn"];
 function canSit(body) {
   return SIT_BODIES.includes(body);
 }
