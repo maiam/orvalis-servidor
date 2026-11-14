@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.93.61 (cfe7362) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.93.63 (db5482d) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -2415,6 +2415,8 @@ var InteriorTerrain = class {
 var WOLF_SIGHT = 3;
 var GOBLIN_SIGHT = WOLF_SIGHT * SUBDIV;
 var GOBLIN_ATTACK_SECONDS = 0.55;
+var GOBLIN_WINDUP = 0.4;
+var WOLF_WINDUP = 0.3;
 var GOBLIN_ALERT_SECONDS = 0.48;
 function hasPoses(kind) {
   return kind === "goblin" || kind === "lizard" || isWolf(kind);
@@ -2426,9 +2428,9 @@ var MONSTERS = {
   "spider-boss": { spec: { speed: 1.15, halfW: 0.9, halfD: 0.45, stepHeight: 0 }, sight: 9, leash: 4, biteEvery: 1.6, respawn: 300, deathSeconds: 1.6 },
   // Lobos (v0.91.0): só atacam a personagem a até 3 células (regra do dono do produto: `sight` = 3, em linha reta);
   // mais lentos que ela (4,2) para dar para fugir; o bando passeia junto, perto da toca.
-  "wolf-brown": { spec: { speed: 3, halfW: 0.36, halfD: 0.2, stepHeight: 1 }, sight: WOLF_SIGHT, leash: 5, biteEvery: 1.1, respawn: 120, deathSeconds: 0.8, open: true },
-  "wolf-gray": { spec: { speed: 3, halfW: 0.36, halfD: 0.2, stepHeight: 1 }, sight: WOLF_SIGHT, leash: 5, biteEvery: 1.1, respawn: 120, deathSeconds: 0.8, open: true },
-  "wolf-white": { spec: { speed: 3, halfW: 0.36, halfD: 0.2, stepHeight: 1 }, sight: WOLF_SIGHT, leash: 5, biteEvery: 1.1, respawn: 120, deathSeconds: 0.8, open: true },
+  "wolf-brown": { spec: { speed: 3, halfW: 0.36, halfD: 0.2, stepHeight: 1 }, sight: WOLF_SIGHT, leash: 5, biteEvery: 1.1, respawn: 120, deathSeconds: 0.8, open: true, windup: WOLF_WINDUP },
+  "wolf-gray": { spec: { speed: 3, halfW: 0.36, halfD: 0.2, stepHeight: 1 }, sight: WOLF_SIGHT, leash: 5, biteEvery: 1.1, respawn: 120, deathSeconds: 0.8, open: true, windup: WOLF_WINDUP },
+  "wolf-white": { spec: { speed: 3, halfW: 0.36, halfD: 0.2, stepHeight: 1 }, sight: WOLF_SIGHT, leash: 5, biteEvery: 1.1, respawn: 120, deathSeconds: 0.8, open: true, windup: WOLF_WINDUP },
   // Goblins guard a campfire in groups of seven; aggression only within 3 cells.
   goblin: {
     spec: { speed: 2.75, halfW: 0.34, halfD: 0.21, stepHeight: 1 },
@@ -2437,7 +2439,8 @@ var MONSTERS = {
     biteEvery: 1.2,
     respawn: 150,
     deathSeconds: 0.95,
-    open: true
+    open: true,
+    windup: GOBLIN_WINDUP
   },
   // Homem-lagarto (v0.93.60): vive junto de rios e anda em grupos de três; mesma visão, coleira e ritmo do goblin.
   lizard: {
@@ -2447,7 +2450,8 @@ var MONSTERS = {
     biteEvery: 1.2,
     respawn: 150,
     deathSeconds: 0.95,
-    open: true
+    open: true,
+    windup: GOBLIN_WINDUP
   }
 };
 if (SUBDIV !== 1) for (const d of Object.values(MONSTERS)) {
@@ -2476,6 +2480,9 @@ var Monster = class extends Walker {
   hurt = 0;
   /** Espera até poder morder de novo (s). */
   biteCd = 0;
+  /** Ataque armado: tempo restante até o dano (> 0) e se o dano está pendente (ao zerar, o próximo `tryBite` o aplica). */
+  windupLeft = 0;
+  strikePending = false;
   state;
   attackAnim = 0;
   alertAnim = 0;
@@ -2507,13 +2514,19 @@ var Monster = class extends Walker {
     const b = this.bounds;
     return x - halfW >= b.x0 && x + halfW <= b.x1 + 1 && y - halfD >= b.y0 && y + halfD <= b.y1 + 1;
   }
-  /** Leva um golpe de `damage` pontos: perde vida, pisca e é empurrado para longe de (fromX, fromY). */
-  takeHit(damage, fromX, fromY, world, blocked) {
+  /**
+   * Leva um golpe de `damage` pontos: perde vida, pisca e é empurrado para longe de (fromX, fromY). `knock` (1 = o recuo de
+   * sempre) escala o empurrão: golpe forte ou crítico recua mais. Um ataque armado é interrompido.
+   */
+  takeHit(damage, fromX, fromY, world, blocked, knock = 1) {
     this.hp -= damage;
     this.hurt = HURT_SECONDS;
+    this.windupLeft = 0;
+    this.strikePending = false;
+    this.attackAnim = 0;
     const d = Math.hypot(this.x - fromX, this.y - fromY) || 1;
     const facing = this.facing;
-    this.move(0.25, (this.x - fromX) / d, (this.y - fromY) / d, world, this.confine(blocked));
+    this.move(0.25 * knock, (this.x - fromX) / d, (this.y - fromY) / d, world, this.confine(blocked));
     this.facing = facing;
   }
   /** Bloqueio entre entidades + limite do interior. */
@@ -2524,13 +2537,31 @@ var Monster = class extends Walker {
   get reach() {
     return 0.7 * SUBDIV + this.spec.halfW;
   }
-  /** Encostado na personagem e pronto para morder? Se sim, consome a espera e devolve true. */
+  /**
+   * Encostado na personagem e pronto para morder? Devolve true no instante em que o dano deve sair.
+   * Monstros com `windup` (goblin, lagarto, lobos) **armam** o ataque: ao chegar ao alcance tocam a pose de ataque e só
+   * causam dano `windup` segundos depois — e só se a personagem ainda estiver ao alcance (dá para esquivar); um golpe
+   * recebido nesse meio-tempo cancela o ataque. Sem `windup` (aranhas) o dano é imediato, como antes.
+   */
   tryBite(target) {
-    if (this.dead || this.biteCd > 0 || this.hurt > 0) return false;
-    if (Math.hypot(target.x - this.x, target.y - this.y) > this.reach + 0.15) return false;
-    this.biteCd = MONSTERS[this.kind].biteEvery;
+    if (this.dead || this.hurt > 0) return false;
+    const inReach = Math.hypot(target.x - this.x, target.y - this.y) <= this.reach + 0.15;
+    if (this.strikePending) {
+      if (this.windupLeft > 0) return false;
+      this.strikePending = false;
+      this.biteCd = MONSTERS[this.kind].biteEvery;
+      return inReach;
+    }
+    if (this.biteCd > 0 || !inReach) return false;
+    const w = MONSTERS[this.kind].windup ?? 0;
     if (hasPoses(this.kind)) this.attackAnim = GOBLIN_ATTACK_SECONDS;
-    return true;
+    if (w <= 0) {
+      this.biteCd = MONSTERS[this.kind].biteEvery;
+      return true;
+    }
+    this.windupLeft = w;
+    this.strikePending = true;
+    return false;
   }
   /**
    * Passeia; com a personagem dentro do seu limite e perto (pelo caminho, se houver `flow`), persegue.
@@ -2541,6 +2572,7 @@ var Monster = class extends Walker {
     this.hurt = Math.max(0, this.hurt - dt);
     this.biteCd = Math.max(0, this.biteCd - dt);
     this.attackAnim = Math.max(0, this.attackAnim - dt);
+    this.windupLeft = Math.max(0, this.windupLeft - dt);
     this.alertAnim = Math.max(0, this.alertAnim - dt);
     const def = MONSTERS[this.kind];
     const fence = this.confine(blocked);
@@ -2556,7 +2588,7 @@ var Monster = class extends Walker {
       if (hasPoses(this.kind) && !this.chasing) this.alertAnim = GOBLIN_ALERT_SECONDS;
       this.chasing = true;
       const reach = this.reach;
-      if (dist <= reach) {
+      if (this.windupLeft > 0 || dist <= reach) {
         this.move(dt, 0, 0, world, fence);
         this.facing = Math.abs(tx) > Math.abs(ty) ? tx < 0 ? "left" : "right" : ty < 0 ? "up" : "down";
         return;
@@ -3944,7 +3976,8 @@ var Entities = class {
         continue;
       }
       const dmg = rollDamage(attack, MONSTER_STATS[s.kind].defense, this.rand);
-      if (world) s.takeHit(dmg.amount, from.x, from.y, world, this.blocker);
+      const knock = Math.min(2, 0.8 + Math.min(0.7, dmg.amount / s.maxHp) + (dmg.crit ? 0.5 : 0));
+      if (world) s.takeHit(dmg.amount, from.x, from.y, world, this.blocker, knock);
       else s.hp -= dmg.amount;
       this.onDamage?.(s.x, s.y, dmg, "enemy");
       if (s.dead) this.killMonster(s);
@@ -4206,6 +4239,8 @@ function homesFor(world, n, onStreet) {
 // src/game/player.ts
 var ATTACK_SECONDS = 0.36;
 var ATTACK_HIT_AT = 0.45;
+var ATTACK_CHAIN_AT = 0.7;
+var ATTACK_BUFFER_S = 0.18;
 var ATTACK_FRAMES = 4;
 var HURT_INVULN_S = 0.9;
 var RESPAWN_INVULN_S = 2;
@@ -4223,6 +4258,9 @@ var Player = class extends Walker {
   /** Golpes começados (a sala repassa aos outros, que tocam a animação ao ver o número mudar). */
   swings = 0;
   hitDone = true;
+  /** Golpe pedido durante o anterior (fila curta): ferramenta e tempo restante da fila. */
+  queuedTool = void 0;
+  queueLeft = 0;
   /** Atributos atuais (vida máxima, ataque, defesa — `world/progression.ts`). */
   stats = playerStats(1);
   /** Vida em pontos (0 = derrotada; o Game a faz renascer). */
@@ -4250,9 +4288,25 @@ var Player = class extends Walker {
     const p = 1 - this.attackTime / ATTACK_SECONDS;
     return Math.min(ATTACK_FRAMES - 1, Math.floor(p * ATTACK_FRAMES));
   }
-  /** Começa um golpe (se não houver outro em andamento). */
+  /** Já passou do acerto e do ponto de cancelar: dá para começar outro golpe por cima do que termina. */
+  get canChain() {
+    return this.attacking && this.hitDone && 1 - this.attackTime / ATTACK_SECONDS >= ATTACK_CHAIN_AT;
+  }
+  /**
+   * Começa um golpe. Com outro em andamento: se já dá para encadear, começa o novo; senão, se faltam até `ATTACK_BUFFER_S`
+   * para poder encadear, o pedido entra na fila (sai sozinho quando der) e devolve false; pedido mais cedo que isso é
+   * ignorado (apertar sem parar não empilha golpes).
+   */
   startAttack(tool = this.equipped) {
-    if (this.attacking) return false;
+    if (this.attacking && !this.canChain) {
+      const toChain = ATTACK_SECONDS * ATTACK_CHAIN_AT - (ATTACK_SECONDS - this.attackTime);
+      if (toChain <= ATTACK_BUFFER_S) {
+        this.queuedTool = tool;
+        this.queueLeft = ATTACK_BUFFER_S;
+      }
+      return false;
+    }
+    this.queuedTool = void 0;
     this.attackTool = tool;
     this.attackTime = ATTACK_SECONDS;
     this.swings++;
@@ -4305,6 +4359,7 @@ var Player = class extends Walker {
     this.sinceHurt = Infinity;
     this.attackTime = 0;
     this.hitDone = true;
+    this.queuedTool = void 0;
   }
   /** Come: a fome sobe `points` (até cheia). false = sem fome (barra cheia) ou fome desligada. */
   eat(points) {
@@ -4433,6 +4488,11 @@ var Player = class extends Walker {
     if (this.attacking) {
       this.facing = facing;
       this.attackTime = Math.max(0, this.attackTime - dt);
+    }
+    if (this.queuedTool !== void 0) {
+      this.queueLeft -= dt;
+      if (this.queueLeft <= 0) this.queuedTool = void 0;
+      else if (!this.attacking || this.canChain) this.startAttack(this.queuedTool);
     }
   }
 };
