@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.93.73 (1135dda) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.93.74 (60bbaa4) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -4659,6 +4659,7 @@ function rescaleHoles(holes, f) {
 }
 
 // src/world/slabs.ts
+var SLAB_DEPTH = 12 / 16;
 var SLABS = [
   { id: Block.OAK_SLAB_1, recipe: "laje1", facepx: 4, height: 4 / 16 },
   { id: Block.OAK_SLAB_2, recipe: "laje2", facepx: 6, height: 6 / 16 },
