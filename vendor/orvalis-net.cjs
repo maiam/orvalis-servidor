@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.93.89 (e5aa1d9) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.93.89 (39db5d4) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -227,6 +227,11 @@ var Block = {
   V_SACKS: 236,
   /** Capim e flores (enfeite que não bloqueia). */
   V_FLOWERS: 237,
+  /** Portão da vila fechado (os dois postes e as folhas). Abre e fecha com um toque; os 8 blocos da peça mudam juntos (`World.toggleDoor`). */
+  V_GATE_CLOSED: 238,
+  /** Os 6 blocos do vão entre os postes: livres com o portão aberto, sólidos com ele fechado (sem arte própria: o desenho é do portão). */
+  V_GATE_GAP: 239,
+  V_GATE_GAP_CLOSED: 254,
   // --- plantação de trigo: 16 estágios consecutivos (60 = semente ... 75 = maduro) ---
   WHEAT_0: 60,
   WHEAT_15: 75,
@@ -472,6 +477,9 @@ var defs = [
     [Block.V_CART, "Carro\xE7a"],
     [Block.V_SACKS, "Sacos"]
   ].map(([id, name]) => object(id, name, { shape: "building", breakable: false, placeable: false, seat: id === Block.V_BENCH })),
+  object(Block.V_GATE_CLOSED, "Port\xE3o da Vila (fechado)", { shape: "building", breakable: false, placeable: false }),
+  object(Block.V_GATE_GAP, "Port\xE3o da Vila", { shape: "building", solid: false, breakable: false, placeable: false }),
+  object(Block.V_GATE_GAP_CLOSED, "Port\xE3o da Vila (fechado)", { shape: "building", breakable: false, placeable: false }),
   object(Block.V_FLOWERS, "Capim e Flores", { shape: "building", solid: false, breakable: false, placeable: false }),
   // Santuário Celestial: todos são cubos de construção (as águas são blocos sólidos decorativos).
   object(Block.CLOUD_SOLID, "Nuvem S\xF3lida"),
@@ -607,7 +615,11 @@ var TOGGLES = {
   [Block.WALL_DOOR_PLANKS]: Block.WALL_DOOR_PLANKS_OPEN,
   [Block.WALL_DOOR_PLANKS_OPEN]: Block.WALL_DOOR_PLANKS,
   [Block.FENCE_GATE]: Block.FENCE_GATE_OPEN,
-  [Block.FENCE_GATE_OPEN]: Block.FENCE_GATE
+  [Block.FENCE_GATE_OPEN]: Block.FENCE_GATE,
+  [Block.V_GATE]: Block.V_GATE_CLOSED,
+  [Block.V_GATE_CLOSED]: Block.V_GATE,
+  [Block.V_GATE_GAP]: Block.V_GATE_GAP_CLOSED,
+  [Block.V_GATE_GAP_CLOSED]: Block.V_GATE_GAP
 };
 function isOpenable(id) {
   return TOGGLES[id] !== void 0;
@@ -616,7 +628,7 @@ function toggled(id) {
   return TOGGLES[id] ?? null;
 }
 function isOpen(id) {
-  return id === Block.OAK_DOOR_OPEN || id === Block.FENCE_GATE_OPEN || id === Block.WALL_DOOR_PLANKS_OPEN;
+  return id === Block.OAK_DOOR_OPEN || id === Block.FENCE_GATE_OPEN || id === Block.WALL_DOOR_PLANKS_OPEN || id === Block.V_GATE || id === Block.V_GATE_GAP;
 }
 
 // src/world/random.ts
@@ -5259,7 +5271,10 @@ var VILLAGE_SIZES = {
   [Block.V_HAY]: [2, 1],
   [Block.V_CART]: [3, 2],
   [Block.V_SACKS]: [2, 1],
-  [Block.V_FLOWERS]: [2, 1]
+  [Block.V_FLOWERS]: [2, 1],
+  [Block.V_GATE_CLOSED]: [8, 1],
+  [Block.V_GATE_GAP]: [1, 1],
+  [Block.V_GATE_GAP_CLOSED]: [1, 1]
 };
 var cached2;
 function villageLayout() {
@@ -5312,6 +5327,7 @@ function buildVillage() {
     must(Block.V_PAL_E, 46, y);
   }
   must(Block.V_GATE, 20, 43, [[20, 43], [27, 43]]);
+  for (let x = 21; x <= 26; x++) objects[idx(x, 43)] = Block.V_GATE_GAP;
   must(Block.V_BARN, 18, 10);
   must(Block.V_COOP, 40, 8);
   must(Block.V_BED_WHEAT, 3, 17);
@@ -5945,10 +5961,31 @@ var World = class {
    * Quem chama garante que ninguém está na célula ao fechar. Retorna false se não há porta nem portão.
    */
   toggleDoor(x, y) {
+    const group = this.gateCells(x, y);
+    if (group) {
+      const open3 = this.getObject(group[0][0], group[0][1]) === Block.V_GATE;
+      for (const [cx, cy] of group) {
+        const id = this.getObject(cx, cy);
+        if (id === Block.TOWN_PART) continue;
+        const next2 = open3 ? id === Block.V_GATE ? Block.V_GATE_CLOSED : Block.V_GATE_GAP_CLOSED : id === Block.V_GATE_CLOSED ? Block.V_GATE : Block.V_GATE_GAP;
+        this.setLevel(cx, cy, 0, next2);
+      }
+      return true;
+    }
     const next = toggled(this.getObject(x, y));
     if (next === null) return false;
     this.setLevel(x, y, 0, next);
     return true;
+  }
+  /** Blocos do portão da vila a que a célula pertence (poste esquerdo primeiro), ou null se não é um. */
+  gateCells(x, y) {
+    const id = this.getObject(x, y);
+    if (id !== Block.V_GATE && id !== Block.V_GATE_CLOSED && id !== Block.V_GATE_GAP && id !== Block.V_GATE_GAP_CLOSED) return null;
+    const v = this.village;
+    if (!v) return null;
+    const x0 = v.gate.x0 - 1;
+    if (y !== v.gate.y0 || x < x0 || x > x0 + 7) return null;
+    return Array.from({ length: 8 }, (_, i) => [x0 + i, y]);
   }
   canPlace(x, y, id) {
     return this.placementLevel(x, y, id) !== null;
