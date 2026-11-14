@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.93.69 (1e1e575) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.93.72 (cad13a9) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -1639,6 +1639,8 @@ var Walker = class {
   /** Nível lógico (inteiro) e exibido (suavizado). */
   z = 0;
   visualZ = 0;
+  /** Quanto o corpo sobe por cima de uma laje (piloto `?tabua=laje`; 0 no resto): só o visual, a lógica fica em `z`. */
+  lift = 0;
   /** Especificação física (mutável: o filhote cresce), já em células da grade atual. */
   spec;
   /**
@@ -1646,7 +1648,7 @@ var Walker = class {
    * Retorna a distância efetivamente percorrida.
    */
   move(dt, ix, iy, world, blocked) {
-    this.visualZ += (this.z - this.visualZ) * (1 - Math.exp(-Z_SMOOTH * dt));
+    this.visualZ += (this.z + this.lift - this.visualZ) * (1 - Math.exp(-Z_SMOOTH * dt));
     let len = Math.hypot(ix, iy);
     if (len > 1) {
       ix /= len;
@@ -1678,6 +1680,17 @@ var Walker = class {
     this.x = x;
     this.y = y;
     this.z = h;
+    this.lift = this.liftAt(x, y, world);
+  }
+  /** O maior `slabLift` entre as células sob a caixa dos pés (0 sem lajes no mundo). */
+  liftAt(x, y, world) {
+    if (!world.hasSlabs) return 0;
+    const { halfW, halfD } = this.spec;
+    let lift = 0;
+    for (let cy = Math.floor(y - halfD); cy <= Math.floor(y + halfD); cy++) {
+      for (let cx = Math.floor(x - halfW); cx <= Math.floor(x + halfW); cx++) lift = Math.max(lift, world.slabLift(cx, cy));
+    }
+    return lift;
   }
   /** Altura de apoio na posição, ou null se bloqueado (degrau alto, água, buraco, árvore). */
   supportHeight(x, y, world) {
@@ -1703,7 +1716,10 @@ var Walker = class {
   /** Recalcula o apoio no lugar (ex.: o bloco sob os pés foi quebrado). */
   settle(world) {
     const h = this.supportHeight(this.x, this.y, world);
-    if (h !== null) this.z = h;
+    if (h !== null) {
+      this.z = h;
+      this.lift = this.liftAt(this.x, this.y, world);
+    }
   }
   /** A caixa dos pés ocupa a célula? */
   occupies(cx, cy) {
@@ -4625,6 +4641,9 @@ function rescaleHoles(holes, f) {
   });
 }
 
+// src/world/slabs.ts
+var SLAB_HEIGHT = 0.25;
+
 // src/world/walls.ts
 function wallNeighbors(isWall2, x, y) {
   return {
@@ -5406,8 +5425,27 @@ var World = class {
   standHeight(x, y) {
     if (!this.isGroundStandable(x, y)) return null;
     const base = blockDef(this.getObject(x, y));
+    if (base.shape === "cube" && this.isSlabAt(x, y)) return 0;
     if (base.shape === "cube") return this.stackHeight(x, y);
     return base.solid ? null : 0;
+  }
+  /** Blocos que viram laje (piloto `?tabua=laje`, ver `world/slabs.ts`); vazio = nenhum (o padrão, e sempre na sala). */
+  slabs = /* @__PURE__ */ new Set();
+  setSlabBlocks(ids) {
+    this.slabs = new Set(ids);
+  }
+  get hasSlabs() {
+    return this.slabs.size > 0;
+  }
+  /** A célula tem uma laje (bloco de laje sozinho no nível 0, sem mais nada em cima)? */
+  isSlabAt(x, y) {
+    if (this.slabs.size === 0 || !this.slabs.has(this.getObject(x, y))) return false;
+    for (let level = 1; level < this.maxStack; level++) if (this.getLevel(x, y, level) !== Block.AIR) return false;
+    return true;
+  }
+  /** Quanto o corpo sobe por cima da célula (visual): `SLAB_HEIGHT` sobre laje, 0 no resto. */
+  slabLift(x, y) {
+    return this.isSlabAt(x, y) ? SLAB_HEIGHT : 0;
   }
   /** Mantido para o objeto do nível 0 (testes/ferramentas). */
   setObject(x, y, id) {
