@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.93.68 (0b351e6) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.93.69 (1e1e575) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -4244,6 +4244,10 @@ function homesFor(world, n, onStreet) {
 // src/game/attackTiming.ts
 var DEFAULT_ATTACK_TIMING = { seconds: 0.36, hitAt: 0.45 };
 
+// src/game/feel.ts
+var INPUT_ACCEL = 18;
+var INPUT_DECEL = 25;
+
 // src/game/player.ts
 var ATTACK_SECONDS = DEFAULT_ATTACK_TIMING.seconds;
 var ATTACK_HIT_AT = DEFAULT_ATTACK_TIMING.hitAt;
@@ -4269,6 +4273,14 @@ var Player = class extends Walker {
   timingFor = null;
   timing = DEFAULT_ATTACK_TIMING;
   hitDone = true;
+  /**
+   * Sensação de movimento (v0.93.69): com `smooth` ligado a entrada tem inércia curta (arranca e para em ~50 ms, sem corte seco) e o passo
+   * da animação anda pela distância percorrida (o pé não desliza). Desligado = o movimento de antes. O `Game` liga; os testes de física antigos ficam como eram.
+   */
+  smooth = false;
+  /** Entrada suavizada (0..1 por eixo): o que de fato move o personagem quando `smooth`. */
+  vx = 0;
+  vy = 0;
   /** Golpe pedido durante o anterior (fila curta): ferramenta e tempo restante da fila. */
   queuedTool = void 0;
   queueLeft = 0;
@@ -4365,6 +4377,7 @@ var Player = class extends Walker {
   /** Renasce em (x, y) com vida cheia (itens ficam com ela). */
   respawn(x, y) {
     this.seat = null;
+    this.vx = this.vy = 0;
     this.x = x;
     this.y = y;
     this.z = this.visualZ = 0;
@@ -4495,11 +4508,23 @@ var Player = class extends Walker {
   update(dt, ix, iy, world, blocked) {
     this.tickHealth(dt);
     if (this.seat) {
+      this.vx = this.vy = 0;
       this.updateSeat(dt, ix, iy);
       return;
     }
     const facing = this.facing;
-    this.move(dt, ix, iy, world, blocked);
+    if (this.smooth) {
+      const want = Math.hypot(ix, iy);
+      const have = Math.hypot(this.vx, this.vy);
+      const k = 1 - Math.exp(-(want >= have ? INPUT_ACCEL : INPUT_DECEL) * dt);
+      this.vx += (ix - this.vx) * k;
+      this.vy += (iy - this.vy) * k;
+      const w0 = this.walkTime;
+      const moved = this.move(dt, this.vx, this.vy, world, blocked);
+      if (this.moving) this.walkTime = w0 + Math.max(moved / this.spec.speed, 0.25 * dt);
+    } else {
+      this.move(dt, ix, iy, world, blocked);
+    }
     if (this.attacking) {
       this.facing = facing;
       this.attackTime = Math.max(0, this.attackTime - dt);
