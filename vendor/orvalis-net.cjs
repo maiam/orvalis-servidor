@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.93.80 (86c7993) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.93.89 (e5aa1d9) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -195,6 +195,38 @@ var Block = {
   SIGNPOST: 139,
   HEDGE: 140,
   STALL: 141,
+  // --- Vila Camponesa (v0.93.89, `docs/domains/village.md`; só no Mundo principal, área protegida). Todos `building`: o id fica na célula do
+  //     canto inferior esquerdo da peça e o resto do lote é `TOWN_PART` (`world/village.ts`, `VILLAGE_SIZES`). ---
+  V_HOUSE_STRAW: 112,
+  V_HOUSE_TILE: 113,
+  V_BARN: 114,
+  V_COOP: 115,
+  V_WELL: 116,
+  V_BENCH: 117,
+  V_BED_WHEAT: 118,
+  V_BED_VEG: 119,
+  V_OAK: 143,
+  V_TREE: 144,
+  /** Muro de estacas: segmentos retos de 6 e de 7 células (norte e sul), laterais (uma estaca por fileira) e os quatro cantos. */
+  V_PAL_H6: 145,
+  V_PAL_H7: 146,
+  V_PAL_W: 147,
+  V_PAL_E: 148,
+  V_PAL_NW: 149,
+  V_PAL_NE: 206,
+  V_PAL_SW: 207,
+  V_PAL_SE: 208,
+  /** Portão aberto (duas colunas com lampião; o vão entre elas fica livre). */
+  V_GATE: 209,
+  V_BARREL: 226,
+  V_ROCKS: 227,
+  V_BUSH: 228,
+  V_LOGS: 229,
+  V_HAY: 234,
+  V_CART: 235,
+  V_SACKS: 236,
+  /** Capim e flores (enfeite que não bloqueia). */
+  V_FLOWERS: 237,
   // --- plantação de trigo: 16 estágios consecutivos (60 = semente ... 75 = maduro) ---
   WHEAT_0: 60,
   WHEAT_15: 75,
@@ -411,6 +443,36 @@ var defs = [
     [Block.SIGNPOST, "Placa"],
     [Block.HEDGE, "Cerca Viva"]
   ].map(([id, name]) => object(id, name, { shape: "building", breakable: false, placeable: false })),
+  // Vila Camponesa: peças de várias células (como a cidade) e enfeites fixos; o World protege a área inteira.
+  ...[
+    [Block.V_HOUSE_STRAW, "Casa de Palha"],
+    [Block.V_HOUSE_TILE, "Casa de Telhas"],
+    [Block.V_BARN, "Celeiro"],
+    [Block.V_COOP, "Galinheiro"],
+    [Block.V_WELL, "Po\xE7o"],
+    [Block.V_BENCH, "Banco"],
+    [Block.V_BED_WHEAT, "Canteiro de Trigo"],
+    [Block.V_BED_VEG, "Horta"],
+    [Block.V_OAK, "Carvalho"],
+    [Block.V_TREE, "\xC1rvore"],
+    [Block.V_PAL_H6, "Pali\xE7ada"],
+    [Block.V_PAL_H7, "Pali\xE7ada"],
+    [Block.V_PAL_W, "Pali\xE7ada"],
+    [Block.V_PAL_E, "Pali\xE7ada"],
+    [Block.V_PAL_NW, "Pali\xE7ada"],
+    [Block.V_PAL_NE, "Pali\xE7ada"],
+    [Block.V_PAL_SW, "Pali\xE7ada"],
+    [Block.V_PAL_SE, "Pali\xE7ada"],
+    [Block.V_GATE, "Port\xE3o da Vila"],
+    [Block.V_BARREL, "Barril"],
+    [Block.V_ROCKS, "Rochas"],
+    [Block.V_BUSH, "Arbusto Florido"],
+    [Block.V_LOGS, "Toras"],
+    [Block.V_HAY, "Feno"],
+    [Block.V_CART, "Carro\xE7a"],
+    [Block.V_SACKS, "Sacos"]
+  ].map(([id, name]) => object(id, name, { shape: "building", breakable: false, placeable: false, seat: id === Block.V_BENCH })),
+  object(Block.V_FLOWERS, "Capim e Flores", { shape: "building", solid: false, breakable: false, placeable: false }),
   // Santuário Celestial: todos são cubos de construção (as águas são blocos sólidos decorativos).
   object(Block.CLOUD_SOLID, "Nuvem S\xF3lida"),
   object(Block.CLOUD_ETHEREAL, "Nuvem Et\xE9rea"),
@@ -3383,6 +3445,7 @@ function planGoblinCamps(world) {
     for (let rx = r0x - PACK_REGION_RADIUS; rx <= r0x + PACK_REGION_RADIUS; rx++) {
       for (const [x, y] of regionPoint(world.seed, rx, ry, 113, 8)) {
         if (x >= town.area.x0 - 36 * SUBDIV && x <= town.area.x1 + 36 * SUBDIV && y >= town.area.y0 - 36 * SUBDIV && y <= town.area.y1 + 36 * SUBDIV) continue;
+        if (nearVillage(world, x, y, 16 * SUBDIV)) continue;
         if (camps.some((c) => Math.hypot(c.x - x, c.y - y) < 24 * SUBDIV)) continue;
         if (!open2(world, x, y)) continue;
         const slots = GOBLIN_CAMP_SLOTS.map(([dx, dy]) => [x + dx, y + dy]);
@@ -3393,6 +3456,10 @@ function planGoblinCamps(world) {
     }
   }
   return camps;
+}
+function nearVillage(world, x, y, m) {
+  const t = world.village?.touched;
+  return !!t && x >= t.x0 - m && x <= t.x1 + m && y >= t.y0 - m && y <= t.y1 + m;
 }
 var LIZARD_PACK_SIZE = 3;
 var LIZARD_ROAM = 9 * SUBDIV;
@@ -3415,6 +3482,7 @@ function planLizardPacks(world, riverAt, avoid = []) {
       for (const [x, y] of regionPoint(world.seed, rx, ry, 271, 40)) {
         if (x >= town.area.x0 - 24 * SUBDIV && x <= town.area.x1 + 24 * SUBDIV && y >= town.area.y0 - 24 * SUBDIV && y <= town.area.y1 + 24 * SUBDIV) continue;
         if (!riverAt(x, y)) continue;
+        if (nearVillage(world, x, y, 12 * SUBDIV)) continue;
         let spot = null;
         for (let d = 1; d <= 4 * SUBDIV && !spot; d++) {
           for (const [ox, oy] of [[d, 0], [-d, 0], [0, d], [0, -d], [d, d], [-d, d], [d, -d], [-d, -d]]) {
@@ -5157,6 +5225,198 @@ var WORLD_PROFILES = {
   }
 };
 
+// src/world/village.ts
+var VILLAGE_W = 48;
+var VILLAGE_H = 48;
+var VILLAGE_X0 = -24;
+var VILLAGE_Y0 = TOWN_SOUTH_FIELD + 16;
+var VILLAGE_MARGIN = 8;
+var VILLAGE_CLEAR = 6;
+var VILLAGE_SIZES = {
+  [Block.V_HOUSE_STRAW]: [8, 4],
+  [Block.V_HOUSE_TILE]: [8, 4],
+  [Block.V_BARN]: [13, 5],
+  [Block.V_COOP]: [4, 3],
+  [Block.V_WELL]: [4, 3],
+  [Block.V_BENCH]: [2, 1],
+  [Block.V_BED_WHEAT]: [6, 7],
+  [Block.V_BED_VEG]: [6, 6],
+  [Block.V_OAK]: [1, 1],
+  [Block.V_TREE]: [1, 1],
+  [Block.V_PAL_H6]: [6, 1],
+  [Block.V_PAL_H7]: [7, 1],
+  [Block.V_PAL_W]: [1, 1],
+  [Block.V_PAL_E]: [1, 1],
+  [Block.V_PAL_NW]: [7, 6],
+  [Block.V_PAL_NE]: [7, 6],
+  [Block.V_PAL_SW]: [6, 6],
+  [Block.V_PAL_SE]: [6, 6],
+  [Block.V_GATE]: [8, 1],
+  [Block.V_BARREL]: [1, 1],
+  [Block.V_ROCKS]: [3, 1],
+  [Block.V_BUSH]: [3, 1],
+  [Block.V_LOGS]: [2, 1],
+  [Block.V_HAY]: [2, 1],
+  [Block.V_CART]: [3, 2],
+  [Block.V_SACKS]: [2, 1],
+  [Block.V_FLOWERS]: [2, 1]
+};
+var cached2;
+function villageLayout() {
+  if (cached2 === void 0) cached2 = SUBDIV === 2 ? buildVillage() : null;
+  return cached2;
+}
+function buildVillage() {
+  const W = VILLAGE_W, H = VILLAGE_H;
+  const ground2 = new Uint8Array(W * H).fill(Block.GRASS);
+  const objects = new Uint8Array(W * H);
+  const props = [];
+  const idx = (x, y) => y * W + x;
+  const inside = (x, y) => x >= 0 && y >= 0 && x < W && y < H;
+  const at = (lx, ly) => ({ x: lx + VILLAGE_X0, y: ly + VILLAGE_Y0 });
+  const free = (x, y) => inside(x, y) && objects[idx(x, y)] === Block.AIR && ground2[idx(x, y)] !== Block.PATH;
+  const path = (x0, y0, x1, y1) => {
+    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) if (inside(x, y)) ground2[idx(x, y)] = Block.PATH;
+  };
+  path(22, 11, 25, 47);
+  for (let y = 19; y <= 31; y++) for (let x = 17; x <= 31; x++) if ((x - 24) ** 2 + ((y - 25) * 1.1) ** 2 <= 36) path(x, y, x, y);
+  path(13, 18, 22, 19);
+  path(25, 19, 34, 20);
+  path(11, 28, 21, 29);
+  path(26, 28, 36, 29);
+  path(15, 38, 21, 39);
+  path(26, 38, 33, 39);
+  const put = (id, x, y, cells, force = false) => {
+    const [w, d] = VILLAGE_SIZES[id];
+    const lot = cells ?? [];
+    if (!cells) for (let dy = 0; dy < d; dy++) for (let dx = 0; dx < w; dx++) lot.push([x + dx, y - dy]);
+    const solid = id !== Block.V_FLOWERS;
+    const body = solid ? lot : [[x, y]];
+    if (!force && body.some(([cx, cy]) => !free(cx, cy))) return false;
+    for (const [cx, cy] of body) if (inside(cx, cy)) objects[idx(cx, cy)] = Block.TOWN_PART;
+    objects[idx(x, y)] = id;
+    props.push({ id, ...at(x, y) });
+    return true;
+  };
+  const must = (id, x, y, cells) => put(id, x, y, cells, true);
+  const row = (x0, x1, y) => Array.from({ length: x1 - x0 + 1 }, (_, i) => [x0 + i, y]);
+  const col = (x, y0, y1) => Array.from({ length: y1 - y0 + 1 }, (_, i) => [x, y0 + i]);
+  must(Block.V_PAL_NW, 1, 9, [...row(1, 7, 4), ...col(1, 5, 9)]);
+  must(Block.V_PAL_NE, 40, 9, [...row(40, 46, 4), ...col(46, 5, 9), [40, 9]]);
+  must(Block.V_PAL_SW, 1, 43, [...row(1, 6, 43), ...col(1, 38, 42)]);
+  must(Block.V_PAL_SE, 41, 43, [...row(41, 46, 43), ...col(46, 38, 42)]);
+  for (const [x, id] of [[8, Block.V_PAL_H6], [14, Block.V_PAL_H7], [21, Block.V_PAL_H6], [27, Block.V_PAL_H7], [34, Block.V_PAL_H6]]) must(id, x, 4);
+  for (const [x, id] of [[7, Block.V_PAL_H6], [13, Block.V_PAL_H7], [28, Block.V_PAL_H7], [35, Block.V_PAL_H6]]) must(id, x, 43);
+  for (let y = 10; y <= 37; y++) {
+    must(Block.V_PAL_W, 1, y);
+    must(Block.V_PAL_E, 46, y);
+  }
+  must(Block.V_GATE, 20, 43, [[20, 43], [27, 43]]);
+  must(Block.V_BARN, 18, 10);
+  must(Block.V_COOP, 40, 8);
+  must(Block.V_BED_WHEAT, 3, 17);
+  must(Block.V_BED_VEG, 39, 22);
+  must(Block.V_WELL, 22, 27);
+  for (const [id, x, y] of [
+    [Block.V_HOUSE_STRAW, 9, 17],
+    [Block.V_HOUSE_TILE, 30, 18],
+    [Block.V_HOUSE_TILE, 7, 27],
+    [Block.V_HOUSE_STRAW, 32, 27],
+    [Block.V_HOUSE_STRAW, 11, 37],
+    [Block.V_HOUSE_TILE, 29, 37]
+  ]) must(id, x, y);
+  for (const [x, y] of [[7, 9], [27, 20], [6, 36], [42, 38]]) must(Block.V_OAK, x, y);
+  for (const [x, y] of [[5, 22], [43, 28]]) must(Block.V_TREE, x, y);
+  for (const [x, y] of [[22, 20], [18, 24], [28, 23], [19, 30], [27, 30]]) put(Block.V_BENCH, x, y);
+  for (const [x, y] of [[15, 9], [16, 7]]) put(Block.V_HAY, x, y);
+  for (const [x, y] of [[17, 10], [28, 11], [19, 22], [10, 36], [26, 36]]) put(Block.V_BARREL, x, y);
+  put(Block.V_CART, 29, 12);
+  for (const [x, y] of [[5, 27], [27, 36]]) put(Block.V_LOGS, x, y);
+  for (const [x, y] of [[39, 28], [17, 18], [34, 31]]) put(Block.V_SACKS, x, y);
+  for (const [x, y] of [[33, 7], [40, 15], [4, 38], [38, 39], [15, 46], [37, 46]]) put(Block.V_ROCKS, x, y);
+  for (const [x, y] of [[18, 22], [43, 14], [13, 5], [19, 16], [37, 32], [4, 46], [30, 46], [34, 22], [13, 33]]) put(Block.V_BUSH, x, y);
+  for (let ly = 5; ly <= 47; ly++) {
+    for (let lx = 0; lx < W; lx++) {
+      if (hash2(465566, lx * 7 + 1, ly * 13 + 5) < 0.026 && free(lx, ly)) put(Block.V_FLOWERS, lx, ly);
+    }
+  }
+  const area = { x0: VILLAGE_X0, y0: VILLAGE_Y0, x1: VILLAGE_X0 + W - 1, y1: VILLAGE_Y0 + H - 1 };
+  const gx = VILLAGE_X0 + 22;
+  const trailTop = VILLAGE_Y0 - 44;
+  const trail = [
+    { x0: gx, y0: trailTop, x1: gx + 3, y1: VILLAGE_Y0 - 3 },
+    { x0: VILLAGE_X0 - 3, y0: VILLAGE_Y0 - 4, x1: gx + 3, y1: VILLAGE_Y0 - 3 },
+    { x0: VILLAGE_X0 - 3, y0: VILLAGE_Y0 - 4, x1: VILLAGE_X0 - 2, y1: VILLAGE_Y0 + 49 },
+    { x0: VILLAGE_X0 - 3, y0: VILLAGE_Y0 + 48, x1: gx + 3, y1: VILLAGE_Y0 + 49 },
+    { x0: gx, y0: VILLAGE_Y0 + 44, x1: gx + 3, y1: VILLAGE_Y0 + 49 }
+  ];
+  const touched = { x0: area.x0 - VILLAGE_MARGIN, y0: trailTop, x1: area.x1 + VILLAGE_MARGIN, y1: area.y1 + VILLAGE_MARGIN };
+  return { w: W, h: H, area, gate: { x0: VILLAGE_X0 + 21, y0: VILLAGE_Y0 + 43, x1: VILLAGE_X0 + 26, y1: VILLAGE_Y0 + 43 }, trail, touched, ground: ground2, objects, props };
+}
+var VillageTerrain = class {
+  constructor(base, layout) {
+    this.base = base;
+    this.layout = layout;
+  }
+  base;
+  layout;
+  get seed() {
+    return this.base.seed;
+  }
+  onTrail(x, y) {
+    return this.layout.trail.some((r) => inRect(r, x, y));
+  }
+  surround(x, y, c) {
+    const a = this.layout.area;
+    if (this.onTrail(x, y)) return { ground: Block.PATH, object: Block.AIR, upper: Block.AIR };
+    const d = Math.max(a.x0 - x, x - a.x1, a.y0 - y, y - a.y1);
+    if (d > VILLAGE_MARGIN) return c;
+    const g = blockDef(c.ground);
+    const ground2 = g.liquid || c.ground === Block.HOLE ? Block.GRASS : c.ground;
+    if (d <= VILLAGE_CLEAR) return { ground: ground2, object: Block.AIR, upper: Block.AIR };
+    return { ground: ground2, object: c.object, upper: c.upper };
+  }
+  cellAt(x, y) {
+    const l = this.layout;
+    if (inRect(l.area, x, y)) {
+      const i = (y - l.area.y0) * l.w + (x - l.area.x0);
+      return { ground: l.ground[i], object: l.objects[i], upper: Block.AIR };
+    }
+    const c = this.base.cellAt(x, y);
+    return inRect(l.touched, x, y) ? this.surround(x, y, c) : c;
+  }
+  groundAt(x, y) {
+    return this.cellAt(x, y).ground;
+  }
+  objectAt(x, y) {
+    return this.cellAt(x, y).object;
+  }
+  upperAt(x, y) {
+    return this.cellAt(x, y).upper;
+  }
+  biomeAt(x, y) {
+    return this.base.biomeAt(x, y);
+  }
+  generateChunk(cx, cy, ground2, objects, upper) {
+    this.base.generateChunk(cx, cy, ground2, objects, upper);
+    const t = this.layout.touched;
+    const S = Math.round(Math.sqrt(ground2.length));
+    const x0 = cx * S, y0 = cy * S;
+    if (x0 > t.x1 || x0 + S - 1 < t.x0 || y0 > t.y1 || y0 + S - 1 < t.y0) return;
+    for (let ly = 0; ly < S; ly++) {
+      for (let lx = 0; lx < S; lx++) {
+        const x = x0 + lx, y = y0 + ly;
+        if (!inRect(t, x, y)) continue;
+        const i = ly * S + lx;
+        const c = inRect(this.layout.area, x, y) ? this.cellAt(x, y) : this.surround(x, y, { ground: ground2[i], object: objects[i], upper: upper[i] });
+        ground2[i] = c.ground;
+        objects[i] = c.object;
+        upper[i] = c.upper;
+      }
+    }
+  }
+};
+
 // src/world/world.ts
 var WHEAT_STAGE_SECONDS = 6;
 var CROP_STAGE_SECONDS = { wheat: WHEAT_STAGE_SECONDS, potato: 8, carrot: 8, tomato: 10 };
@@ -5204,6 +5464,8 @@ var World = class {
   cave = null;
   /** Cidade do Despertar (perfil com `town`), ou null. Área protegida; início e renascer sem tenda. */
   town = null;
+  /** Vila Camponesa (ao sul da cidade, só na grade fina; `domains/village.md`), ou null. Área protegida. */
+  village = null;
   /** Camps with seven goblins around the existing Campfire block (seed based). */
   goblinCamps = [];
   /** Bandos de três homens-lagarto na margem dos rios (seed based, v0.93.60). */
@@ -5232,12 +5494,23 @@ var World = class {
       this.town = townLayout();
       this.generator = new TownTerrain(this.generator, this.town);
       this.spawn = this.town.start;
+      const village = villageLayout();
+      if (village) {
+        this.village = village;
+        this.generator = new VillageTerrain(this.generator, village);
+      }
     }
     if (profile.dungeon) {
       const base = this.generator;
       const spawn = this.spawn = this.findSpawn();
       const keep = this.town ? grow(this.town.area, TOWN_MARGIN + 4) : null;
       if (keep) keep.y1 = this.town.area.y1 + TOWN_SOUTH_FIELD;
+      if (keep && this.village) {
+        const t = this.village.touched;
+        keep.x0 = Math.min(keep.x0, t.x0);
+        keep.x1 = Math.max(keep.x1, t.x1);
+        keep.y1 = Math.max(keep.y1, t.y1);
+      }
       const castle = this.town?.buildings.find((b2) => b2.id === Block.CASTLE);
       const center = castle ? [castle.x + castle.w / 2, castle.y - castle.d / 2] : spawn;
       this.dungeon = isolatedDungeon(seed);
@@ -5264,7 +5537,7 @@ var World = class {
    * muro NÃO entra aqui: o que já foi construído fora da cidade, nesses chunks, continua lá (só não se constrói mais).
    */
   inGuardedArea(x, y) {
-    return !!this.dungeon && inRect(dungeonGuard(this.dungeon), x, y) || !!this.cave && inRect(this.cave.guard, x, y) || !!this.town && inRect(this.town.area, x, y) || this.interiors.some((l) => inRect(l.guard, x, y));
+    return !!this.dungeon && inRect(dungeonGuard(this.dungeon), x, y) || !!this.cave && inRect(this.cave.guard, x, y) || !!this.town && inRect(this.town.area, x, y) || !!this.village && inRect(this.village.area, x, y) || this.interiors.some((l) => inRect(l.guard, x, y));
   }
   /** O chunk da célula contém alguma célula da muralha (o anel de `TOWN_WALL` na borda da área da cidade)? */
   inWallChunk(area, x, y) {
