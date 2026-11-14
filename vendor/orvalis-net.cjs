@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.93.63 (db5482d) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.93.66 (e39e5d9) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -58,6 +58,7 @@ var SUBDIV = gridSubdiv();
 var TILE = 32;
 var CUBE_FRONT = 18;
 var MAX_STACK = 2;
+var SANCTUARY_MAX_STACK = 5;
 var STEP_HEIGHT = 1;
 var CHUNK_SIZE = 16;
 var UNLOAD_MARGIN = 3;
@@ -215,6 +216,8 @@ var Block = {
   EARTH_CULTIVATED: 91,
   WATER_SACRED: 92,
   WATER_CRYSTAL: 93,
+  /** Água Pura: bloco 3D azul com textura aquática em todas as faces; exclusivo do Santuário. */
+  WATER_PURE: 98,
   CRYSTAL_LIFE: 94,
   LIGHT_BLOCK: 95,
   WOOD_CELESTIAL: 96,
@@ -416,6 +419,7 @@ var defs = [
   object(Block.EARTH_CULTIVATED, "Terra Cultivada"),
   object(Block.WATER_SACRED, "\xC1gua Sagrada"),
   object(Block.WATER_CRYSTAL, "\xC1gua Cristalina"),
+  object(Block.WATER_PURE, "\xC1gua Pura"),
   object(Block.CRYSTAL_LIFE, "Cristal da Vida", { glow: true }),
   object(Block.LIGHT_BLOCK, "Bloco de Luz", { glow: true }),
   object(Block.WOOD_CELESTIAL, "Madeira Celestial"),
@@ -4141,6 +4145,7 @@ var Entities = class {
         moving: p.moving,
         walkTime: p.walkTime,
         frame: sitting ? p.sitFrame : p.attacking ? p.attackFrame : void 0,
+        phase: !sitting && p.attacking ? p.attackPhase : void 0,
         hurt: p.invuln > 0
       });
     }
@@ -4236,9 +4241,12 @@ function homesFor(world, n, onStreet) {
   return homes;
 }
 
+// src/game/attackTiming.ts
+var DEFAULT_ATTACK_TIMING = { seconds: 0.36, hitAt: 0.45 };
+
 // src/game/player.ts
-var ATTACK_SECONDS = 0.36;
-var ATTACK_HIT_AT = 0.45;
+var ATTACK_SECONDS = DEFAULT_ATTACK_TIMING.seconds;
+var ATTACK_HIT_AT = DEFAULT_ATTACK_TIMING.hitAt;
 var ATTACK_CHAIN_AT = 0.7;
 var ATTACK_BUFFER_S = 0.18;
 var ATTACK_FRAMES = 4;
@@ -4257,6 +4265,9 @@ var Player = class extends Walker {
   attackTool = null;
   /** Golpes começados (a sala repassa aos outros, que tocam a animação ao ver o número mudar). */
   swings = 0;
+  /** Tempo do golpe em andamento (do personagem e da ferramenta, `attackTimingFor`); o `Game` liga `timingFor`. */
+  timingFor = null;
+  timing = DEFAULT_ATTACK_TIMING;
   hitDone = true;
   /** Golpe pedido durante o anterior (fila curta): ferramenta e tempo restante da fila. */
   queuedTool = void 0;
@@ -4285,12 +4296,15 @@ var Player = class extends Walker {
   }
   /** Quadro atual do golpe (0..ATTACK_FRAMES-1). */
   get attackFrame() {
-    const p = 1 - this.attackTime / ATTACK_SECONDS;
-    return Math.min(ATTACK_FRAMES - 1, Math.floor(p * ATTACK_FRAMES));
+    return Math.min(ATTACK_FRAMES - 1, Math.floor(this.attackPhase * ATTACK_FRAMES));
+  }
+  /** Quanto do golpe já passou (0..1): as folhas com mais de 4 quadros escolhem o quadro por aqui. */
+  get attackPhase() {
+    return this.attacking ? 1 - this.attackTime / this.timing.seconds : 0;
   }
   /** Já passou do acerto e do ponto de cancelar: dá para começar outro golpe por cima do que termina. */
   get canChain() {
-    return this.attacking && this.hitDone && 1 - this.attackTime / ATTACK_SECONDS >= ATTACK_CHAIN_AT;
+    return this.attacking && this.hitDone && this.attackPhase >= ATTACK_CHAIN_AT;
   }
   /**
    * Começa um golpe. Com outro em andamento: se já dá para encadear, começa o novo; senão, se faltam até `ATTACK_BUFFER_S`
@@ -4299,7 +4313,7 @@ var Player = class extends Walker {
    */
   startAttack(tool = this.equipped) {
     if (this.attacking && !this.canChain) {
-      const toChain = ATTACK_SECONDS * ATTACK_CHAIN_AT - (ATTACK_SECONDS - this.attackTime);
+      const toChain = this.timing.seconds * ATTACK_CHAIN_AT - (this.timing.seconds - this.attackTime);
       if (toChain <= ATTACK_BUFFER_S) {
         this.queuedTool = tool;
         this.queueLeft = ATTACK_BUFFER_S;
@@ -4308,7 +4322,8 @@ var Player = class extends Walker {
     }
     this.queuedTool = void 0;
     this.attackTool = tool;
-    this.attackTime = ATTACK_SECONDS;
+    this.timing = this.timingFor?.(tool) ?? DEFAULT_ATTACK_TIMING;
+    this.attackTime = this.timing.seconds;
     this.swings++;
     this.hitDone = false;
     return true;
@@ -4316,7 +4331,7 @@ var Player = class extends Walker {
   /** true uma única vez por golpe, quando a lâmina chega ao ponto de acerto. */
   consumeHit() {
     if (this.hitDone || !this.attacking) return false;
-    if (1 - this.attackTime / ATTACK_SECONDS < ATTACK_HIT_AT) return false;
+    if (this.attackPhase < this.timing.hitAt) return false;
     this.hitDone = true;
     return true;
   }
@@ -4625,15 +4640,18 @@ function wallPiece(nb) {
 
 // src/world/chunk.ts
 var Chunk = class {
-  constructor(cx, cy) {
+  constructor(cx, cy, maxStack = MAX_STACK) {
     this.cx = cx;
     this.cy = cy;
+    this.maxStack = maxStack;
+    this.levels = Array.from({ length: maxStack }, () => new Uint8Array(CHUNK_SIZE * CHUNK_SIZE));
   }
   cx;
   cy;
+  maxStack;
   ground = new Uint8Array(CHUNK_SIZE * CHUNK_SIZE);
   /** Um array por nível de pilha. */
-  levels = Array.from({ length: MAX_STACK }, () => new Uint8Array(CHUNK_SIZE * CHUNK_SIZE));
+  levels;
   /** True se o jogador alterou algo (chunk não pode ser descartado). */
   modified = false;
   /** Incrementado a cada mudança visível (inclusive vizinhos na borda); invalida caches. */
@@ -4658,7 +4676,7 @@ var Chunk = class {
   /** Quantos níveis ocupados há na célula (contínuos a partir do 0). */
   filledLevels(lx, ly) {
     let n = 0;
-    while (n < MAX_STACK && this.levels[n][ly * CHUNK_SIZE + lx] !== 0) n++;
+    while (n < this.levels.length && this.levels[n][ly * CHUNK_SIZE + lx] !== 0) n++;
     return n;
   }
   /** Define o chão (buraco ao quebrar, ou cubo usado como piso). */
@@ -4750,6 +4768,90 @@ var FlatGenerator = class {
     ground2.fill(this.cell.ground, 0, CHUNK_SIZE * CHUNK_SIZE);
     objects.fill(Block.AIR);
     upper.fill(Block.AIR);
+  }
+};
+
+// src/world/sanctuarySeedGenerator.ts
+var SANCTUARY_LEVEL_COVERAGE = [1, 0.5, 0.3, 0.1, 0.05];
+var SanctuarySeedGenerator = class {
+  seed;
+  x0;
+  y0;
+  width;
+  height;
+  heights;
+  constructor(seed, bounds) {
+    this.seed = seed >>> 0;
+    this.x0 = bounds.cx0 * CHUNK_SIZE;
+    this.y0 = bounds.cy0 * CHUNK_SIZE;
+    this.width = (bounds.cx1 - bounds.cx0 + 1) * CHUNK_SIZE;
+    this.height = (bounds.cy1 - bounds.cy0 + 1) * CHUNK_SIZE;
+    const count = this.width * this.height;
+    this.heights = new Uint8Array(count).fill(1);
+    const centerX = this.x0 + Math.floor(this.width / 2);
+    const centerY = this.y0 + Math.floor(this.height / 2);
+    const eligible = [];
+    for (let i = 0; i < count; i++) {
+      const x = this.x0 + i % this.width;
+      const y = this.y0 + Math.floor(i / this.width);
+      if (Math.abs(x - centerX) <= 1 && Math.abs(y - centerY) <= 1) continue;
+      eligible.push(i);
+    }
+    const random = mulberry32(this.seed ^ 1511507773);
+    for (let i = eligible.length - 1; i > 0; i--) {
+      const j = Math.floor(random() * (i + 1));
+      [eligible[i], eligible[j]] = [eligible[j], eligible[i]];
+    }
+    for (let level = 2; level <= 5; level++) {
+      const required = Math.round(count * SANCTUARY_LEVEL_COVERAGE[level - 1]);
+      if (required > eligible.length) throw new Error("\xC1rea insuficiente para a distribui\xE7\xE3o do Santu\xE1rio");
+      for (let i = 0; i < required; i++) this.heights[eligible[i]] = level;
+    }
+  }
+  heightAt(x, y) {
+    const lx = x - this.x0, ly = y - this.y0;
+    if (lx < 0 || ly < 0 || lx >= this.width || ly >= this.height) return 0;
+    return this.heights[ly * this.width + lx];
+  }
+  /** Nível zero é a primeira camada de construção, sobre o chão de nuvens. */
+  levelAt(x, y, level) {
+    const height = this.heightAt(x, y);
+    if (level < 0 || level >= height) return Block.AIR;
+    return level === height - 1 ? Block.GRASS : Block.DIRT;
+  }
+  cellAt(x, y) {
+    return { ground: this.groundAt(x, y), object: this.objectAt(x, y), upper: this.upperAt(x, y) };
+  }
+  groundAt(_x, _y) {
+    return Block.CLOUD_SOLID;
+  }
+  objectAt(x, y) {
+    return this.levelAt(x, y, 0);
+  }
+  upperAt(x, y) {
+    return this.levelAt(x, y, 1);
+  }
+  biomeAt(_x, _y) {
+    return BIOMES.celestial;
+  }
+  /** Não marca o chunk como editado; tudo pode ser recuperado a partir da seed. */
+  generateChunk(cx, cy, ground2, objects, upper) {
+    ground2.fill(Block.CLOUD_SOLID);
+    for (let ly = 0; ly < CHUNK_SIZE; ly++) for (let lx = 0; lx < CHUNK_SIZE; lx++) {
+      const i = ly * CHUNK_SIZE + lx;
+      const x = cx * CHUNK_SIZE + lx, y = cy * CHUNK_SIZE + ly;
+      objects[i] = this.levelAt(x, y, 0);
+      upper[i] = this.levelAt(x, y, 1);
+    }
+  }
+  /** Completa 3º, 4º e 5º níveis após o gerador padrão preencher os dois primeiros. */
+  fillHighLevels(cx, cy, levels) {
+    for (let level = 2; level < levels.length; level++) {
+      const layer = levels[level];
+      for (let ly = 0; ly < CHUNK_SIZE; ly++) for (let lx = 0; lx < CHUNK_SIZE; lx++) {
+        layer[ly * CHUNK_SIZE + lx] = this.levelAt(cx * CHUNK_SIZE + lx, cy * CHUNK_SIZE + ly, level);
+      }
+    }
   }
 };
 
@@ -4989,8 +5091,18 @@ var WORLD_PROFILES = {
     // 10 chunks: 5 × 2 (80 × 32 blocos), centrados na origem.
     bounds: { cx0: -3, cy0: -1, cx1: 1, cy1: 0 },
     character: "goddess",
-    // 18 blocos celestiais + paredes autotile e a porta de parede (ADR 0027; só o Santuário por ora, W5 leva ao Mundo).
-    blocks: [...CELESTIAL_BLOCKS, ...WALL_BLOCKS, ...WALL_DOOR_BLOCKS],
+    // Laboratório de oito materiais do cubo (lista única e na ordem aprovada pelo usuário).
+    // O piso Nuvem Sólida permanece como suporte do cenário, mas NÃO é selecionável na hotbar.
+    blocks: [
+      Block.DIRT,
+      Block.TILLED,
+      Block.GRASS,
+      Block.WATER_PURE,
+      Block.OAK_LOG,
+      Block.OAK_PLANKS,
+      Block.STONE,
+      Block.STONE_SMOOTH
+    ],
     tools: false,
     farming: false,
     sheep: false,
@@ -5024,6 +5136,8 @@ function numKey(cx, cy) {
 var World = class {
   generator;
   profile;
+  /** Profundidade de pilha específica do perfil: Mundo 2, Santuário 5. */
+  maxStack;
   /** Limites em células (inclusivos) quando o perfil limita o mundo. */
   cellBounds;
   /** Chunks por chave numérica (`numKey`): evita criar strings a cada leitura de célula. */
@@ -5061,7 +5175,8 @@ var World = class {
   spawn = null;
   constructor(seed, profile = WORLD_PROFILES.principal) {
     this.profile = profile;
-    this.generator = profile.terrain.kind === "flat" ? new FlatGenerator(seed, profile.terrain.ground) : new WorldGenerator(seed);
+    this.maxStack = profile.id === "santuario" ? SANCTUARY_MAX_STACK : MAX_STACK;
+    this.generator = profile.id === "santuario" && profile.bounds ? new SanctuarySeedGenerator(seed, profile.bounds) : profile.terrain.kind === "flat" ? new FlatGenerator(seed, profile.terrain.ground) : new WorldGenerator(seed);
     const baseTerrain = this.generator;
     const b = profile.bounds;
     this.cellBounds = b ? { x0: b.cx0 * CHUNK_SIZE, y0: b.cy0 * CHUNK_SIZE, x1: (b.cx1 + 1) * CHUNK_SIZE - 1, y1: (b.cy1 + 1) * CHUNK_SIZE - 1 } : null;
@@ -5207,8 +5322,10 @@ var World = class {
     const key = numKey(cx, cy);
     let chunk = this.chunks.get(key);
     if (!chunk) {
-      chunk = new Chunk(cx, cy);
+      chunk = new Chunk(cx, cy, this.maxStack);
       this.generator.generateChunk(cx, cy, chunk.ground, chunk.objects, chunk.upper);
+      if (this.generator instanceof SanctuarySeedGenerator)
+        this.generator.fillHighLevels(cx, cy, chunk.levels);
       this.chunks.set(key, chunk);
     }
     return chunk;
@@ -5233,16 +5350,17 @@ var World = class {
   }
   /** Bloco de um nível da pilha (0 = objeto no chão). O gerador só preenche os níveis 0 e 1. */
   getLevel(x, y, level) {
-    if (!Number.isInteger(level) || level < 0 || level >= MAX_STACK) return Block.AIR;
+    if (!Number.isInteger(level) || level < 0 || level >= this.maxStack) return Block.AIR;
     if (level === 0) return this.getObject(x, y);
     if (level === 1) return this.getUpper(x, y);
     if (!this.inBounds(x, y)) return Block.AIR;
     const chunk = this.chunkAt(x, y);
-    return chunk ? chunk.getLevel(toLocal(x), toLocal(y), level) : Block.AIR;
+    if (chunk) return chunk.getLevel(toLocal(x), toLocal(y), level);
+    return this.generator instanceof SanctuarySeedGenerator ? this.generator.levelAt(x, y, level) : Block.AIR;
   }
   /** Bloco visível no topo da célula e seu nível (null se vazia). */
   topBlock(x, y) {
-    for (let level = MAX_STACK - 1; level >= 0; level--) {
+    for (let level = this.maxStack - 1; level >= 0; level--) {
       const id = this.getLevel(x, y, level);
       if (id !== Block.AIR) return { id, level };
     }
@@ -5252,7 +5370,7 @@ var World = class {
   stackHeight(x, y) {
     if (blockDef(this.getObject(x, y)).shape !== "cube") return 0;
     let n = 1;
-    while (n < MAX_STACK && this.getLevel(x, y, n) !== Block.AIR) n++;
+    while (n < this.maxStack && this.getLevel(x, y, n) !== Block.AIR) n++;
     return n;
   }
   /**
@@ -5386,7 +5504,7 @@ var World = class {
     }
     if (def.shape === "cube" && base.shape === "cube") {
       const h = this.stackHeight(x, y);
-      return h < MAX_STACK ? h : null;
+      return h < this.maxStack ? h : null;
     }
     return null;
   }
@@ -5566,6 +5684,7 @@ var World = class {
     if (b) {
       const cx = Math.floor((b.cx0 + b.cx1 + 1) * CHUNK_SIZE / 2);
       const cy = Math.floor((b.cy0 + b.cy1 + 1) * CHUNK_SIZE / 2);
+      if (this.generator instanceof SanctuarySeedGenerator) return [cx, cy];
       return this.nearestWalkable(cx, cy, 64);
     }
     const welcoming = /* @__PURE__ */ new Set(["meadow", "sakura", "enchanted"]);
@@ -5823,7 +5942,7 @@ var World = class {
    * vazias. Devolve quantos blocos foram descartados, para quem restaura avisar (jogo) ou registrar (servidor).
    */
   restoreChunk(cx, cy, ground2, levels) {
-    const c = new Chunk(cx, cy);
+    const c = new Chunk(cx, cy, this.maxStack);
     c.ground.set(ground2.subarray(0, c.ground.length));
     let dropped = 0;
     for (let i = c.levels.length; i < levels.length; i++) for (const b of levels[i]) if (b !== Block.AIR) dropped++;
