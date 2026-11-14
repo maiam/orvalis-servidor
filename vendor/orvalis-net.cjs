@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.93.89 (39db5d4) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.93.90 (407f98b) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -207,15 +207,8 @@ var Block = {
   V_BED_VEG: 119,
   V_OAK: 143,
   V_TREE: 144,
-  /** Muro de estacas: segmentos retos de 6 e de 7 células (norte e sul), laterais (uma estaca por fileira) e os quatro cantos. */
-  V_PAL_H6: 145,
-  V_PAL_H7: 146,
-  V_PAL_W: 147,
-  V_PAL_E: 148,
-  V_PAL_NW: 149,
-  V_PAL_NE: 206,
-  V_PAL_SW: 207,
-  V_PAL_SE: 208,
+  /** Estaca alta do muro da vila: 1 célula de largura (4 estacas) × 1,5 de altura (16 × 24 px); só o gerador a põe. */
+  V_STAKE: 145,
   /** Portão aberto (duas colunas com lampião; o vão entre elas fica livre). */
   V_GATE: 209,
   V_BARREL: 226,
@@ -232,6 +225,8 @@ var Block = {
   /** Os 6 blocos do vão entre os postes: livres com o portão aberto, sólidos com ele fechado (sem arte própria: o desenho é do portão). */
   V_GATE_GAP: 239,
   V_GATE_GAP_CLOSED: 254,
+  /** Cerca de Estacas (v0.93.90): 1 célula × 1 de altura (16 × 16 px), 4 estacas; o jogador fabrica (1 Tora → 4) e coloca. */
+  FENCE_STAKE: 244,
   // --- plantação de trigo: 16 estágios consecutivos (60 = semente ... 75 = maduro) ---
   WHEAT_0: 60,
   WHEAT_15: 75,
@@ -386,6 +381,7 @@ var defs = [
   object(Block.OAK_DOOR_OPEN, "Porta de Carvalho (aberta)", { shape: "door", solid: false, placeable: false, organic: "wood" }),
   // Cerca e portão: ocupam a célula (nada empilha em cima); madeira: o machado desmonta.
   object(Block.FENCE, "Cerca de Madeira", { shape: "fence", organic: "wood" }),
+  object(Block.FENCE_STAKE, "Cerca de Estacas", { shape: "building", organic: "wood" }),
   object(Block.FENCE_GATE, "Port\xE3o de Madeira", { shape: "fence", organic: "wood" }),
   object(Block.FENCE_GATE_OPEN, "Port\xE3o de Madeira (aberto)", { shape: "fence", solid: false, placeable: false, organic: "wood" }),
   object(Block.CACTUS, "Cacto", { placeable: false, organic: "plant" }),
@@ -460,14 +456,7 @@ var defs = [
     [Block.V_BED_VEG, "Horta"],
     [Block.V_OAK, "Carvalho"],
     [Block.V_TREE, "\xC1rvore"],
-    [Block.V_PAL_H6, "Pali\xE7ada"],
-    [Block.V_PAL_H7, "Pali\xE7ada"],
-    [Block.V_PAL_W, "Pali\xE7ada"],
-    [Block.V_PAL_E, "Pali\xE7ada"],
-    [Block.V_PAL_NW, "Pali\xE7ada"],
-    [Block.V_PAL_NE, "Pali\xE7ada"],
-    [Block.V_PAL_SW, "Pali\xE7ada"],
-    [Block.V_PAL_SE, "Pali\xE7ada"],
+    [Block.V_STAKE, "Pali\xE7ada"],
     [Block.V_GATE, "Port\xE3o da Vila"],
     [Block.V_BARREL, "Barril"],
     [Block.V_ROCKS, "Rochas"],
@@ -572,7 +561,8 @@ var HOTBAR_BLOCKS = [
   Block.OVEN,
   Block.CHAIR,
   Block.FENCE,
-  Block.FENCE_GATE
+  Block.FENCE_GATE,
+  Block.FENCE_STAKE
 ];
 var GROWTH_STAGE_ADULT = {
   [Block.OAK_SAPLING]: Block.OAK_TREE,
@@ -1324,7 +1314,7 @@ function toolDrops(tool, id, rand = Math.random) {
   return dropsFor(id, rand);
 }
 var TOOL_ORDER = [Tool.SWORD, Tool.HOE, Tool.PICKAXE, Tool.SHOVEL, Tool.AXE];
-var COLLECTABLE = /* @__PURE__ */ new Set([...MATERIALS, Block.OAK_DOOR, Block.TENT, Block.CHEST, Block.CAMPFIRE, Block.CAULDRON, Block.OVEN, Block.CHAIR, Block.FENCE, Block.WALL_PLANKS, Block.WALL_STONE, Block.WALL_DOOR_PLANKS]);
+var COLLECTABLE = /* @__PURE__ */ new Set([...MATERIALS, Block.OAK_DOOR, Block.TENT, Block.CHEST, Block.CAMPFIRE, Block.CAULDRON, Block.OVEN, Block.CHAIR, Block.FENCE, Block.FENCE_STAKE, Block.WALL_PLANKS, Block.WALL_STONE, Block.WALL_DOOR_PLANKS]);
 var ADULT_TREES = /* @__PURE__ */ new Set([Block.OAK_TREE, Block.APPLE_TREE, Block.APPLE_TREE_BARE]);
 function blockDrops(id, rand = Math.random) {
   if (ADULT_TREES.has(id)) return [{ item: blockStack(Block.OAK_LOG), count: 2 + (rand() < 0.5 ? 1 : 0) }];
@@ -1422,6 +1412,14 @@ var RECIPES = [
     profession: "builder",
     inputs: [{ item: blockStack(Block.OAK_PLANKS), count: 2 }],
     output: { item: blockStack(Block.FENCE), count: 4 }
+  },
+  // Cerca de Estacas (v0.93.90, teste do dono do produto): 4 estacas por bloco; 1 Tora de Carvalho rende 4 blocos (custo provisório).
+  {
+    id: "stake-fence",
+    name: "Cerca de Estacas",
+    profession: "builder",
+    inputs: [{ item: blockStack(Block.OAK_LOG), count: 1 }],
+    output: { item: blockStack(Block.FENCE_STAKE), count: 4 }
   },
   {
     id: "fence-gate",
@@ -5255,15 +5253,8 @@ var VILLAGE_SIZES = {
   [Block.V_BED_VEG]: [6, 6],
   [Block.V_OAK]: [1, 1],
   [Block.V_TREE]: [1, 1],
-  [Block.V_PAL_H6]: [6, 1],
-  [Block.V_PAL_H7]: [7, 1],
-  [Block.V_PAL_W]: [1, 1],
-  [Block.V_PAL_E]: [1, 1],
-  [Block.V_PAL_NW]: [7, 6],
-  [Block.V_PAL_NE]: [7, 6],
-  [Block.V_PAL_SW]: [6, 6],
-  [Block.V_PAL_SE]: [6, 6],
-  [Block.V_GATE]: [8, 1],
+  [Block.V_STAKE]: [1, 1],
+  [Block.V_GATE]: [5, 1],
   [Block.V_BARREL]: [1, 1],
   [Block.V_ROCKS]: [3, 1],
   [Block.V_BUSH]: [3, 1],
@@ -5272,7 +5263,7 @@ var VILLAGE_SIZES = {
   [Block.V_CART]: [3, 2],
   [Block.V_SACKS]: [2, 1],
   [Block.V_FLOWERS]: [2, 1],
-  [Block.V_GATE_CLOSED]: [8, 1],
+  [Block.V_GATE_CLOSED]: [5, 1],
   [Block.V_GATE_GAP]: [1, 1],
   [Block.V_GATE_GAP_CLOSED]: [1, 1]
 };
@@ -5314,20 +5305,19 @@ function buildVillage() {
     return true;
   };
   const must = (id, x, y, cells) => put(id, x, y, cells, true);
-  const row = (x0, x1, y) => Array.from({ length: x1 - x0 + 1 }, (_, i) => [x0 + i, y]);
-  const col = (x, y0, y1) => Array.from({ length: y1 - y0 + 1 }, (_, i) => [x, y0 + i]);
-  must(Block.V_PAL_NW, 1, 9, [...row(1, 7, 4), ...col(1, 5, 9)]);
-  must(Block.V_PAL_NE, 40, 9, [...row(40, 46, 4), ...col(46, 5, 9), [40, 9]]);
-  must(Block.V_PAL_SW, 1, 43, [...row(1, 6, 43), ...col(1, 38, 42)]);
-  must(Block.V_PAL_SE, 41, 43, [...row(41, 46, 43), ...col(46, 38, 42)]);
-  for (const [x, id] of [[8, Block.V_PAL_H6], [14, Block.V_PAL_H7], [21, Block.V_PAL_H6], [27, Block.V_PAL_H7], [34, Block.V_PAL_H6]]) must(id, x, 4);
-  for (const [x, id] of [[7, Block.V_PAL_H6], [13, Block.V_PAL_H7], [28, Block.V_PAL_H7], [35, Block.V_PAL_H6]]) must(id, x, 43);
-  for (let y = 10; y <= 37; y++) {
-    must(Block.V_PAL_W, 1, y);
-    must(Block.V_PAL_E, 46, y);
+  const stake = (x, y) => {
+    objects[idx(x, y)] = Block.V_STAKE;
+  };
+  for (let x = 1; x <= 46; x++) {
+    stake(x, 4);
+    if (x < 22 || x > 26) stake(x, 43);
   }
-  must(Block.V_GATE, 20, 43, [[20, 43], [27, 43]]);
-  for (let x = 21; x <= 26; x++) objects[idx(x, 43)] = Block.V_GATE_GAP;
+  for (let y = 5; y <= 42; y++) {
+    stake(1, y);
+    stake(46, y);
+  }
+  must(Block.V_GATE, 22, 43, [[22, 43], [26, 43]]);
+  for (let x = 23; x <= 25; x++) objects[idx(x, 43)] = Block.V_GATE_GAP;
   must(Block.V_BARN, 18, 10);
   must(Block.V_COOP, 40, 8);
   must(Block.V_BED_WHEAT, 3, 17);
@@ -5367,7 +5357,7 @@ function buildVillage() {
     { x0: gx, y0: VILLAGE_Y0 + 44, x1: gx + 3, y1: VILLAGE_Y0 + 49 }
   ];
   const touched = { x0: area.x0 - VILLAGE_MARGIN, y0: trailTop, x1: area.x1 + VILLAGE_MARGIN, y1: area.y1 + VILLAGE_MARGIN };
-  return { w: W, h: H, area, gate: { x0: VILLAGE_X0 + 21, y0: VILLAGE_Y0 + 43, x1: VILLAGE_X0 + 26, y1: VILLAGE_Y0 + 43 }, trail, touched, ground: ground2, objects, props };
+  return { w: W, h: H, area, gate: { x0: VILLAGE_X0 + 23, y0: VILLAGE_Y0 + 43, x1: VILLAGE_X0 + 25, y1: VILLAGE_Y0 + 43 }, trail, touched, ground: ground2, objects, props };
 }
 var VillageTerrain = class {
   constructor(base, layout) {
@@ -5977,15 +5967,16 @@ var World = class {
     this.setLevel(x, y, 0, next);
     return true;
   }
-  /** Blocos do portão da vila a que a célula pertence (poste esquerdo primeiro), ou null se não é um. */
+  /** Blocos do portão da vila (2 postes e o vão) a que a célula pertence (poste esquerdo primeiro), ou null se não é um. */
   gateCells(x, y) {
     const id = this.getObject(x, y);
     if (id !== Block.V_GATE && id !== Block.V_GATE_CLOSED && id !== Block.V_GATE_GAP && id !== Block.V_GATE_GAP_CLOSED) return null;
     const v = this.village;
     if (!v) return null;
     const x0 = v.gate.x0 - 1;
-    if (y !== v.gate.y0 || x < x0 || x > x0 + 7) return null;
-    return Array.from({ length: 8 }, (_, i) => [x0 + i, y]);
+    const n = v.gate.x1 - v.gate.x0 + 3;
+    if (y !== v.gate.y0 || x < x0 || x > x0 + n - 1) return null;
+    return Array.from({ length: n }, (_, i) => [x0 + i, y]);
   }
   canPlace(x, y, id) {
     return this.placementLevel(x, y, id) !== null;
