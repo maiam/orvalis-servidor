@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.93.72 (cad13a9) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.93.73 (1135dda) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -96,6 +96,10 @@ var Block = {
   /** Porta de parede (v0.93.25): bloco dentro de uma fileira leste–oeste, entre duas paredes; o id guarda o estado (fechada sólida, aberta passável). */
   WALL_DOOR_PLANKS: 242,
   WALL_DOOR_PLANKS_OPEN: 243,
+  // --- lajes de Carvalho (piloto `?tabua=laje`, v0.93.73): topo 16 × 16 e face de 4, 6 e 8 px; só se fabricam e se colocam no piloto (offline) ---
+  OAK_SLAB_1: 250,
+  OAK_SLAB_2: 251,
+  OAK_SLAB_3: 252,
   // --- porta (objeto de 3 níveis de altura; o id guarda o estado) ---
   OAK_DOOR: 28,
   /** Porta aberta: mesma porta, passável. Só existe no mundo (a hotbar coloca a fechada). */
@@ -318,6 +322,9 @@ var defs = [
   object(Block.STONE_BRICK_CRACKED, "Tijolo de Pedra Rachado", { stone: true }),
   object(Block.OAK_LOG, "Tora de Carvalho", { organic: "wood" }),
   object(Block.OAK_PLANKS, "T\xE1bua de Carvalho", { organic: "wood" }),
+  object(Block.OAK_SLAB_1, "Laje 1 de Carvalho (4\xD716)", { organic: "wood" }),
+  object(Block.OAK_SLAB_2, "Laje 2 de Carvalho (6\xD716)", { organic: "wood" }),
+  object(Block.OAK_SLAB_3, "Laje 3 de Carvalho (8\xD716)", { organic: "wood" }),
   object(Block.CHERRY_LOG, "Tora de Cerejeira", { organic: "wood" }),
   object(Block.CHERRY_PLANKS, "T\xE1bua de Cerejeira", { organic: "wood" }),
   object(Block.BIRCH_LOG, "Tora de B\xE9tula", { organic: "wood" }),
@@ -485,6 +492,7 @@ var CELESTIAL_BLOCKS = [
   Block.WOOD_CELESTIAL,
   Block.FOLIAGE_GOLDEN
 ];
+var SLAB_BLOCKS = [Block.OAK_SLAB_1, Block.OAK_SLAB_2, Block.OAK_SLAB_3];
 var HOTBAR_BLOCKS = [
   ...MATERIALS,
   Block.OAK_DOOR,
@@ -1243,7 +1251,7 @@ function toolDrops(tool, id, rand = Math.random) {
   return dropsFor(id, rand);
 }
 var TOOL_ORDER = [Tool.SWORD, Tool.HOE, Tool.PICKAXE, Tool.SHOVEL, Tool.AXE];
-var COLLECTABLE = /* @__PURE__ */ new Set([...MATERIALS, Block.OAK_DOOR, Block.TENT, Block.CHEST, Block.CAMPFIRE, Block.CAULDRON, Block.OVEN, Block.CHAIR, Block.FENCE, Block.WALL_PLANKS, Block.WALL_STONE, Block.WALL_DOOR_PLANKS]);
+var COLLECTABLE = /* @__PURE__ */ new Set([...MATERIALS, ...SLAB_BLOCKS, Block.OAK_DOOR, Block.TENT, Block.CHEST, Block.CAMPFIRE, Block.CAULDRON, Block.OVEN, Block.CHAIR, Block.FENCE, Block.WALL_PLANKS, Block.WALL_STONE, Block.WALL_DOOR_PLANKS]);
 var ADULT_TREES = /* @__PURE__ */ new Set([Block.OAK_TREE, Block.APPLE_TREE, Block.APPLE_TREE_BARE]);
 function blockDrops(id, rand = Math.random) {
   if (ADULT_TREES.has(id)) return [{ item: blockStack(Block.OAK_LOG), count: 2 + (rand() < 0.5 ? 1 : 0) }];
@@ -1259,6 +1267,15 @@ function breakDrops(tool, id, collect, rand = Math.random) {
   return [...toolDrops(tool, id, rand), ...collect ? blockDrops(id, rand) : []];
 }
 var RECIPES = [
+  // Lajes de Carvalho (piloto `?tabua=laje`, v0.93.73): 1 Tábua rende 4, 3 ou 2 lajes (4, 6 e 8 px de face).
+  ...[["laje1", "Laje 1 de Carvalho (4\xD716)", Block.OAK_SLAB_1, 4], ["laje2", "Laje 2 de Carvalho (6\xD716)", Block.OAK_SLAB_2, 3], ["laje3", "Laje 3 de Carvalho (8\xD716)", Block.OAK_SLAB_3, 2]].map(([id, name, out, n]) => ({
+    id,
+    name,
+    profession: "builder",
+    pilot: "laje",
+    inputs: [{ item: blockStack(Block.OAK_PLANKS), count: 1 }],
+    output: { item: blockStack(out), count: n }
+  })),
   {
     id: "oak-planks",
     name: "T\xE1bua de Carvalho",
@@ -4642,7 +4659,14 @@ function rescaleHoles(holes, f) {
 }
 
 // src/world/slabs.ts
-var SLAB_HEIGHT = 0.25;
+var SLABS = [
+  { id: Block.OAK_SLAB_1, recipe: "laje1", facepx: 4, height: 4 / 16 },
+  { id: Block.OAK_SLAB_2, recipe: "laje2", facepx: 6, height: 6 / 16 },
+  { id: Block.OAK_SLAB_3, recipe: "laje3", facepx: 8, height: 8 / 16 }
+];
+function slabHeightOf(id) {
+  return SLABS.find((s) => s.id === id)?.height ?? 0;
+}
 
 // src/world/walls.ts
 function wallNeighbors(isWall2, x, y) {
@@ -5443,9 +5467,9 @@ var World = class {
     for (let level = 1; level < this.maxStack; level++) if (this.getLevel(x, y, level) !== Block.AIR) return false;
     return true;
   }
-  /** Quanto o corpo sobe por cima da célula (visual): `SLAB_HEIGHT` sobre laje, 0 no resto. */
+  /** Quanto o corpo sobe por cima da célula (visual): a altura da laje ali, 0 no resto. */
   slabLift(x, y) {
-    return this.isSlabAt(x, y) ? SLAB_HEIGHT : 0;
+    return this.isSlabAt(x, y) ? slabHeightOf(this.getObject(x, y)) : 0;
   }
   /** Mantido para o objeto do nível 0 (testes/ferramentas). */
   setObject(x, y, id) {
@@ -5554,7 +5578,8 @@ var World = class {
   placementLevel(x, y, id) {
     const def = blockDef(id);
     if (!def.placeable || def.layer !== "object") return null;
-    if (!this.profile.blocks.includes(id) || this.isProtected(x, y)) return null;
+    if (!this.profile.blocks.includes(id) && !this.slabs.has(id) || this.isProtected(x, y)) return null;
+    if (this.isSlabAt(x, y) || this.slabs.has(id) && !(this.getObject(x, y) === Block.AIR || blockDef(this.getObject(x, y)).shape === "decoration")) return null;
     if (this.getGround(x, y) === Block.HOLE) return def.shape === "cube" ? "ground" : null;
     if (this.getGround(x, y) === Block.WATER) return REPLACES_WATER.has(id) ? "ground" : null;
     if (!this.isGroundStandable(x, y)) return null;
