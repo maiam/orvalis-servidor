@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.93.59 (4dd45e2) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.93.60 (9baf79f) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -1102,8 +1102,10 @@ var LOOT_ITEMS = [Item.SILK, Item.FANG, Item.QUEEN_HEART, Item.WOLF_FANG, Item.W
 var WOLF_PELT_CHANCE = 0.55;
 var WOLF_FANG_CHANCE = 0.4;
 var GOBLIN_COIN_DROP = 2;
+var LIZARD_COIN_DROP = 2;
 function monsterDrops(kind, rand = Math.random) {
   if (kind === "goblin") return [{ item: Item.COPPER_COIN, count: GOBLIN_COIN_DROP }];
+  if (kind === "lizard") return [{ item: Item.COPPER_COIN, count: LIZARD_COIN_DROP }];
   if (isWolf(kind)) {
     const out = [];
     if (rand() < WOLF_PELT_CHANCE) out.push({ item: Item.WOLF_PELT, count: 1 });
@@ -1461,7 +1463,7 @@ function applyAction(world, a) {
 }
 
 // src/net/protocol.ts
-var PROTOCOL_VERSION = 21;
+var PROTOCOL_VERSION = 22;
 var MAX_PLAYERS = 10;
 var ROOMS = [
   { id: 1, name: "Sala 1", seed: 20261106 }
@@ -1593,7 +1595,9 @@ var MONSTER_STATS = {
   "wolf-gray": { hp: 45, attack: 13, defense: 2 },
   "wolf-white": { hp: 55, attack: 15, defense: 3 },
   /** Goblin comum: vida 60, ataque nominal 15, mesma fórmula dos lobos. */
-  goblin: { hp: 60, attack: 15, defense: 2 }
+  goblin: { hp: 60, attack: 15, defense: 2 },
+  /** Homem-lagarto (v0.93.60): vida 100, ataque nominal 15 (dono do produto, 14/11/2026); defesa como a do goblin. */
+  lizard: { hp: 100, attack: 15, defense: 2 }
 };
 var DAMAGE_SPREAD = 0.1;
 var CRIT_CHANCE = 0.05;
@@ -2405,6 +2409,9 @@ var WOLF_SIGHT = 3;
 var GOBLIN_SIGHT = WOLF_SIGHT * SUBDIV;
 var GOBLIN_ATTACK_SECONDS = 0.55;
 var GOBLIN_ALERT_SECONDS = 0.48;
+function hasPoses(kind) {
+  return kind === "goblin" || kind === "lizard";
+}
 var GOBLIN_VISUALS = ["idle", "walk", "run", "alert", "attack", "hurt"];
 var MONSTERS = {
   "spider-small": { spec: { speed: 2.1, halfW: 0.3, halfD: 0.18, stepHeight: 0 }, sight: 6, leash: 5, biteEvery: 1, respawn: 40, deathSeconds: 0.7 },
@@ -2418,6 +2425,16 @@ var MONSTERS = {
   // Goblins guard a campfire in groups of seven; aggression only within 3 cells.
   goblin: {
     spec: { speed: 2.75, halfW: 0.34, halfD: 0.21, stepHeight: 1 },
+    sight: WOLF_SIGHT,
+    leash: 4,
+    biteEvery: 1.2,
+    respawn: 150,
+    deathSeconds: 0.95,
+    open: true
+  },
+  // Homem-lagarto (v0.93.60): vive junto de rios e anda em grupos de três; mesma visão, coleira e ritmo do goblin.
+  lizard: {
+    spec: { speed: 2.9, halfW: 0.34, halfD: 0.21, stepHeight: 1 },
     sight: WOLF_SIGHT,
     leash: 4,
     biteEvery: 1.2,
@@ -2505,7 +2522,7 @@ var Monster = class extends Walker {
     if (this.dead || this.biteCd > 0 || this.hurt > 0) return false;
     if (Math.hypot(target.x - this.x, target.y - this.y) > this.reach + 0.15) return false;
     this.biteCd = MONSTERS[this.kind].biteEvery;
-    if (this.kind === "goblin") this.attackAnim = GOBLIN_ATTACK_SECONDS;
+    if (hasPoses(this.kind)) this.attackAnim = GOBLIN_ATTACK_SECONDS;
     return true;
   }
   /**
@@ -2529,7 +2546,7 @@ var Monster = class extends Walker {
     const steps = flow ? flow(cx, cy) : -1;
     const chasing = targetInside && (def.open ? dist <= def.sight : flow ? steps >= 0 && steps <= def.sight * 1.6 : dist < def.sight);
     if (chasing) {
-      if (this.kind === "goblin" && !this.chasing) this.alertAnim = GOBLIN_ALERT_SECONDS;
+      if (hasPoses(this.kind) && !this.chasing) this.alertAnim = GOBLIN_ALERT_SECONDS;
       this.chasing = true;
       const reach = this.reach;
       if (dist <= reach) {
@@ -3266,7 +3283,6 @@ function wolfPacks(world) {
 
 // src/world/goblins.ts
 var GOBLIN_PACK_SIZE = 7;
-var GOBLIN_CAMP_COUNT = 4;
 var GOBLIN_CAMP_ROAM = 11 * SUBDIV;
 var GOBLIN_CAMP_SLOTS = [
   [0, -3],
@@ -3294,26 +3310,78 @@ function open2(world, x, y) {
   if (ground2 === Block.VOID || ground2 === Block.HOLE || ground2 === Block.WATER || def.liquid || !standable) return false;
   return cell.upper === Block.AIR;
 }
+var PACK_REGION = 32 * SUBDIV;
+var PACK_REGION_RADIUS = 10;
+function regionPoint(seed, rx, ry, salt, tries) {
+  const out = [];
+  for (let i = 0; i < tries; i++) {
+    const x = rx * PACK_REGION + Math.floor(hash2(seed, rx * 131 + i + salt, ry * 977 + salt) * PACK_REGION);
+    const y = ry * PACK_REGION + Math.floor(hash2(seed, rx * 577 + salt, ry * 313 + i + salt * 3) * PACK_REGION);
+    out.push([x, y]);
+  }
+  return out;
+}
 function planGoblinCamps(world) {
   if (world.profile.id !== "principal" || !world.town) return [];
   const town = world.town;
-  const mx = (town.area.x0 + town.area.x1) / 2;
-  const my = (town.area.y0 + town.area.y1) / 2;
-  const rx = (town.area.x1 - town.area.x0 + 1) / 2;
-  const ry = (town.area.y1 - town.area.y0 + 1) / 2;
+  const mx = Math.floor((town.area.x0 + town.area.x1) / 2);
+  const my = Math.floor((town.area.y0 + town.area.y1) / 2);
+  const r0x = Math.floor(mx / PACK_REGION), r0y = Math.floor(my / PACK_REGION);
   const camps = [];
-  for (let i = 0; i < 1800 && camps.length < GOBLIN_CAMP_COUNT; i++) {
-    const angle = hash2(world.seed, 113 + i, 274) * Math.PI * 2;
-    const extra = (36 + hash2(world.seed, 938 + i, 181) * Math.min(220, 56 + Math.floor(i / 15) * 8)) * SUBDIV;
-    const x = Math.round(mx + Math.cos(angle) * (rx + extra));
-    const y = Math.round(my + Math.sin(angle) * (ry + extra));
-    if (camps.some((c) => Math.hypot(c.x - x, c.y - y) < 32 * SUBDIV)) continue;
-    if (!open2(world, x, y)) continue;
-    const slots = GOBLIN_CAMP_SLOTS.map(([dx, dy]) => [x + dx, y + dy]);
-    if (!slots.every(([sx, sy]) => open2(world, sx, sy))) continue;
-    camps.push({ x, y, slots });
+  for (let ry = r0y - PACK_REGION_RADIUS; ry <= r0y + PACK_REGION_RADIUS; ry++) {
+    for (let rx = r0x - PACK_REGION_RADIUS; rx <= r0x + PACK_REGION_RADIUS; rx++) {
+      for (const [x, y] of regionPoint(world.seed, rx, ry, 113, 8)) {
+        if (x >= town.area.x0 - 36 * SUBDIV && x <= town.area.x1 + 36 * SUBDIV && y >= town.area.y0 - 36 * SUBDIV && y <= town.area.y1 + 36 * SUBDIV) continue;
+        if (camps.some((c) => Math.hypot(c.x - x, c.y - y) < 24 * SUBDIV)) continue;
+        if (!open2(world, x, y)) continue;
+        const slots = GOBLIN_CAMP_SLOTS.map(([dx, dy]) => [x + dx, y + dy]);
+        if (!slots.every(([sx, sy]) => open2(world, sx, sy))) continue;
+        camps.push({ x, y, slots });
+        break;
+      }
+    }
   }
   return camps;
+}
+var LIZARD_PACK_SIZE = 3;
+var LIZARD_ROAM = 9 * SUBDIV;
+var LIZARD_SLOTS = [[0, 0], [2, 1], [-2, 1]].map(([dx, dy]) => [dx * SUBDIV, dy * SUBDIV]);
+function lizardRoam(x, y) {
+  return { x0: x - LIZARD_ROAM, y0: y - LIZARD_ROAM, x1: x + LIZARD_ROAM, y1: y + LIZARD_ROAM };
+}
+function freeLand(world, x, y) {
+  return open2(world, x, y) && world.generator.cellAt(x, y).object === Block.AIR;
+}
+function planLizardPacks(world, riverAt, avoid = []) {
+  if (world.profile.id !== "principal" || !world.town) return [];
+  const town = world.town;
+  const mx = Math.floor((town.area.x0 + town.area.x1) / 2);
+  const my = Math.floor((town.area.y0 + town.area.y1) / 2);
+  const r0x = Math.floor(mx / PACK_REGION), r0y = Math.floor(my / PACK_REGION);
+  const packs = [];
+  for (let ry = r0y - PACK_REGION_RADIUS; ry <= r0y + PACK_REGION_RADIUS; ry++) {
+    for (let rx = r0x - PACK_REGION_RADIUS; rx <= r0x + PACK_REGION_RADIUS; rx++) {
+      for (const [x, y] of regionPoint(world.seed, rx, ry, 271, 40)) {
+        if (x >= town.area.x0 - 24 * SUBDIV && x <= town.area.x1 + 24 * SUBDIV && y >= town.area.y0 - 24 * SUBDIV && y <= town.area.y1 + 24 * SUBDIV) continue;
+        if (!riverAt(x, y)) continue;
+        let spot = null;
+        for (let d = 1; d <= 4 * SUBDIV && !spot; d++) {
+          for (const [ox, oy] of [[d, 0], [-d, 0], [0, d], [0, -d], [d, d], [-d, d], [d, -d], [-d, -d]]) {
+            const sx = x + ox, sy = y + oy;
+            if (freeLand(world, sx, sy) && LIZARD_SLOTS.every(([dx, dy]) => freeLand(world, sx + dx, sy + dy))) {
+              spot = [sx, sy];
+              break;
+            }
+          }
+        }
+        if (!spot) continue;
+        if (avoid.some((c) => Math.hypot(c.x - spot[0], c.y - spot[1]) < 12 * SUBDIV)) continue;
+        packs.push({ x: spot[0], y: spot[1], slots: LIZARD_SLOTS.map(([dx, dy]) => [spot[0] + dx, spot[1] + dy]) });
+        break;
+      }
+    }
+  }
+  return packs;
 }
 var GoblinCampTerrain = class {
   constructor(source, camps) {
@@ -3378,6 +3446,8 @@ function canSit(body) {
 var FLOW_EVERY = 0.25;
 var RESPAWN_CLEARANCE = 10 * SUBDIV;
 var ACTIVE_RADIUS = 48 * SUBDIV;
+var PACK_SPAWN_RADIUS = 56 * SUBDIV;
+var PACK_DROP_RADIUS = 80 * SUBDIV;
 var FLOCK_SIZE = 4;
 var SWORD_REACH = 1.45 * SUBDIV;
 var SWORD_ARC_COS = 0.3;
@@ -3523,7 +3593,7 @@ var Entities = class {
    * Bichos do mundo (os mesmos em qualquer aparelho e na sala, pela seed): rebanho, cavalo, vacas e galinhas no campo
    * diante do portão (mundos com animais) e os monstros da dungeon.
    */
-  spawnWildlife(world) {
+  spawnWildlife(world, stream = false) {
     if (world.profile.sheep) {
       const [gx, gy] = world.outsideGate();
       const town = !!world.town;
@@ -3535,7 +3605,10 @@ var Entities = class {
     }
     this.spawnMonsters(world);
     this.spawnWolves(world);
-    this.spawnGoblins(world);
+    if (!stream) {
+      this.spawnGoblins(world);
+      this.spawnLizards(world);
+    }
   }
   /** Monstros nos pontos da dungeon (posições pela seed; o sorteio do passeio usa `rand`). */
   spawnMonsters(world) {
@@ -3547,9 +3620,13 @@ var Entities = class {
   spawnWolves(world) {
     for (const w of wolfPacks(world)) this.monsters.push(new Monster(w.kind, w.x, w.y, wolfRoam(w.homeX, w.homeY), this.rand, w.homeX, w.homeY));
   }
-  /** Exactly seven goblins around each deterministic campfire in the open world. */
-  spawnGoblins(world) {
+  /**
+   * Exactly seven goblins around each deterministic campfire in the open world. Sem `wake`, todos os acampamentos (testes e
+   * mundos pequenos); com `wake`, só os que passam no teste (o streaming de `updatePacks`).
+   */
+  spawnGoblins(world, wake) {
     for (const camp of world.goblinCamps) {
+      if (wake && !wake(camp.x + 0.5, camp.y + 0.5)) continue;
       if (world.getObject(camp.x, camp.y) !== Block.CAMPFIRE) continue;
       const bounds = goblinRoam(camp.x, camp.y);
       const existing = this.monsters.filter((m) => m.kind === "goblin" && Math.abs(m.homeX - (camp.x + 0.5)) <= 5 * SUBDIV && Math.abs(m.homeY - (camp.y + 0.5)) <= 5 * SUBDIV);
@@ -3560,6 +3637,57 @@ var Entities = class {
         if (existing.some((m) => Math.hypot(m.homeX - px, m.homeY - py) < 0.2)) continue;
         this.monsters.push(new Monster("goblin", px, py, bounds, this.rand, px, py));
       }
+      this.livePacks.add(`g:${camp.x},${camp.y}`);
+    }
+  }
+  /** Bandos de três homens-lagarto na margem dos rios (mesma regra de `wake`). */
+  spawnLizards(world, wake) {
+    for (const pack of world.lizardPacks) {
+      if (wake && !wake(pack.x + 0.5, pack.y + 0.5)) continue;
+      const bounds = lizardRoam(pack.x, pack.y);
+      const existing = this.monsters.filter((m) => m.kind === "lizard" && Math.abs(m.homeX - (pack.x + 0.5)) <= 5 * SUBDIV && Math.abs(m.homeY - (pack.y + 0.5)) <= 5 * SUBDIV);
+      if (existing.length >= LIZARD_PACK_SIZE) continue;
+      for (const [x, y] of pack.slots) {
+        if (!world.isWalkable(x, y)) continue;
+        const px = x + 0.5, py = y + 0.5;
+        if (existing.some((m) => Math.hypot(m.homeX - px, m.homeY - py) < 0.2)) continue;
+        this.monsters.push(new Monster("lizard", px, py, bounds, this.rand, px, py));
+      }
+      this.livePacks.add(`l:${pack.x},${pack.y}`);
+    }
+  }
+  /** Bandos que estão no jogo agora (chave `g:x,y` / `l:x,y`): o resto do mundo só existe no plano da seed. */
+  livePacks = /* @__PURE__ */ new Set();
+  packTimer = 0;
+  /**
+   * Streaming dos bandos (v0.93.60): com ~170 acampamentos e bandos de rio no mundo, só vivem os que têm um jogador a até
+   * `PACK_SPAWN_RADIUS`; quando todos se afastam além de `PACK_DROP_RADIUS` o bando sai (com os renascimentos pendentes) e
+   * volta completo na próxima aproximação. Roda a cada 0,5 s.
+   */
+  updatePacks(dt, world) {
+    this.packTimer -= dt;
+    if (this.packTimer > 0) return;
+    this.packTimer = 0.5;
+    const hs = this.hunters();
+    if (!hs.length) return;
+    const near = (x, y, r) => hs.some((h) => Math.abs(h.x - x) <= r && Math.abs(h.y - y) <= r);
+    this.spawnGoblins(world, (x, y) => near(x, y, PACK_SPAWN_RADIUS) && !this.livePacks.has(`g:${Math.floor(x)},${Math.floor(y)}`));
+    this.spawnLizards(world, (x, y) => near(x, y, PACK_SPAWN_RADIUS) && !this.livePacks.has(`l:${Math.floor(x)},${Math.floor(y)}`));
+    for (const key of [...this.livePacks]) {
+      const [kind, xy] = key.split(":");
+      const [x, y] = xy.split(",").map(Number);
+      if (near(x + 0.5, y + 0.5, PACK_DROP_RADIUS)) continue;
+      const mk = kind === "g" ? "goblin" : "lizard";
+      const mine = (hx, hy) => Math.abs(hx - (x + 0.5)) <= 5 * SUBDIV && Math.abs(hy - (y + 0.5)) <= 5 * SUBDIV;
+      for (let i = this.monsters.length - 1; i >= 0; i--) {
+        const m = this.monsters[i];
+        if (m.kind === mk && mine(m.homeX, m.homeY)) this.monsters.splice(i, 1);
+      }
+      for (let i = this.respawns.length - 1; i >= 0; i--) {
+        const r = this.respawns[i];
+        if (r.kind === mk && mine(r.x, r.y)) this.respawns.splice(i, 1);
+      }
+      this.livePacks.delete(key);
     }
   }
   /** When old saves replace the generated campfire tile with a player edit,
@@ -3619,6 +3747,7 @@ var Entities = class {
     }
     if (this.remote) return;
     this.updateRespawns(dt);
+    this.updatePacks(dt, world);
     this.finishCourtships(world);
     this.formPairs();
     this.startCourtships();
@@ -4026,8 +4155,8 @@ var Entities = class {
       });
     }
     for (const m of this.monsters) {
-      const state = m.kind === "goblin" ? m.visualState : null;
-      const kind = state ? state === "walk" ? "goblin" : `goblin-${state}` : m.kind;
+      const state = hasPoses(m.kind) ? m.visualState : null;
+      const kind = state ? state === "walk" ? m.kind : `${m.kind}-${state}` : m.kind;
       out.push({
         kind,
         x: m.x,
@@ -4687,6 +4816,11 @@ var WorldGenerator = class {
     const m = this.climate.fbm2(x / 300 - 913.1, y / 300 + 77.7, 3);
     return pickBiome(t * 1.9, m * 1.9);
   }
+  /** Célula de rio (água de rio, não de lago nem de mar)? Usada para plantar os bandos de homem-lagarto. */
+  riverAt(x, y) {
+    const e = this.elevation(x, y);
+    return e >= WATER_LEVEL && e < MOUNTAIN_LEVEL - 0.04 && this.isRiver(x, y);
+  }
   isRiver(x, y) {
     x /= SUBDIV;
     y /= SUBDIV;
@@ -4842,6 +4976,8 @@ var World = class {
   town = null;
   /** Camps with seven goblins around the existing Campfire block (seed based). */
   goblinCamps = [];
+  /** Bandos de três homens-lagarto na margem dos rios (seed based, v0.93.60). */
+  lizardPacks = [];
   /** Interiores das construções da cidade (ADR 0014): cômodos isolados e protegidos. Vazio sem cidade. */
   interiors = [];
   /** Buracos enchendo de água (estado de execução; ao carregar, `settleWater` reagenda). */
@@ -4857,6 +4993,7 @@ var World = class {
   constructor(seed, profile = WORLD_PROFILES.principal) {
     this.profile = profile;
     this.generator = profile.terrain.kind === "flat" ? new FlatGenerator(seed, profile.terrain.ground) : new WorldGenerator(seed);
+    const baseTerrain = this.generator;
     const b = profile.bounds;
     this.cellBounds = b ? { x0: b.cx0 * CHUNK_SIZE, y0: b.cy0 * CHUNK_SIZE, x1: (b.cx1 + 1) * CHUNK_SIZE - 1, y1: (b.cy1 + 1) * CHUNK_SIZE - 1 } : null;
     if (profile.town) {
@@ -4880,6 +5017,7 @@ var World = class {
     if (this.interiors.length) this.generator = new InteriorTerrain(this.generator, this.interiors);
     this.goblinCamps.push(...planGoblinCamps(this));
     if (this.goblinCamps.length) this.generator = new GoblinCampTerrain(this.generator, this.goblinCamps);
+    if (baseTerrain instanceof WorldGenerator) this.lizardPacks.push(...planLizardPacks(this, (x, y) => baseTerrain.riverAt(x, y), this.goblinCamps));
   }
   /**
    * Célula dentro da dungeon, da cidade (muralhas incluídas) ou de um interior — ou num chunk que tem pedaço da muralha
@@ -5708,7 +5846,7 @@ var Room = class {
     this.loadAround(gx, gy + 6, 24);
     const d = this.world.dungeon;
     if (d) this.loadRect(d.area.x0, d.area.y0, d.area.x1, d.area.y1);
-    e.spawnWildlife(this.world);
+    e.spawnWildlife(this.world, true);
   }
   id;
   name;
@@ -5949,7 +6087,7 @@ var Room = class {
       if (m.moving) s.m = 1;
       if (m.hp < m.maxHp) s.p = round2(Math.max(0, m.hp / m.maxHp));
       if (m.hurt > 0) s.h = 1;
-      if (m.kind === "goblin") {
+      if (hasPoses(m.kind)) {
         s.v = GOBLIN_VISUALS.indexOf(m.visualState);
         s.r = m.visualFrame;
       }
