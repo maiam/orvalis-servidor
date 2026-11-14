@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.93.60 (9baf79f) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.93.61 (cfe7362) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -1463,7 +1463,7 @@ function applyAction(world, a) {
 }
 
 // src/net/protocol.ts
-var PROTOCOL_VERSION = 22;
+var PROTOCOL_VERSION = 23;
 var MAX_PLAYERS = 10;
 var ROOMS = [
   { id: 1, name: "Sala 1", seed: 20261106 }
@@ -1911,7 +1911,7 @@ var Sheep = class extends Breeder {
 
 // src/game/horse.ts
 var FARM_GROW_UP_SECONDS = 3 * DAY_LENGTH_S;
-var BABY_KIND = { horse: "foal", cow: "calf", chicken: "chick" };
+var BABY_KIND = { horse: "foal", cow: "calf", chicken: "chick", capybara: "capybara" };
 var FARM = {
   horse: {
     adult: { speed: 1.8, halfW: 0.4, halfD: 0.2, stepHeight: 0 },
@@ -1926,6 +1926,13 @@ var FARM = {
     idle: [3, 8],
     walk: [1.5, 3.5],
     leash: 8
+  },
+  capybara: {
+    adult: { speed: 0.8, halfW: 0.34, halfD: 0.2, stepHeight: 0 },
+    baby: { speed: 0.8, halfW: 0.34, halfD: 0.2, stepHeight: 0 },
+    idle: [3, 9],
+    walk: [1.2, 3],
+    leash: 7
   },
   chicken: {
     adult: { speed: 1.3, halfW: 0.22, halfD: 0.14, stepHeight: 0 },
@@ -2410,7 +2417,7 @@ var GOBLIN_SIGHT = WOLF_SIGHT * SUBDIV;
 var GOBLIN_ATTACK_SECONDS = 0.55;
 var GOBLIN_ALERT_SECONDS = 0.48;
 function hasPoses(kind) {
-  return kind === "goblin" || kind === "lizard";
+  return kind === "goblin" || kind === "lizard" || isWolf(kind);
 }
 var GOBLIN_VISUALS = ["idle", "walk", "run", "alert", "attack", "hurt"];
 var MONSTERS = {
@@ -3456,19 +3463,20 @@ var PICK_BOX = {
   sheep: [[1.15, 0.45], [0.85, 0.35]],
   horse: [[1.5, 0.55], [1.05, 0.4]],
   cow: [[1.25, 0.5], [0.95, 0.4]],
-  chicken: [[0.8, 0.3], [0.65, 0.26]]
+  chicken: [[0.8, 0.3], [0.65, 0.26]],
+  capybara: [[0.95, 0.45], [0.95, 0.45]]
 };
 var LOVE_FRAMES = 16;
-var LOVE_SCALE = { sheep: 1, cow: 1.05, chicken: 0.7, horse: 1.25 };
+var LOVE_SCALE = { sheep: 1, cow: 1.05, chicken: 0.7, horse: 1.25, capybara: 1 };
 var PAIR_RANGE = 6 * SUBDIV;
 var COURT_DISTANCE = 1.5 * SUBDIV;
 var MAX_SHEEP = 16;
-var MAX_PER_SPECIES = { sheep: MAX_SHEEP, horse: 6, cow: 10, chicken: 12 };
+var MAX_PER_SPECIES = { sheep: MAX_SHEEP, horse: 6, cow: 10, chicken: 12, capybara: 6 };
 function heroActorKind(body, equipped, attackTool, attacking) {
   if (attacking && attackTool && TOOLS[attackTool].swings) return `${body}-${attackTool}-attack`;
   return equipped ? `${body}-${equipped}` : body;
 }
-var ANIMAL_KINDS = /* @__PURE__ */ new Set(["sheep", "horse", "cow", "chicken"]);
+var ANIMAL_KINDS = /* @__PURE__ */ new Set(["sheep", "horse", "cow", "chicken", "capybara"]);
 var finiteNum = (v) => typeof v === "number" && Number.isFinite(v) && Math.abs(v) < 2 ** 30;
 var NOBODY = { x: 1e9, y: 1e9 };
 var Entities = class {
@@ -3602,6 +3610,7 @@ var Entities = class {
       this.spawnHorse(world, gx + 9 * s, gy + (town ? 10 : 2) * s);
       this.spawnAnimals(world, "cow", gx - 9 * s, gy + (town ? 10 : 2) * s, 2, 91);
       this.spawnAnimals(world, "chicken", gx - 6 * s, gy + (town ? 6 : 1) * s, 4, 97);
+      this.spawnAnimals(world, "capybara", gx - 8 * s, gy + (town ? 4 : 1) * s, 3, 103);
     }
     this.spawnMonsters(world);
     this.spawnWolves(world);
@@ -4116,7 +4125,7 @@ var Entities = class {
     }
     for (const h of this.horses) {
       out.push({
-        kind: h.baby ? BABY_KIND[h.kind] : h.kind,
+        kind: h.baby ? BABY_KIND[h.kind] : h.kind === "capybara" && !h.moving ? "capybara-idle" : h.kind,
         x: h.x,
         y: h.y,
         visualZ: h.visualZ,
