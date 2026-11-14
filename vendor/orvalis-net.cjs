@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.93.75 (67e7e6f) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.93.76 (8f4572c) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -57,7 +57,8 @@ function gridSubdiv() {
 var SUBDIV = gridSubdiv();
 var TILE = 32;
 var CUBE_FRONT = 18;
-var MAX_STACK = 2;
+var CUBE_LEVELS = 4;
+var MAX_STACK = CUBE_LEVELS;
 var SANCTUARY_MAX_STACK = 5;
 var STEP_HEIGHT = 1;
 var CHUNK_SIZE = 16;
@@ -96,10 +97,6 @@ var Block = {
   /** Porta de parede (v0.93.25): bloco dentro de uma fileira leste–oeste, entre duas paredes; o id guarda o estado (fechada sólida, aberta passável). */
   WALL_DOOR_PLANKS: 242,
   WALL_DOOR_PLANKS_OPEN: 243,
-  // --- lajes de Carvalho (piloto `?tabua=laje`, v0.93.73): topo 16 × 16 e face de 4, 6 e 8 px; só se fabricam e se colocam no piloto (offline) ---
-  OAK_SLAB_1: 250,
-  OAK_SLAB_2: 251,
-  OAK_SLAB_3: 252,
   // --- porta (objeto de 3 níveis de altura; o id guarda o estado) ---
   OAK_DOOR: 28,
   /** Porta aberta: mesma porta, passável. Só existe no mundo (a hotbar coloca a fechada). */
@@ -294,7 +291,13 @@ var object = (id, name, extra = {}) => ({
 var REMOVED_BLOCK_FIRST = 210;
 var REMOVED_BLOCK_LAST = 225;
 function isRemovedBlock(id) {
-  return id >= REMOVED_BLOCK_FIRST && id <= REMOVED_BLOCK_LAST;
+  return id >= REMOVED_BLOCK_FIRST && id <= REMOVED_BLOCK_LAST || id >= PILOT_SLAB_FIRST && id <= PILOT_SLAB_LAST;
+}
+var PILOT_SLAB_FIRST = 250;
+var PILOT_SLAB_LAST = 252;
+function isStackBlock(id) {
+  const d = blockDef(id);
+  return d.layer === "object" && d.shape === "cube" && d.placeable;
 }
 function isRemovedStack(stack) {
   if (RETIRED_ITEMS.has(stack)) return true;
@@ -322,9 +325,6 @@ var defs = [
   object(Block.STONE_BRICK_CRACKED, "Tijolo de Pedra Rachado", { stone: true }),
   object(Block.OAK_LOG, "Tora de Carvalho", { organic: "wood" }),
   object(Block.OAK_PLANKS, "T\xE1bua de Carvalho", { organic: "wood" }),
-  object(Block.OAK_SLAB_1, "Laje 1 de Carvalho (4\xD716)", { organic: "wood" }),
-  object(Block.OAK_SLAB_2, "Laje 2 de Carvalho (6\xD716)", { organic: "wood" }),
-  object(Block.OAK_SLAB_3, "Laje 3 de Carvalho (8\xD716)", { organic: "wood" }),
   object(Block.CHERRY_LOG, "Tora de Cerejeira", { organic: "wood" }),
   object(Block.CHERRY_PLANKS, "T\xE1bua de Cerejeira", { organic: "wood" }),
   object(Block.BIRCH_LOG, "Tora de B\xE9tula", { organic: "wood" }),
@@ -492,7 +492,6 @@ var CELESTIAL_BLOCKS = [
   Block.WOOD_CELESTIAL,
   Block.FOLIAGE_GOLDEN
 ];
-var SLAB_BLOCKS = [Block.OAK_SLAB_1, Block.OAK_SLAB_2, Block.OAK_SLAB_3];
 var HOTBAR_BLOCKS = [
   ...MATERIALS,
   Block.OAK_DOOR,
@@ -1251,7 +1250,7 @@ function toolDrops(tool, id, rand = Math.random) {
   return dropsFor(id, rand);
 }
 var TOOL_ORDER = [Tool.SWORD, Tool.HOE, Tool.PICKAXE, Tool.SHOVEL, Tool.AXE];
-var COLLECTABLE = /* @__PURE__ */ new Set([...MATERIALS, ...SLAB_BLOCKS, Block.OAK_DOOR, Block.TENT, Block.CHEST, Block.CAMPFIRE, Block.CAULDRON, Block.OVEN, Block.CHAIR, Block.FENCE, Block.WALL_PLANKS, Block.WALL_STONE, Block.WALL_DOOR_PLANKS]);
+var COLLECTABLE = /* @__PURE__ */ new Set([...MATERIALS, Block.OAK_DOOR, Block.TENT, Block.CHEST, Block.CAMPFIRE, Block.CAULDRON, Block.OVEN, Block.CHAIR, Block.FENCE, Block.WALL_PLANKS, Block.WALL_STONE, Block.WALL_DOOR_PLANKS]);
 var ADULT_TREES = /* @__PURE__ */ new Set([Block.OAK_TREE, Block.APPLE_TREE, Block.APPLE_TREE_BARE]);
 function blockDrops(id, rand = Math.random) {
   if (ADULT_TREES.has(id)) return [{ item: blockStack(Block.OAK_LOG), count: 2 + (rand() < 0.5 ? 1 : 0) }];
@@ -1267,15 +1266,6 @@ function breakDrops(tool, id, collect, rand = Math.random) {
   return [...toolDrops(tool, id, rand), ...collect ? blockDrops(id, rand) : []];
 }
 var RECIPES = [
-  // Lajes de Carvalho (piloto `?tabua=laje`, v0.93.73): 1 Tábua rende 4, 3 ou 2 lajes (4, 6 e 8 px de face).
-  ...[["laje1", "Laje 1 de Carvalho (4\xD716)", Block.OAK_SLAB_1, 4], ["laje2", "Laje 2 de Carvalho (6\xD716)", Block.OAK_SLAB_2, 3], ["laje3", "Laje 3 de Carvalho (8\xD716)", Block.OAK_SLAB_3, 2]].map(([id, name, out, n]) => ({
-    id,
-    name,
-    profession: "builder",
-    pilot: "laje",
-    inputs: [{ item: blockStack(Block.OAK_PLANKS), count: 1 }],
-    output: { item: blockStack(out), count: n }
-  })),
   {
     id: "oak-planks",
     name: "T\xE1bua de Carvalho",
@@ -1484,7 +1474,7 @@ function applyAction(world, a) {
 }
 
 // src/net/protocol.ts
-var PROTOCOL_VERSION = 23;
+var PROTOCOL_VERSION = 24;
 var MAX_PLAYERS = 10;
 var ROOMS = [
   { id: 1, name: "Sala 1", seed: 20261106 }
@@ -1656,8 +1646,6 @@ var Walker = class {
   /** Nível lógico (inteiro) e exibido (suavizado). */
   z = 0;
   visualZ = 0;
-  /** Quanto o corpo sobe por cima de uma laje (piloto `?tabua=laje`; 0 no resto): só o visual, a lógica fica em `z`. */
-  lift = 0;
   /** Especificação física (mutável: o filhote cresce), já em células da grade atual. */
   spec;
   /**
@@ -1665,7 +1653,7 @@ var Walker = class {
    * Retorna a distância efetivamente percorrida.
    */
   move(dt, ix, iy, world, blocked) {
-    this.visualZ += (this.z + this.lift - this.visualZ) * (1 - Math.exp(-Z_SMOOTH * dt));
+    this.visualZ += (this.z / world.cubeLevels - this.visualZ) * (1 - Math.exp(-Z_SMOOTH * dt));
     let len = Math.hypot(ix, iy);
     if (len > 1) {
       ix /= len;
@@ -1697,21 +1685,11 @@ var Walker = class {
     this.x = x;
     this.y = y;
     this.z = h;
-    this.lift = this.liftAt(x, y, world);
-  }
-  /** O maior `slabLift` entre as células sob a caixa dos pés (0 sem lajes no mundo). */
-  liftAt(x, y, world) {
-    if (!world.hasSlabs) return 0;
-    const { halfW, halfD } = this.spec;
-    let lift = 0;
-    for (let cy = Math.floor(y - halfD); cy <= Math.floor(y + halfD); cy++) {
-      for (let cx = Math.floor(x - halfW); cx <= Math.floor(x + halfW); cx++) lift = Math.max(lift, world.slabLift(cx, cy));
-    }
-    return lift;
   }
   /** Altura de apoio na posição, ou null se bloqueado (degrau alto, água, buraco, árvore). */
   supportHeight(x, y, world) {
-    const { halfW, halfD, stepHeight } = this.spec;
+    const { halfW, halfD } = this.spec;
+    const stepHeight = world.stepLevels(this.spec.stepHeight);
     const x0 = Math.floor(x - halfW);
     const x1 = Math.floor(x + halfW);
     const y0 = Math.floor(y - halfD);
@@ -1733,10 +1711,7 @@ var Walker = class {
   /** Recalcula o apoio no lugar (ex.: o bloco sob os pés foi quebrado). */
   settle(world) {
     const h = this.supportHeight(this.x, this.y, world);
-    if (h !== null) {
-      this.z = h;
-      this.lift = this.liftAt(this.x, this.y, world);
-    }
+    if (h !== null) this.z = h;
   }
   /** A caixa dos pés ocupa a célula? */
   occupies(cx, cy) {
@@ -4658,15 +4633,12 @@ function rescaleHoles(holes, f) {
   });
 }
 
-// src/world/slabs.ts
-var SLAB_STACK_MAX = 4;
-var SLABS = [
-  { id: Block.OAK_SLAB_1, recipe: "laje1", facepx: 4, height: 4 / 16 },
-  { id: Block.OAK_SLAB_2, recipe: "laje2", facepx: 6, height: 6 / 16 },
-  { id: Block.OAK_SLAB_3, recipe: "laje3", facepx: 8, height: 8 / 16 }
-];
-function slabHeightOf(id) {
-  return SLABS.find((s) => s.id === id)?.height ?? 0;
+// src/world/quarters.ts
+function quarterLevel(obj, upper, level) {
+  if (!isStackBlock(obj)) return level === 0 ? obj : level === 1 ? upper : Block.AIR;
+  if (level < 0 || level >= 4) return Block.AIR;
+  if (!isStackBlock(upper)) return obj;
+  return level < 2 ? obj : upper;
 }
 
 // src/world/walls.ts
@@ -4753,10 +4725,6 @@ var Chunk = class {
     this.ground[ly * CHUNK_SIZE + lx] = id;
     this.modified = true;
     this.version++;
-  }
-  /** Acrescenta níveis vazios até ter `n` (o piloto das lajes sobe o limite de pilha com chunks já gerados). */
-  growLevels(n) {
-    while (this.levels.length < n) this.levels.push(new Uint8Array(CHUNK_SIZE * CHUNK_SIZE));
   }
   /** Define o bloco de um nível da célula. */
   setLevel(lx, ly, level, id) {
@@ -5210,9 +5178,13 @@ var World = class {
   generator;
   profile;
   /** Profundidade de pilha específica do perfil: Mundo 2, Santuário 5. */
-  /** Níveis de pilha por célula (2 no Mundo, 5 no Santuário; o piloto das lajes eleva para `SLAB_STACK_MAX` enquanto ligado). */
+  /** Níveis de pilha por célula: 4 blocos de 1/4 no Mundo (ADR 0033) e 5 cubos cheios no Santuário. */
   maxStack;
-  baseMaxStack;
+  /**
+   * Quantos níveis valem 1 célula de altura (o cubo antigo): 4 no Mundo (cada bloco tem 1/4 de célula), 1 no Santuário. É a escala entre o
+   * apoio lógico `z`/`standHeight` (em níveis) e o visual (`visualZ`, em células).
+   */
+  cubeLevels;
   /** Limites em células (inclusivos) quando o perfil limita o mundo. */
   cellBounds;
   /** Chunks por chave numérica (`numKey`): evita criar strings a cada leitura de célula. */
@@ -5250,7 +5222,8 @@ var World = class {
   spawn = null;
   constructor(seed, profile = WORLD_PROFILES.principal) {
     this.profile = profile;
-    this.maxStack = this.baseMaxStack = profile.id === "santuario" ? SANCTUARY_MAX_STACK : MAX_STACK;
+    this.maxStack = profile.id === "santuario" ? SANCTUARY_MAX_STACK : MAX_STACK;
+    this.cubeLevels = profile.id === "santuario" ? 1 : CUBE_LEVELS;
     this.generator = profile.id === "santuario" && profile.bounds ? new SanctuarySeedGenerator(seed, profile.bounds) : profile.terrain.kind === "flat" ? new FlatGenerator(seed, profile.terrain.ground) : new WorldGenerator(seed);
     const baseTerrain = this.generator;
     const b = profile.bounds;
@@ -5401,9 +5374,23 @@ var World = class {
       this.generator.generateChunk(cx, cy, chunk.ground, chunk.objects, chunk.upper);
       if (this.generator instanceof SanctuarySeedGenerator)
         this.generator.fillHighLevels(cx, cy, chunk.levels);
+      else if (this.cubeLevels > 1) this.expandQuarters(chunk);
       this.chunks.set(key, chunk);
     }
     return chunk;
+  }
+  /**
+   * Terreno gerado → blocos de 1/4 (ADR 0033): onde o gerador pôs um cubo de construção (pedra da montanha, tijolo da muralha), a
+   * célula vira 4 blocos empilhados (`quarterLevel`), com a mesma altura de antes.
+   */
+  expandQuarters(chunk) {
+    const n = chunk.ground.length;
+    for (let i = 0; i < n; i++) {
+      const obj = chunk.levels[0][i];
+      if (!isStackBlock(obj)) continue;
+      const up = chunk.levels[1][i];
+      for (let l = 1; l < chunk.levels.length; l++) chunk.levels[l][i] = quarterLevel(obj, up, l);
+    }
   }
   /** Chão da célula. Fora de chunk carregado consulta o gerador (puro); fora dos limites, céu. */
   getGround(x, y) {
@@ -5419,19 +5406,18 @@ var World = class {
   }
   /** Nível superior (1). */
   getUpper(x, y) {
-    if (!this.inBounds(x, y)) return Block.AIR;
-    const chunk = this.chunkAt(x, y);
-    return chunk ? chunk.getLevel(toLocal(x), toLocal(y), 1) : this.generator.upperAt(x, y);
+    return this.getLevel(x, y, 1);
   }
   /** Bloco de um nível da pilha (0 = objeto no chão). O gerador só preenche os níveis 0 e 1. */
   getLevel(x, y, level) {
     if (!Number.isInteger(level) || level < 0 || level >= this.maxStack) return Block.AIR;
     if (level === 0) return this.getObject(x, y);
-    if (level === 1) return this.getUpper(x, y);
     if (!this.inBounds(x, y)) return Block.AIR;
     const chunk = this.chunkAt(x, y);
     if (chunk) return chunk.getLevel(toLocal(x), toLocal(y), level);
-    return this.generator instanceof SanctuarySeedGenerator ? this.generator.levelAt(x, y, level) : Block.AIR;
+    if (this.generator instanceof SanctuarySeedGenerator) return this.generator.levelAt(x, y, level);
+    if (this.cubeLevels > 1) return quarterLevel(this.generator.objectAt(x, y), this.generator.upperAt(x, y), level);
+    return level === 1 ? this.generator.upperAt(x, y) : Block.AIR;
   }
   /** Bloco visível no topo da célula e seu nível (null se vazia). */
   topBlock(x, y) {
@@ -5441,12 +5427,24 @@ var World = class {
     }
     return null;
   }
-  /** Quantos cubos há empilhados na célula (0..MAX_STACK). */
+  /**
+   * Altura da pilha da célula em níveis (0..`maxStack`): no Mundo, quantos blocos de 1/4 há empilhados (4 = 1 célula cheia); no
+   * Santuário, quantos cubos. O cacto (planta que o gerador põe como "cubo") não é bloco de construção: conta como célula cheia.
+   */
   stackHeight(x, y) {
-    if (blockDef(this.getObject(x, y)).shape !== "cube") return 0;
+    const base = this.getObject(x, y);
+    if (blockDef(base).shape !== "cube") return 0;
+    if (!isStackBlock(base)) return this.cubeLevels;
     let n = 1;
     while (n < this.maxStack && this.getLevel(x, y, n) !== Block.AIR) n++;
     return n;
+  }
+  /**
+   * Quantos níveis um corpo com `stepHeight` (em cubos cheios, como na `WalkerSpec`) sobe de uma vez. No Mundo um cubo cheio são 4
+   * blocos de 1/4 e **a pilha de 4 bloqueia**: quem sobe 1 cubo sobe no máximo 3 blocos (piso e degraus, nunca a célula cheia).
+   */
+  stepLevels(stepHeight) {
+    return this.cubeLevels === 1 ? stepHeight : Math.round(stepHeight * (this.cubeLevels - 1));
   }
   /**
    * Altura em que se fica de pé na célula, ou null se não dá para ficar
@@ -5456,48 +5454,8 @@ var World = class {
   standHeight(x, y) {
     if (!this.isGroundStandable(x, y)) return null;
     const base = blockDef(this.getObject(x, y));
-    if (base.shape === "cube" && this.isSlabAt(x, y)) return 0;
     if (base.shape === "cube") return this.stackHeight(x, y);
     return base.solid ? null : 0;
-  }
-  /** Blocos que viram laje (piloto `?tabua=laje`, ver `world/slabs.ts`); vazio = nenhum (o padrão, e sempre na sala). */
-  slabs = /* @__PURE__ */ new Set();
-  /** Liga o piloto (ids de laje) ou o desliga (`[]`). Ligado, o limite de níveis sobe para `SLAB_STACK_MAX` (e os chunks já gerados crescem). */
-  setSlabBlocks(ids) {
-    this.slabs = new Set(ids);
-    this.maxStack = ids.length > 0 ? Math.max(this.baseMaxStack, SLAB_STACK_MAX) : this.baseMaxStack;
-    if (ids.length > 0) for (const c of this.chunks.values()) c.growLevels(this.maxStack);
-  }
-  get hasSlabs() {
-    return this.slabs.size > 0;
-  }
-  /**
-   * A célula é uma pilha só de lajes (nível 0 de laje e, acima, só lajes ou nada)? Cubo comum em qualquer nível desfaz a laje.
-   */
-  isSlabAt(x, y) {
-    if (this.slabs.size === 0 || !this.slabs.has(this.getObject(x, y))) return false;
-    for (let level = 1; level < this.maxStack; level++) {
-      const id = this.getLevel(x, y, level);
-      if (id !== Block.AIR && !this.slabs.has(id)) return false;
-    }
-    return true;
-  }
-  /** Quantas lajes há empilhadas na célula (0 se não é pilha de lajes). */
-  slabCount(x, y) {
-    if (!this.isSlabAt(x, y)) return 0;
-    let n = 0;
-    while (n < this.maxStack && this.slabs.has(this.getLevel(x, y, n))) n++;
-    return n;
-  }
-  /** Altura (células) das lajes abaixo do nível `level` da célula: onde assenta a laje desse nível. */
-  slabBase(x, y, level) {
-    let h = 0;
-    for (let l = 0; l < level; l++) h += slabHeightOf(this.getLevel(x, y, l));
-    return h;
-  }
-  /** Quanto o corpo sobe por cima da célula (visual): a soma das alturas das lajes empilhadas, 0 no resto. */
-  slabLift(x, y) {
-    return this.isSlabAt(x, y) ? this.slabBase(x, y, this.slabCount(x, y)) : 0;
   }
   /** Mantido para o objeto do nível 0 (testes/ferramentas). */
   setObject(x, y, id) {
@@ -5606,17 +5564,7 @@ var World = class {
   placementLevel(x, y, id) {
     const def = blockDef(id);
     if (!def.placeable || def.layer !== "object") return null;
-    if (!this.profile.blocks.includes(id) && !this.slabs.has(id) || this.isProtected(x, y)) return null;
-    if (this.slabs.has(id)) {
-      if (this.getGround(x, y) === Block.HOLE || !this.isGroundStandable(x, y)) return null;
-      if (this.isSlabAt(x, y)) {
-        const n = this.slabCount(x, y);
-        return n < SLAB_STACK_MAX && n < this.maxStack ? n : null;
-      }
-      const o = blockDef(this.getObject(x, y));
-      return o.id === Block.AIR || o.shape === "decoration" ? 0 : null;
-    }
-    if (this.isSlabAt(x, y)) return null;
+    if (!this.profile.blocks.includes(id) || this.isProtected(x, y)) return null;
     if (this.getGround(x, y) === Block.HOLE) return def.shape === "cube" ? "ground" : null;
     if (this.getGround(x, y) === Block.WATER) return REPLACES_WATER.has(id) ? "ground" : null;
     if (!this.isGroundStandable(x, y)) return null;
@@ -6074,6 +6022,14 @@ var World = class {
     levels.forEach((l, i) => {
       if (i < c.levels.length) c.levels[i].set(l.subarray(0, c.levels[i].length));
     });
+    if (this.cubeLevels > 1 && levels.length <= 2) {
+      const n = c.ground.length;
+      for (let i = 0; i < n; i++) {
+        const obj = c.levels[0][i], up = c.levels[1][i];
+        if (!isStackBlock(obj)) continue;
+        for (let l = 1; l < c.levels.length; l++) c.levels[l][i] = quarterLevel(obj, up, l);
+      }
+    }
     for (const l of c.levels) for (let i = 0; i < l.length; i++) l[i] = isRemovedBlock(l[i]) ? Block.AIR : adultOfStage(l[i]);
     for (let ly = 0; ly < CHUNK_SIZE; ly++) {
       for (let lx = 0; lx < CHUNK_SIZE; lx++) {
@@ -6083,7 +6039,7 @@ var World = class {
         const cell = this.generator.cellAt(x, y);
         c.setGround(lx, ly, cell.ground);
         c.levels.forEach((l, i) => {
-          l[ly * CHUNK_SIZE + lx] = i === 0 ? cell.object : i === 1 ? cell.upper : Block.AIR;
+          l[ly * CHUNK_SIZE + lx] = this.cubeLevels > 1 ? quarterLevel(cell.object, cell.upper, i) : i === 0 ? cell.object : i === 1 ? cell.upper : Block.AIR;
         });
       }
     }
@@ -6108,7 +6064,7 @@ var World = class {
 // src/net/room.ts
 var ROOM_START_TIME = 0.31;
 var TIME_SYNC_SECONDS = 30;
-var ROOM_SNAPSHOT_VERSION = 5;
+var ROOM_SNAPSHOT_VERSION = 6;
 var DROP_LIFETIME = 300;
 var TAKE_REACH = 3;
 var MOBS_EVERY = 0.1;
@@ -6456,7 +6412,7 @@ var Room = class {
   }
   /** Recarrega o que o servidor gravou (só se for desta sala e desta seed; senão, a sala começa do zero). */
   restore(snap) {
-    if (!snap || ![1, 2, 3, 4, ROOM_SNAPSHOT_VERSION].includes(snap.v) || snap.room !== this.id || snap.seed !== this.seed) return false;
+    if (!snap || ![1, 2, 3, 4, 5, ROOM_SNAPSHOT_VERSION].includes(snap.v) || snap.room !== this.id || snap.seed !== this.seed) return false;
     if ((snap.sub ?? 1) > SUBDIV) return false;
     const s = rescaleRoomSnapshot(snap, SUBDIV);
     let dropped = 0;
