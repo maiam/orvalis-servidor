@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.93.117 (f47b110) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.93.119 (b38e9a9) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -63,6 +63,25 @@ var SANCTUARY_MAX_STACK = 5;
 var STEP_HEIGHT = 1;
 var CHUNK_SIZE = 16;
 var UNLOAD_MARGIN = 3;
+
+// src/world/random.ts
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = a + 1831565813 >>> 0;
+    let t = a;
+    t = Math.imul(t ^ t >>> 15, t | 1);
+    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function hash2(seed, x, y) {
+  let h = (seed ^ Math.imul(x | 0, 668265261) ^ Math.imul(y | 0, 374761393)) >>> 0;
+  h = Math.imul(h ^ h >>> 15, 2246822507);
+  h = Math.imul(h ^ h >>> 13, 3266489909);
+  h ^= h >>> 16;
+  return (h >>> 0) / 4294967296;
+}
 
 // src/world/blocks.ts
 var Block = {
@@ -355,6 +374,9 @@ var FLOWER_NAMES = [
   [Block.FLOWER_VANILLA, "Coroa de Baunilha"]
 ];
 var FLOWER_BLOCKS = FLOWER_NAMES.map(([id]) => id);
+function wildFlowerIndex(seed, x, y) {
+  return Math.floor(hash2(seed, x * 7 + 3, y * 13 - 1) * FLOWER_BLOCKS.length);
+}
 var object = (id, name, extra = {}) => ({
   id,
   name,
@@ -708,25 +730,6 @@ function toggled(id) {
 }
 function isOpen(id) {
   return id === Block.OAK_DOOR_OPEN || isGateOpen(id) || id === Block.WALL_DOOR_PLANKS_OPEN || id === Block.V_GATE || id === Block.V_GATE_GAP;
-}
-
-// src/world/random.ts
-function mulberry32(seed) {
-  let a = seed >>> 0;
-  return () => {
-    a = a + 1831565813 >>> 0;
-    let t = a;
-    t = Math.imul(t ^ t >>> 15, t | 1);
-    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
-    return ((t ^ t >>> 14) >>> 0) / 4294967296;
-  };
-}
-function hash2(seed, x, y) {
-  let h = (seed ^ Math.imul(x | 0, 668265261) ^ Math.imul(y | 0, 374761393)) >>> 0;
-  h = Math.imul(h ^ h >>> 15, 2246822507);
-  h = Math.imul(h ^ h >>> 13, 3266489909);
-  h ^= h >>> 16;
-  return (h >>> 0) / 4294967296;
 }
 
 // src/world/dungeon.ts
@@ -1403,7 +1406,7 @@ function toolDrops(tool, id, rand = Math.random) {
   return dropsFor(id, rand);
 }
 var TOOL_ORDER = [Tool.SWORD, Tool.HOE, Tool.PICKAXE, Tool.SHOVEL, Tool.AXE];
-var COLLECTABLE = /* @__PURE__ */ new Set([...MATERIALS, Block.OAK_DOOR, Block.TENT, Block.CHEST, Block.CAMPFIRE, Block.CAULDRON, Block.OVEN, Block.CHAIR, Block.FLOWER, ...FLOWER_BLOCKS, Block.FENCE, Block.FENCE_BIRCH, Block.FENCE_CHERRY, Block.FENCE_STAKE, Block.WALL_PLANKS, Block.WALL_STONE, Block.WALL_DOOR_PLANKS]);
+var COLLECTABLE = /* @__PURE__ */ new Set([...MATERIALS, Block.OAK_DOOR, Block.TENT, Block.CHEST, Block.CAMPFIRE, Block.CAULDRON, Block.OVEN, Block.CHAIR, ...FLOWER_BLOCKS, Block.FENCE, Block.FENCE_BIRCH, Block.FENCE_CHERRY, Block.FENCE_STAKE, Block.WALL_PLANKS, Block.WALL_STONE, Block.WALL_DOOR_PLANKS]);
 var ADULT_TREES = /* @__PURE__ */ new Set([Block.OAK_TREE, Block.APPLE_TREE, Block.APPLE_TREE_BARE]);
 function blockDrops(id, rand = Math.random) {
   if (ADULT_TREES.has(id)) return [{ item: blockStack(Block.OAK_LOG), count: 2 + (rand() < 0.5 ? 1 : 0) }];
@@ -1416,7 +1419,8 @@ function blockDrops(id, rand = Math.random) {
   if (id === Block.ROCK_BOULDER) return [{ item: blockStack(Block.STONE), count: 1 + Math.floor(rand() * 3) }];
   return COLLECTABLE.has(id) ? [{ item: blockStack(id), count: 1 }] : [];
 }
-function breakDrops(tool, id, collect, rand = Math.random) {
+function breakDrops(tool, id, collect, rand = Math.random, at) {
+  if (collect && id === Block.FLOWER && at) return [{ item: blockStack(FLOWER_BLOCKS[wildFlowerIndex(at.seed, at.x, at.y)]), count: 1 }];
   return [...toolDrops(tool, id, rand), ...collect ? blockDrops(id, rand) : []];
 }
 var RECIPES = [
@@ -5874,6 +5878,81 @@ var WorldGenerator = class {
   }
 };
 
+// src/world/flowerPatch.ts
+var PATCH_FLOWERS = 10;
+var SIDE = 6 * SUBDIV;
+var NEAR = 20 * SUBDIV;
+var BAND = 20 * SUBDIV;
+var MAX_DIST = 140 * SUBDIV;
+function patchSpecies(seed) {
+  return FLOWER_BLOCKS[Math.floor(hash2(seed, 20979, 77) * FLOWER_BLOCKS.length)];
+}
+function planFlowerPatch(seed, base, gate, avoid) {
+  const free = (x, y) => {
+    if (avoid.some((r) => inRect(r, x, y))) return false;
+    const c = base.cellAt(x, y);
+    const g = blockDef(c.ground);
+    if (g.liquid || c.ground === Block.HOLE || c.ground === Block.PATH) return false;
+    return c.upper === Block.AIR && (c.object === Block.AIR || c.object === Block.TALL_GRASS || c.object === Block.FLOWER);
+  };
+  for (let t = 0; t < 1600; t++) {
+    const band = Math.floor(t / 80);
+    const lo = NEAR + band * BAND;
+    if (lo > MAX_DIST) break;
+    const angle = hash2(seed, 1697, t) * Math.PI * 2;
+    const dist = lo + hash2(seed, 1698, t) * BAND;
+    const cx = Math.round(gate[0] + Math.cos(angle) * dist), cy = Math.round(gate[1] + Math.sin(angle) * dist);
+    const area = { x0: cx - SIDE / 2, y0: cy - SIDE / 2, x1: cx + SIDE / 2 - 1, y1: cy + SIDE / 2 - 1 };
+    let ok = true;
+    for (let y = area.y0 - 1; y <= area.y1 + 1 && ok; y++) for (let x = area.x0 - 1; x <= area.x1 + 1 && ok; x++) ok = free(x, y);
+    if (!ok) continue;
+    const cells = [];
+    const taken = /* @__PURE__ */ new Set();
+    for (let n = 0; cells.length < PATCH_FLOWERS && n < 200; n++) {
+      const x = area.x0 + Math.floor(hash2(seed, 1713 + n, t) * SIDE), y = area.y0 + Math.floor(hash2(seed, 1714 + n, t) * SIDE);
+      if (taken.has(`${x},${y}`)) continue;
+      taken.add(`${x},${y}`);
+      cells.push([x, y]);
+    }
+    if (cells.length === PATCH_FLOWERS) return { species: patchSpecies(seed), area, cells };
+  }
+  return null;
+}
+var FlowerPatchTerrain = class {
+  constructor(source, patch) {
+    this.source = source;
+    this.patch = patch;
+    this.seed = source.seed;
+    this.at = new Set(patch.cells.map(([x, y]) => `${x},${y}`));
+  }
+  source;
+  patch;
+  seed;
+  at;
+  cellAt(x, y) {
+    const c = this.source.cellAt(x, y);
+    return this.at.has(`${x},${y}`) ? { ...c, object: this.patch.species } : c;
+  }
+  groundAt(x, y) {
+    return this.source.groundAt(x, y);
+  }
+  objectAt(x, y) {
+    return this.at.has(`${x},${y}`) ? this.patch.species : this.source.objectAt(x, y);
+  }
+  upperAt(x, y) {
+    return this.source.upperAt(x, y);
+  }
+  biomeAt(x, y) {
+    return this.source.biomeAt(x, y);
+  }
+  generateChunk(cx, cy, ground2, objects, upper) {
+    this.source.generateChunk(cx, cy, ground2, objects, upper);
+    for (const [x, y] of this.patch.cells) {
+      if (Math.floor(x / CHUNK_SIZE) === cx && Math.floor(y / CHUNK_SIZE) === cy) objects[(y - cy * CHUNK_SIZE) * CHUNK_SIZE + (x - cx * CHUNK_SIZE)] = this.patch.species;
+    }
+  }
+};
+
 // src/world/profiles.ts
 var WORLD_PROFILES = {
   principal: {
@@ -6179,6 +6258,8 @@ var World = class {
    * (`loadHoleAges`); buraco sem idade guardada começa a contar do zero.
    */
   holeAge = /* @__PURE__ */ new Map();
+  /** Canteiro de flores da missão do Silvano (null fora do Mundo da Cidade). */
+  flowerPatch = null;
   /** Spawn calculado no terreno base (a dungeon é posta longe dele e não o altera). */
   spawn = null;
   constructor(seed, profile = WORLD_PROFILES.principal) {
@@ -6221,6 +6302,15 @@ var World = class {
     if (this.interiors.length) this.generator = new InteriorTerrain(this.generator, this.interiors);
     this.goblinCamps.push(...planGoblinCamps(this));
     if (this.goblinCamps.length) this.generator = new GoblinCampTerrain(this.generator, this.goblinCamps);
+    if (this.town && profile.dungeon) {
+      const avoid = [grow(this.town.area, TOWN_MARGIN + 6)];
+      if (this.village) avoid.push(grow(this.village.touched, 6));
+      if (this.cave) avoid.push(grow(this.cave.guard, 6));
+      if (this.dungeon) avoid.push(grow(dungeonGuard(this.dungeon), 6));
+      for (const c of this.goblinCamps) avoid.push(grow({ x0: c.x, y0: c.y, x1: c.x, y1: c.y }, 10 * SUBDIV));
+      this.flowerPatch = planFlowerPatch(seed, this.generator, this.outsideGate(), avoid);
+      if (this.flowerPatch) this.generator = new FlowerPatchTerrain(this.generator, this.flowerPatch);
+    }
     if (baseTerrain instanceof WorldGenerator) this.lizardPacks.push(...planLizardPacks(this, (x, y) => baseTerrain.riverAt(x, y), this.goblinCamps));
   }
   /**
@@ -7340,7 +7430,7 @@ var Room = class {
       const out = [{ to: "all", msg: { t: "applied", ...applied } }];
       let loot = [];
       if (a.kind === "break" && breaking !== null) {
-        loot = [...wasChest ? chestLoot : [], ...breakDrops(a.tool, breaking, this.world.profile.collectBlocks, this.rand)];
+        loot = [...wasChest ? chestLoot : [], ...breakDrops(a.tool, breaking, this.world.profile.collectBlocks, this.rand, { seed: this.world.seed, x: a.x, y: a.y })];
       }
       if (a.kind === "pick") loot = pickDrops(this.rand);
       const list = this.spawnDrops(a.x + 0.5, a.y + 0.7, loot);
