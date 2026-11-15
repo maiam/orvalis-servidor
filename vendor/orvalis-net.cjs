@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.93.92 (21d2b42) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.93.96 (2ead559) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -225,6 +225,9 @@ var Block = {
   /** Os 6 blocos do vão entre os postes: livres com o portão aberto, sólidos com ele fechado (sem arte própria: o desenho é do portão). */
   V_GATE_GAP: 239,
   V_GATE_GAP_CLOSED: 254,
+  /** Cerca de Bétula e de Cerejeira (v0.93.96): a mesma cerca de estacas do Carvalho (`FENCE`), com outra madeira; emendam entre si e com o portão. */
+  FENCE_BIRCH: 245,
+  FENCE_CHERRY: 248,
   /** Cerca de Estacas (v0.93.90): 1 célula × 1 de altura (16 × 16 px), 4 estacas; o jogador fabrica (1 Tora → 4) e coloca. */
   FENCE_STAKE: 244,
   /** Vitória-régia comum (folha ou flor; 4 variantes): enfeite sobre a água rasa de rios e lagos, não bloqueia (a água não se pisa). */
@@ -385,6 +388,8 @@ var defs = [
   object(Block.OAK_DOOR_OPEN, "Porta de Carvalho (aberta)", { shape: "door", solid: false, placeable: false, organic: "wood" }),
   // Cerca e portão: ocupam a célula (nada empilha em cima); madeira: o machado desmonta.
   object(Block.FENCE, "Cerca de Madeira", { shape: "fence", organic: "wood" }),
+  object(Block.FENCE_BIRCH, "Cerca de B\xE9tula", { shape: "fence", organic: "wood" }),
+  object(Block.FENCE_CHERRY, "Cerca de Cerejeira", { shape: "fence", organic: "wood" }),
   object(Block.FENCE_STAKE, "Cerca de Estacas", { shape: "building", organic: "wood" }),
   object(Block.FENCE_GATE, "Port\xE3o de Madeira", { shape: "fence", organic: "wood" }),
   object(Block.FENCE_GATE_OPEN, "Port\xE3o de Madeira (aberto)", { shape: "fence", solid: false, placeable: false, organic: "wood" }),
@@ -567,6 +572,8 @@ var HOTBAR_BLOCKS = [
   Block.OVEN,
   Block.CHAIR,
   Block.FENCE,
+  Block.FENCE_BIRCH,
+  Block.FENCE_CHERRY,
   Block.FENCE_GATE,
   Block.FENCE_STAKE
 ];
@@ -1323,7 +1330,7 @@ function toolDrops(tool, id, rand = Math.random) {
   return dropsFor(id, rand);
 }
 var TOOL_ORDER = [Tool.SWORD, Tool.HOE, Tool.PICKAXE, Tool.SHOVEL, Tool.AXE];
-var COLLECTABLE = /* @__PURE__ */ new Set([...MATERIALS, Block.OAK_DOOR, Block.TENT, Block.CHEST, Block.CAMPFIRE, Block.CAULDRON, Block.OVEN, Block.CHAIR, Block.FENCE, Block.FENCE_STAKE, Block.WALL_PLANKS, Block.WALL_STONE, Block.WALL_DOOR_PLANKS]);
+var COLLECTABLE = /* @__PURE__ */ new Set([...MATERIALS, Block.OAK_DOOR, Block.TENT, Block.CHEST, Block.CAMPFIRE, Block.CAULDRON, Block.OVEN, Block.CHAIR, Block.FENCE, Block.FENCE_BIRCH, Block.FENCE_CHERRY, Block.FENCE_STAKE, Block.WALL_PLANKS, Block.WALL_STONE, Block.WALL_DOOR_PLANKS]);
 var ADULT_TREES = /* @__PURE__ */ new Set([Block.OAK_TREE, Block.APPLE_TREE, Block.APPLE_TREE_BARE]);
 function blockDrops(id, rand = Math.random) {
   if (ADULT_TREES.has(id)) return [{ item: blockStack(Block.OAK_LOG), count: 2 + (rand() < 0.5 ? 1 : 0) }];
@@ -1421,6 +1428,21 @@ var RECIPES = [
     profession: "builder",
     inputs: [{ item: blockStack(Block.OAK_PLANKS), count: 2 }],
     output: { item: blockStack(Block.FENCE), count: 4 }
+  },
+  // Cercas de Bétula e de Cerejeira (v0.93.96): a mesma receita da de Carvalho, com a tábua da madeira.
+  {
+    id: "birch-fence",
+    name: "Cerca de B\xE9tula",
+    profession: "builder",
+    inputs: [{ item: blockStack(Block.BIRCH_PLANKS), count: 2 }],
+    output: { item: blockStack(Block.FENCE_BIRCH), count: 4 }
+  },
+  {
+    id: "cherry-fence",
+    name: "Cerca de Cerejeira",
+    profession: "builder",
+    inputs: [{ item: blockStack(Block.CHERRY_PLANKS), count: 2 }],
+    output: { item: blockStack(Block.FENCE_CHERRY), count: 4 }
   },
   // Cerca de Estacas (v0.93.90, teste do dono do produto): 4 estacas por bloco; 1 Tora de Carvalho rende 4 blocos (custo provisório).
   {
