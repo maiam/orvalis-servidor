@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.93.120 (3346f43) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.93.121 (a7512aa) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -1670,7 +1670,7 @@ function applyAction(world, a) {
 }
 
 // src/net/protocol.ts
-var PROTOCOL_VERSION = 26;
+var PROTOCOL_VERSION = 27;
 var MAX_PLAYERS = 10;
 var ROOMS = [
   { id: 1, name: "Sala 1", seed: 20261106 }
@@ -2609,6 +2609,65 @@ var Villager = class extends Wanderer {
     return false;
   }
 };
+
+// src/game/npcBrain/missions.ts
+var talk = (npc) => (e) => e.type === "talk" && e.npc === npc;
+var kills = (kinds) => (e) => e.type === "kill" && kinds.includes(e.monster);
+var MISSIONS = [
+  {
+    id: "m01",
+    chapter: 1,
+    title: "Um nome na guilda",
+    kind: "Introdu\xE7\xE3o",
+    turnIn: "guild",
+    goals: [
+      { id: "guild", text: "Registrar-se na guilda", count: 1, kind: "event", match: talk("guild") },
+      { id: "black", text: "Conhecer o ferreiro Black", count: 1, kind: "event", match: talk("black") },
+      { id: "bento", text: "Conhecer o mercador Bento", count: 1, kind: "event", match: talk("bento") }
+    ],
+    reward: { coins: 8 },
+    offer: "Mais um aventureiro chegando \xE0 Cidade do Despertar, e ningu\xE9m sabe de onde veio. Por aqui, quem quer trabalho come\xE7a registrando o nome na guilda. \xC9 r\xE1pido: assino o seu registro agora, e voc\xEA ainda conhece o ferreiro e o mercador, que v\xE3o ser os seus parceiros por aqui.",
+    prompt: "Quer se registrar como aventureira da guilda?",
+    accepted: "Registrado! Agora v\xE1 conhecer o ferreiro Black, na Ferraria, e o mercador Bento, no Mercado. Depois volte aqui, que eu pago o seu primeiro contrato.",
+    progress: "Ainda falta conhecer o ferreiro Black e o mercador Bento. Converse com os dois e volte aqui.",
+    complete: "Agora voc\xEA \xE9 de casa! Aqui est\xE3o as suas primeiras moedas. A partir de hoje a guilda tem contratos para voc\xEA. Pode me procurar sempre que quiser trabalho."
+  },
+  {
+    id: "m02",
+    chapter: 1,
+    title: "O pedido do ferreiro",
+    kind: "Coleta",
+    turnIn: "black",
+    goals: [
+      { id: "logs", text: "Juntar toras de carvalho", count: 6, kind: "have", items: [blockStack(Block.OAK_LOG)] },
+      { id: "stone", text: "Juntar pedras brutas", count: 8, kind: "have", items: [blockStack(Block.STONE)] }
+    ],
+    reward: { coins: 12 },
+    offer: "O Black, o ferreiro, est\xE1 sem material para continuar trabalhando. Ele precisa de 6 toras de carvalho e 8 pedras brutas. Corte \xE1rvores com o machado e quebre pedra com a picareta, e leve tudo a ele. Eu cuido do pagamento.",
+    prompt: "Aceita ajudar o ferreiro?",
+    accepted: "Boa! Corte 6 toras de carvalho e junte 8 pedras brutas. Quando tiver tudo, entregue ao Black na Ferraria.",
+    progress: "Ainda estamos juntando o material do Black: 6 toras de carvalho e 8 pedras brutas. Quando tiver, \xE9 s\xF3 entregar a ele.",
+    complete: "Ah, \xE9 disso que eu precisava! Com isso volto \xE0 forja. Aqui est\xE1 o seu pagamento, e diga \xE0 guilda que o Black ficou satisfeito."
+  },
+  {
+    id: "m03",
+    chapter: 1,
+    title: "Lobos na estrada",
+    kind: "Combate",
+    turnIn: "guild",
+    goals: [
+      { id: "wolves", text: "Abater lobos", count: 3, kind: "event", match: kills(WOLF_KINDS) }
+    ],
+    reward: { coins: 15 },
+    offer: "Comerciantes contam que lobos andam atacando as estradas perto da cidade. A guilda abriu um contrato: 3 lobos abatidos. Leve vida cheia, use a espada ou o machado, e n\xE3o deixe que cheguem perto demais.",
+    prompt: "Aceita o contrato dos lobos?",
+    accepted: "Contrato aceito. Abata 3 lobos fora da muralha e volte aqui para receber o pagamento.",
+    progress: "Os lobos ainda est\xE3o soltos. O contrato pede 3 abatidos; cuide da sua vida e volte quando terminar.",
+    complete: "Tr\xEAs lobos a menos! As estradas ficam mais seguras gra\xE7as a voc\xEA. Aqui est\xE1 o seu pagamento."
+  }
+];
+var EMPTY_LOG = () => ({ done: [], active: null, progress: {} });
+var COIN = Item.COPPER_COIN;
 
 // src/game/residents.ts
 var RESIDENT_NAMES = [
@@ -4212,6 +4271,8 @@ var Entities = class {
   quests = {};
   /** Sinal sobre a cabeça dos NPCs com missão (o `Game` o recalcula todo quadro a partir do estado e do inventário). */
   marks = {};
+  /** Corrente de missões do Capítulo 1 (estado salvo no jogador; o `Game` a muda). */
+  missions = EMPTY_LOG();
   /** Hora do mundo (0..1) para a agenda dos moradores (o `Game` a atualiza todo quadro; -1 = sem relógio: sem rotina, como na sala). */
   time = -1;
   /** Monstros da dungeon (presos no interior dela). */
@@ -5013,7 +5074,7 @@ var Entities = class {
         walkTime: v.walkTime,
         fade: v.fade > 0 ? v.fade : void 0,
         look: v.look ?? void 0,
-        mark: v.resident ? void 0 : this.marks[v.npc]
+        mark: this.marks[v.resident?.id ?? v.npc]
       });
     }
     for (const m of this.monsters) {
@@ -7264,6 +7325,7 @@ var Room = class {
     this.entities = new Entities(null, rand);
     const e = this.entities;
     e.onMonsterKilled = (m) => {
+      if (this.striker !== null) this.pending.push({ to: this.striker, msg: { t: "killed", k: m.kind } });
       const list = this.spawnDrops(m.x, m.y + 0.2, monsterDrops(m.kind, rand));
       if (list.length) this.pending.push({ to: "all", msg: { t: "drops", list } });
     };
@@ -7310,6 +7372,8 @@ var Room = class {
    */
   entities;
   avatars = /* @__PURE__ */ new Map();
+  /** Quem está golpeando agora (para dar a morte a quem abateu). */
+  striker = null;
   mobIds = /* @__PURE__ */ new WeakMap();
   nextMobId = 1;
   mobTimer = 0;
@@ -7434,7 +7498,12 @@ var Room = class {
       const av = this.avatars.get(id);
       if (!av) return [];
       av.facing = m.facing;
-      this.entities.strikeFrom(av, m.facing, m.attack, this.world);
+      this.striker = id;
+      try {
+        this.entities.strikeFrom(av, m.facing, m.attack, this.world);
+      } finally {
+        this.striker = null;
+      }
       return this.flush();
     }
     if (m.t === "talk" || m.t === "escort") {
