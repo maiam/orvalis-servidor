@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.93.106 (92314f5) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.93.108 (fc8da26) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -3764,9 +3764,9 @@ var Entities = class {
    * espécie numa faixa de grama da planta dela (`VILLAGE_PENS`, em células da vila); a posição sai da seed, só em grama andável e livre.
    * Devolve quantos de cada espécie nasceram.
    */
-  spawnVillageAnimals(world) {
+  spawnVillageAnimals(world, have = {}) {
     const v = world.village;
-    const placed = { sheep: 0, cow: 0, chicken: 0, capybara: 0, horse: 0 };
+    const placed = { sheep: have.sheep ?? 0, cow: have.cow ?? 0, chicken: have.chicken ?? 0, capybara: have.capybara ?? 0, horse: have.horse ?? 0 };
     if (!v) return placed;
     for (const pen of VILLAGE_PENS) {
       for (let i = 0; i < 400 && placed[pen.kind] < pen.count; i++) {
@@ -3782,6 +3782,39 @@ var Entities = class {
       }
     }
     return placed;
+  }
+  /**
+   * Ajusta os animais da vila de uma sala GRAVADA ANTES da v0.93.106 (snapshot < 7) para 3 de cada espécie: o que está dentro da vila passa a ser,
+   * no máximo, `VILLAGE_ANIMALS_EACH` por espécie (sobram os filhotes e os mais longe do centro da faixa), o cavalo que nascia no campo diante
+   * do portão some (os cavalos moram na vila agora) e o que falta nasce nas faixas (`VILLAGE_PENS`). Bichos fora da vila (soltos, comprados,
+   * crias que saíram) não são tocados, a não ser o cavalo do campo. Devolve quantos foram tirados e quantos nasceram.
+   */
+  reconcileVillageAnimals(world) {
+    const v = world.village;
+    if (!v) return { removed: 0, spawned: 0 };
+    const inVillage = (a) => inRect(v.area, Math.floor(a.x), Math.floor(a.y));
+    let removed = 0;
+    const kindOf = (a) => a.species;
+    const outside = this.horses.filter((h) => h.kind === "horse" && !inVillage(h));
+    for (const h of outside) {
+      this.horses.splice(this.horses.indexOf(h), 1);
+      removed++;
+    }
+    const have = { sheep: 0, cow: 0, chicken: 0, capybara: 0, horse: 0 };
+    for (const kind of Object.keys(have)) {
+      const inside = this.breeders().filter((a) => kindOf(a) === kind && inVillage(a));
+      inside.sort((a, b) => Number(a.baby) - Number(b.baby));
+      for (const extra of inside.slice(VILLAGE_ANIMALS_EACH)) {
+        if (extra instanceof Sheep) this.npcs.splice(this.npcs.indexOf(extra), 1);
+        else this.horses.splice(this.horses.indexOf(extra), 1);
+        this.courting.delete(extra);
+        removed++;
+      }
+      have[kind] = Math.min(inside.length, VILLAGE_ANIMALS_EACH);
+    }
+    const before = this.breeders().length;
+    this.spawnVillageAnimals(world, have);
+    return { removed, spawned: this.breeders().length - before };
   }
   /**
    * Moradores da cidade (`game/npcs.ts`): o **ferreiro Black** dentro da Ferraria e os 15 NPCs comuns, cada um perto de um
@@ -6525,7 +6558,7 @@ var World = class {
 // src/net/room.ts
 var ROOM_START_TIME = 0.31;
 var TIME_SYNC_SECONDS = 30;
-var ROOM_SNAPSHOT_VERSION = 6;
+var ROOM_SNAPSHOT_VERSION = 7;
 var DROP_LIFETIME = 300;
 var TAKE_REACH = 3;
 var MOBS_EVERY = 0.1;
@@ -6873,7 +6906,7 @@ var Room = class {
   }
   /** Recarrega o que o servidor gravou (só se for desta sala e desta seed; senão, a sala começa do zero). */
   restore(snap) {
-    if (!snap || ![1, 2, 3, 4, 5, ROOM_SNAPSHOT_VERSION].includes(snap.v) || snap.room !== this.id || snap.seed !== this.seed) return false;
+    if (!snap || ![1, 2, 3, 4, 5, 6, ROOM_SNAPSHOT_VERSION].includes(snap.v) || snap.room !== this.id || snap.seed !== this.seed) return false;
     if ((snap.sub ?? 1) > SUBDIV) return false;
     const s = rescaleRoomSnapshot(snap, SUBDIV);
     let dropped = 0;
@@ -6890,9 +6923,13 @@ var Room = class {
     if (Array.isArray(s.animals)) {
       for (const a of s.animals) if (Number.isFinite(a?.x) && Number.isFinite(a?.y) && Math.abs(a.x) + Math.abs(a.y) < 2 ** 30) this.loadAround(a.x, a.y, 4);
       this.entities.restoreAnimals(s.animals, this.world);
+      if (snap.v < 7) {
+        const fix = this.entities.reconcileVillageAnimals(this.world);
+        if (fix.removed > 0 || fix.spawned > 0) this.dirty = true;
+      }
     }
     this.entities.reconcileGoblinCamps(this.world);
-    this.dirty = dropped > 0;
+    this.dirty = this.dirty || dropped > 0;
     return true;
   }
 };
