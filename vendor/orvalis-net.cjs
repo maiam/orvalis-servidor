@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.93.118 (e47d0ce) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.93.119 (b38e9a9) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -5878,6 +5878,81 @@ var WorldGenerator = class {
   }
 };
 
+// src/world/flowerPatch.ts
+var PATCH_FLOWERS = 10;
+var SIDE = 6 * SUBDIV;
+var NEAR = 20 * SUBDIV;
+var BAND = 20 * SUBDIV;
+var MAX_DIST = 140 * SUBDIV;
+function patchSpecies(seed) {
+  return FLOWER_BLOCKS[Math.floor(hash2(seed, 20979, 77) * FLOWER_BLOCKS.length)];
+}
+function planFlowerPatch(seed, base, gate, avoid) {
+  const free = (x, y) => {
+    if (avoid.some((r) => inRect(r, x, y))) return false;
+    const c = base.cellAt(x, y);
+    const g = blockDef(c.ground);
+    if (g.liquid || c.ground === Block.HOLE || c.ground === Block.PATH) return false;
+    return c.upper === Block.AIR && (c.object === Block.AIR || c.object === Block.TALL_GRASS || c.object === Block.FLOWER);
+  };
+  for (let t = 0; t < 1600; t++) {
+    const band = Math.floor(t / 80);
+    const lo = NEAR + band * BAND;
+    if (lo > MAX_DIST) break;
+    const angle = hash2(seed, 1697, t) * Math.PI * 2;
+    const dist = lo + hash2(seed, 1698, t) * BAND;
+    const cx = Math.round(gate[0] + Math.cos(angle) * dist), cy = Math.round(gate[1] + Math.sin(angle) * dist);
+    const area = { x0: cx - SIDE / 2, y0: cy - SIDE / 2, x1: cx + SIDE / 2 - 1, y1: cy + SIDE / 2 - 1 };
+    let ok = true;
+    for (let y = area.y0 - 1; y <= area.y1 + 1 && ok; y++) for (let x = area.x0 - 1; x <= area.x1 + 1 && ok; x++) ok = free(x, y);
+    if (!ok) continue;
+    const cells = [];
+    const taken = /* @__PURE__ */ new Set();
+    for (let n = 0; cells.length < PATCH_FLOWERS && n < 200; n++) {
+      const x = area.x0 + Math.floor(hash2(seed, 1713 + n, t) * SIDE), y = area.y0 + Math.floor(hash2(seed, 1714 + n, t) * SIDE);
+      if (taken.has(`${x},${y}`)) continue;
+      taken.add(`${x},${y}`);
+      cells.push([x, y]);
+    }
+    if (cells.length === PATCH_FLOWERS) return { species: patchSpecies(seed), area, cells };
+  }
+  return null;
+}
+var FlowerPatchTerrain = class {
+  constructor(source, patch) {
+    this.source = source;
+    this.patch = patch;
+    this.seed = source.seed;
+    this.at = new Set(patch.cells.map(([x, y]) => `${x},${y}`));
+  }
+  source;
+  patch;
+  seed;
+  at;
+  cellAt(x, y) {
+    const c = this.source.cellAt(x, y);
+    return this.at.has(`${x},${y}`) ? { ...c, object: this.patch.species } : c;
+  }
+  groundAt(x, y) {
+    return this.source.groundAt(x, y);
+  }
+  objectAt(x, y) {
+    return this.at.has(`${x},${y}`) ? this.patch.species : this.source.objectAt(x, y);
+  }
+  upperAt(x, y) {
+    return this.source.upperAt(x, y);
+  }
+  biomeAt(x, y) {
+    return this.source.biomeAt(x, y);
+  }
+  generateChunk(cx, cy, ground2, objects, upper) {
+    this.source.generateChunk(cx, cy, ground2, objects, upper);
+    for (const [x, y] of this.patch.cells) {
+      if (Math.floor(x / CHUNK_SIZE) === cx && Math.floor(y / CHUNK_SIZE) === cy) objects[(y - cy * CHUNK_SIZE) * CHUNK_SIZE + (x - cx * CHUNK_SIZE)] = this.patch.species;
+    }
+  }
+};
+
 // src/world/profiles.ts
 var WORLD_PROFILES = {
   principal: {
@@ -6183,6 +6258,8 @@ var World = class {
    * (`loadHoleAges`); buraco sem idade guardada começa a contar do zero.
    */
   holeAge = /* @__PURE__ */ new Map();
+  /** Canteiro de flores da missão do Silvano (null fora do Mundo da Cidade). */
+  flowerPatch = null;
   /** Spawn calculado no terreno base (a dungeon é posta longe dele e não o altera). */
   spawn = null;
   constructor(seed, profile = WORLD_PROFILES.principal) {
@@ -6225,6 +6302,15 @@ var World = class {
     if (this.interiors.length) this.generator = new InteriorTerrain(this.generator, this.interiors);
     this.goblinCamps.push(...planGoblinCamps(this));
     if (this.goblinCamps.length) this.generator = new GoblinCampTerrain(this.generator, this.goblinCamps);
+    if (this.town && profile.dungeon) {
+      const avoid = [grow(this.town.area, TOWN_MARGIN + 6)];
+      if (this.village) avoid.push(grow(this.village.touched, 6));
+      if (this.cave) avoid.push(grow(this.cave.guard, 6));
+      if (this.dungeon) avoid.push(grow(dungeonGuard(this.dungeon), 6));
+      for (const c of this.goblinCamps) avoid.push(grow({ x0: c.x, y0: c.y, x1: c.x, y1: c.y }, 10 * SUBDIV));
+      this.flowerPatch = planFlowerPatch(seed, this.generator, this.outsideGate(), avoid);
+      if (this.flowerPatch) this.generator = new FlowerPatchTerrain(this.generator, this.flowerPatch);
+    }
     if (baseTerrain instanceof WorldGenerator) this.lizardPacks.push(...planLizardPacks(this, (x, y) => baseTerrain.riverAt(x, y), this.goblinCamps));
   }
   /**
