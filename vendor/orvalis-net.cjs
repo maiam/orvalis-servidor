@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.93.110 (f4ab501) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.93.117 (f47b110) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -1403,7 +1403,7 @@ function toolDrops(tool, id, rand = Math.random) {
   return dropsFor(id, rand);
 }
 var TOOL_ORDER = [Tool.SWORD, Tool.HOE, Tool.PICKAXE, Tool.SHOVEL, Tool.AXE];
-var COLLECTABLE = /* @__PURE__ */ new Set([...MATERIALS, Block.OAK_DOOR, Block.TENT, Block.CHEST, Block.CAMPFIRE, Block.CAULDRON, Block.OVEN, Block.CHAIR, ...FLOWER_BLOCKS, Block.FENCE, Block.FENCE_BIRCH, Block.FENCE_CHERRY, Block.FENCE_STAKE, Block.WALL_PLANKS, Block.WALL_STONE, Block.WALL_DOOR_PLANKS]);
+var COLLECTABLE = /* @__PURE__ */ new Set([...MATERIALS, Block.OAK_DOOR, Block.TENT, Block.CHEST, Block.CAMPFIRE, Block.CAULDRON, Block.OVEN, Block.CHAIR, Block.FLOWER, ...FLOWER_BLOCKS, Block.FENCE, Block.FENCE_BIRCH, Block.FENCE_CHERRY, Block.FENCE_STAKE, Block.WALL_PLANKS, Block.WALL_STONE, Block.WALL_DOOR_PLANKS]);
 var ADULT_TREES = /* @__PURE__ */ new Set([Block.OAK_TREE, Block.APPLE_TREE, Block.APPLE_TREE_BARE]);
 function blockDrops(id, rand = Math.random) {
   if (ADULT_TREES.has(id)) return [{ item: blockStack(Block.OAK_LOG), count: 2 + (rand() < 0.5 ? 1 : 0) }];
@@ -1666,7 +1666,7 @@ function applyAction(world, a) {
 }
 
 // src/net/protocol.ts
-var PROTOCOL_VERSION = 25;
+var PROTOCOL_VERSION = 26;
 var MAX_PLAYERS = 10;
 var ROOMS = [
   { id: 1, name: "Sala 1", seed: 20261106 }
@@ -1728,6 +1728,10 @@ function parseClientMessage(text) {
       return { t: "strike", facing: o.facing, attack: o.attack };
     case "feed":
       return Number.isInteger(o.id) && typeof o.item === "string" && /^[a-z_]{1,32}$/.test(o.item) ? { t: "feed", id: o.id, item: o.item } : null;
+    case "talk":
+      return Number.isInteger(o.id) && typeof o.on === "boolean" ? { t: "talk", id: o.id, on: o.on } : null;
+    case "escort":
+      return Number.isInteger(o.id) && typeof o.on === "boolean" ? { t: "escort", id: o.id, on: o.on } : null;
     case "action": {
       const a = parseAction(o.a);
       return a && Number.isInteger(o.seq) ? { t: "action", seq: o.seq, a } : null;
@@ -2165,6 +2169,38 @@ var FarmAnimal = class extends Breeder {
   kind;
 };
 
+// src/game/npcBrain/memory.ts
+var KNOWN = {
+  acquaintance: ["Ah, \xE9 voc\xEA de novo!", "Ol\xE1 outra vez!"],
+  friend: ["Que bom ver voc\xEA de novo!", "Voc\xEA j\xE1 \xE9 de casa por aqui!"],
+  close: ["Minha visita preferida chegou!", "Voc\xEA nunca deixa de passar, e eu adoro isso."]
+};
+function knownLine(tier, n = 0) {
+  if (tier === "stranger") return "";
+  const l = KNOWN[tier];
+  return l[Math.abs(n) % l.length];
+}
+
+// src/game/npcBrain/schedule.ts
+var BENTO_SCHEDULE = { wakeAt: 6, openAt: 7, closeAt: 19.5, sleepAt: 21 };
+var SCHEDULES = { bento: BENTO_SCHEDULE };
+function scheduleOf(npc) {
+  return SCHEDULES[npc] ?? null;
+}
+function hourOf(time) {
+  return (time % 1 + 1) % 1 * 24;
+}
+function phaseAt(s, time) {
+  const h = hourOf(time);
+  if (h >= s.wakeAt && h < s.openAt) return "opening";
+  if (h >= s.openAt && h < s.closeAt) return "open";
+  if (h >= s.closeAt && h < s.sleepAt) return "closing";
+  return "asleep";
+}
+function closedLine(phase) {
+  return phase === "opening" ? "Ainda estou arrumando as prateleiras! Abro a loja daqui a pouco, volte logo mais." : "J\xE1 fechei por hoje! Estou guardando as mercadorias. Volte amanh\xE3 cedo.";
+}
+
 // src/game/npcs.ts
 var NPCS = [
   {
@@ -2326,32 +2362,104 @@ var MERCHANT = "bento";
 
 // src/game/villager.ts
 var Villager = class extends Wanderer {
-  constructor(x, y, npc, onStreet, rand = Math.random) {
+  constructor(x, y, npc, onStreet, rand = Math.random, resident = null) {
     super(x, y, { speed: 1.4, halfW: 0.26, halfD: 0.14, stepHeight: 0 }, x, y, rand, { idle: [2, 7], walk: [1, 3], leash: (npcDef(npc).role ? 3 : 6) * SUBDIV });
     this.npc = npc;
     this.onStreet = onStreet;
+    this.resident = resident;
     this.role = npcDef(npc).role ?? null;
+    this.schedule = scheduleOf(npc);
+    this.cruise = this.spec.speed;
   }
   npc;
   onStreet;
+  resident;
   /** Ofício (fala e lugar próprios); sem ofício = morador comum. */
   role;
   /** Falando com alguém agora: parado, virado para a personagem (a caixa de conversa o segura). */
   hold = false;
   said = 0;
+  /** Agenda do dia (ADR 0034, nível 1): só o Bento tem hoje; sem agenda, passeia como sempre. */
+  schedule;
+  /** Fase do dia pela agenda (sem agenda, sempre `open`). */
+  phase = "open";
+  /** 0 = à vista … 1 = sumiu pela porta dos fundos (o desenho desbota). */
+  fade = 0;
+  mode = "post";
+  home = null;
+  seeded = false;
+  stuckFor = 0;
+  /** Acompanhando a jogadora numa missão (ADR 0034): `follow` anda atrás dela por onde for; `home` volta ao posto ao terminar. */
+  companion = "off";
+  /** Quem ele acompanha na sala (um avatar; no jogo sozinho vale a jogadora): o `Entities` passa este alvo ao `update`. */
+  leader = null;
+  /** No aparelho dentro da sala: id do jogador que a sala diz estar sendo acompanhado por ele (0/null = ninguém). Só o espelho usa. */
+  escortedBy = null;
+  /** No aparelho dentro da sala: avisa a sala quando a conversa começa/termina (ela segura o morador parado para todos). */
+  talkHook = null;
+  cruise;
+  /** Está acompanhando a jogadora (ou voltando ao posto depois)? */
+  get escorting() {
+    return this.companion !== "off";
+  }
+  /** Começa (`true`) ou termina (`false`: volta ao posto andando) o acompanhamento. */
+  setCompanion(on) {
+    if (on) this.companion = "follow";
+    else if (this.companion === "follow") this.companion = "home";
+  }
+  /** Põe o acompanhante ao lado de (x, y) (carregar o jogo no meio da missão). */
+  teleportTo(x, y) {
+    this.x = x;
+    this.y = y;
+  }
+  /** A porta dos fundos (centro da célula): por onde ele vai dormir e aparece de manhã. */
+  setHome(x, y) {
+    this.home = [x, y];
+  }
+  /** Dormindo (fora do mapa: não aparece, não bloqueia nem atende)? */
+  get hidden() {
+    return this.mode === "asleep";
+  }
+  /** A loja deste atendente está aberta? */
+  get shopIsOpen() {
+    return !this.schedule || this.phase === "open";
+  }
+  /** Conversa de loja fechada (ele ainda está à vista, arrumando): fica parado até `release()`. */
+  closedConversation(phase = this.phase) {
+    this.setHold(true);
+    return { npc: this.npc, name: this.name, text: closedLine(phase) };
+  }
+  /** A sala segura (ou solta) o morador parado enquanto alguém conversa com ele. */
+  freeze(on) {
+    this.hold = on;
+  }
+  setHold(on) {
+    if (this.hold === on) return;
+    this.hold = on;
+    this.talkHook?.(on);
+  }
+  /** Chave da memória: o id do sorteado (`rt3`…) ou o do NPC nomeado. */
+  get memoryKey() {
+    return this.resident?.id ?? this.npc;
+  }
   get name() {
-    return npcDef(this.npc).name;
+    return this.resident?.name ?? npcDef(this.npc).name;
+  }
+  /** Troca de cores do desenho (só os sorteados; os 16 NPCs nomeados usam a arte como ela é). */
+  get look() {
+    return this.resident?.look ?? null;
   }
   /** A próxima fala (em roda) como conversa; o NPC fica parado até `release()`. */
-  conversation() {
-    const def = npcDef(this.npc);
-    const text = def.lines[this.said++ % def.lines.length];
-    this.hold = true;
-    return { npc: this.npc, name: def.name, text };
+  conversation(tier = "stranger") {
+    const lines = this.resident?.lines ?? npcDef(this.npc).lines;
+    const hello = this.said === 0 ? knownLine(tier, this.said) : "";
+    const text = `${hello ? hello + " " : ""}${lines[this.said++ % lines.length]}`;
+    this.setHold(true);
+    return { npc: this.npc, name: this.name, text };
   }
   /** Terminou a conversa: volta a passear. */
   release() {
-    this.hold = false;
+    this.setHold(false);
   }
   get talking() {
     return this.hold;
@@ -2371,14 +2479,264 @@ var Villager = class extends Wanderer {
     }
     return true;
   }
-  update(dt, world, blocked) {
+  update(dt, world, blocked, time = -1, target) {
+    if (this.companion !== "off") {
+      this.escort(dt, world, blocked, target);
+      return;
+    }
+    if (this.schedule && time >= 0 && this.home) {
+      this.routine(dt, world, blocked, time);
+      return;
+    }
+    this.post(dt, world, blocked);
+  }
+  /**
+   * Acompanhante: anda atrás da jogadora (parando a ~2 células, de frente para ela), corre para alcançá-la quando fica para trás e, se a perde de
+   * vista (longe demais), aparece ao lado dela. Ao terminar volta sozinho ao posto e retoma o passeio.
+   */
+  escort(dt, world, blocked, target) {
+    if (this.hold) {
+      this.move(dt, 0, 0, world, blocked);
+      return;
+    }
+    const free = (self, x, y) => !!blocked?.(self, x, y);
+    if (this.companion === "home") {
+      this.spec.speed = this.cruise;
+      if (this.steer(dt, world, free, this.homeX, this.homeY, true)) {
+        this.companion = "off";
+        this.moving = false;
+      }
+      return;
+    }
+    if (!target) {
+      this.move(dt, 0, 0, world, blocked);
+      return;
+    }
+    const dx = target.x - this.x, dy = target.y - this.y;
+    const d = Math.hypot(dx, dy);
+    if (d > 18 * SUBDIV) {
+      this.x = target.x - 1.5;
+      this.y = target.y;
+      return;
+    }
+    if (d <= 2.2 * SUBDIV) {
+      this.spec.speed = this.cruise;
+      this.faceTo(target.x, target.y);
+      this.move(dt, 0, 0, world, blocked);
+      return;
+    }
+    this.spec.speed = d > 5 * SUBDIV ? this.cruise * 2.4 : this.cruise * 1.3;
+    this.move(dt, dx / d, dy / d, world, free);
+  }
+  /** No posto: passeia pela área dele (ou fica parado, se está conversando). */
+  post(dt, world, blocked) {
     if (this.hold) {
       this.move(dt, 0, 0, world, blocked);
       return;
     }
     this.wander(dt, world, (self, x, y) => !this.allowedAt(x, y) || !!blocked?.(self, x, y));
   }
+  /**
+   * Rotina do dia (nível 1): no posto durante o dia; ao anoitecer anda até a porta dos fundos, desbota e dorme (fora do mapa); de manhã aparece
+   * nela e volta ao posto. A primeira chamada já nasce no estado certo para a hora (mundo aberto à noite: ele já está dormindo).
+   */
+  routine(dt, world, blocked, time) {
+    const phase = phaseAt(this.schedule, time);
+    this.phase = phase;
+    const wantAsleep = phase === "asleep";
+    const [hx, hy] = this.home;
+    if (!this.seeded) {
+      this.seeded = true;
+      if (wantAsleep) {
+        this.mode = "asleep";
+        this.fade = 1;
+        this.x = hx;
+        this.y = hy;
+        return;
+      }
+    }
+    switch (this.mode) {
+      case "asleep":
+        if (wantAsleep) return;
+        this.mode = "arriving";
+        this.x = hx;
+        this.y = hy;
+        this.facing = "down";
+        return;
+      case "arriving":
+        this.fade = Math.max(0, this.fade - dt / 1.2);
+        this.move(dt, 0, 0, world, blocked);
+        if (this.fade <= 0) this.mode = "post";
+        return;
+      case "goHome":
+        if (!wantAsleep) {
+          this.mode = "post";
+          break;
+        }
+        if (this.steer(dt, world, blocked, hx, hy)) this.mode = "leaving";
+        return;
+      case "leaving":
+        this.fade = Math.min(1, this.fade + dt / 1.2);
+        this.move(dt, 0, 0, world, blocked);
+        if (this.fade >= 1) this.mode = "asleep";
+        return;
+      default:
+        break;
+    }
+    if (this.mode === "post" && wantAsleep && !this.hold) {
+      this.mode = "goHome";
+      this.stuckFor = 0;
+      return;
+    }
+    this.post(dt, world, blocked);
+  }
+  /** Anda em linha reta até (tx, ty) respeitando a área do morador; travado por 2 s, chega de uma vez. Devolve se chegou. */
+  steer(dt, world, blocked, tx, ty, anywhere = false) {
+    const dx = tx - this.x, dy = ty - this.y;
+    const d = Math.hypot(dx, dy);
+    if (d < 0.3) return true;
+    const moved = this.move(dt, dx / d, dy / d, world, (self, x, y) => !anywhere && !this.allowedAt(x, y) || !!blocked?.(self, x, y));
+    this.stuckFor = moved < 2e-3 ? this.stuckFor + dt : 0;
+    if (this.stuckFor > 2) {
+      this.x = tx;
+      this.y = ty;
+      return true;
+    }
+    return false;
+  }
 };
+
+// src/game/residents.ts
+var RESIDENT_NAMES = [
+  "Adalto",
+  "Beatriz",
+  "Cec\xEDlia",
+  "Davi",
+  "Elisa",
+  "Fausto",
+  "Gael",
+  "Helo\xEDsa",
+  "Ivo",
+  "J\xFAlia",
+  "Lara",
+  "Mateus",
+  "Nina",
+  "Osvaldo",
+  "Paulina",
+  "Quit\xE9ria",
+  "Rui",
+  "S\xF4nia",
+  "Tom\xE1s",
+  "Ulisses",
+  "Vera",
+  "Yara",
+  "Zeca",
+  "Am\xE9lia",
+  "Bruno",
+  "Clara",
+  "Dora",
+  "Estev\xE3o",
+  "Fl\xE1via",
+  "Geraldo",
+  "Helena",
+  "In\xEAs",
+  "Jonas",
+  "L\xFAcia",
+  "Murilo",
+  "Nair",
+  "Ot\xE1vio",
+  "Pietra",
+  "Renato",
+  "Sara",
+  "Tiago",
+  "Vit\xF3ria",
+  "Abel",
+  "Berta",
+  "C\xEDntia",
+  "Dario",
+  "Eug\xEAnia",
+  "Fabr\xEDcio"
+];
+var TOWN_PROFESSIONS = [
+  { name: "guarda de rua", lines: ["Fa\xE7o a ronda das ruas. A muralha protege a cidade, e eu protejo o caminho at\xE9 a porta de casa.", "Dizem que quem acende a lamparina cedo dorme tranquilo. Eu s\xF3 confiro se todas est\xE3o acesas."] },
+  { name: "escriba", lines: ["Copio cartas e registros para a Guilda. Tinta, pena e muita paci\xEAncia: \xE9 s\xF3 disso que preciso.", "Anoto tudo o que acontece na cidade. Se algo importante te acontecer, eu escrevo!"] },
+  { name: "alfaiate", lines: ["Costuro capas e coletes para o povo da cidade. Cor boa n\xE3o sai de moda, sabia?", "Um bom tecido dura anos. Cuide do que veste e ele cuida de voc\xEA."] },
+  { name: "cozinheiro", lines: ["Cozinho para a Hospedaria. P\xE3o quentinho e sopa de legumes sempre d\xE3o \xE2nimo a quem viaja.", "O segredo de um bom caldo? Trigo fresco, hortali\xE7a da horta e tempo no fogo."] },
+  { name: "mensageiro", lines: ["Levo recados de uma ponta \xE0 outra da cidade. Quem anda muito conhece cada pedra da rua!", "J\xE1 entreguei carta at\xE9 no castelo. A porta n\xE3o abriu, mas o guarda leu o envelope."] },
+  { name: "pedreiro", lines: ["Assentei muita pedra nestas ruas. Repare: nenhuma est\xE1 torta.", "Pedra, areia e terra: com isso se faz casa, muro e cal\xE7ada. Bloco bem posto n\xE3o cai."] },
+  { name: "lampadeiro", lines: ["Cuido dos postes de luz da cidade. De noite a rua fica bonita, toda acesa.", "Limpo o vidro de cada lanterna toda semana. Luz suja n\xE3o ilumina direito."] },
+  { name: "aprendiz de ferreiro", lines: ["Quero aprender com o Black a forjar espada. Por enquanto s\xF3 varro a Ferraria.", "Ferro quente \xE9 coisa s\xE9ria. J\xE1 queimei a ponta do cabelo duas vezes!"] }
+];
+var VILLAGE_PROFESSIONS = [
+  { name: "agricultor", lines: ["Planto trigo e hortali\xE7a na vila. Terra arada, semente e \xE1gua: o resto \xE9 esperar.", "Colheita boa \xE9 a que se divide. Leve um pouco de trigo para os bichos!"] },
+  { name: "pastor", lines: ["Cuido das ovelhas da vila. Elas gostam de trigo e de sombra, nessa ordem.", "Ovelha tosquiada d\xE1 l\xE3 de novo, sabia? A paci\xEAncia \xE9 toda a ci\xEAncia do pastor."] },
+  { name: "lenhador", lines: ["Derrubo \xE1rvores e racho lenha para o inverno. Cada tora serve a uma casa.", "\xC1rvore derrubada pede \xE1rvore plantada. Sempre deixo uma muda no lugar."] },
+  { name: "tecel\xE3o", lines: ["Tenho um tear na casa de palha. Fio por fio sai uma manta quentinha.", "A l\xE3 das ovelhas daqui \xE9 macia. D\xE1 pano bom para qualquer esta\xE7\xE3o."] },
+  { name: "ordenhador", lines: ["Tiro o leite das vacas toda manh\xE3, bem cedo, antes de o sol esquentar.", "Vaca calma d\xE1 leite bom. Falo baixinho com elas, e elas gostam."] },
+  { name: "cuidador de galinhas", lines: ["Recolho os ovos do galinheiro. Cada galinha tem o seu jeitinho de botar.", "Semente de trigo para elas, e ovo fresco para a gente. Troca justa!"] }
+];
+var PERSONALITIES = ["alegre", "timido", "curioso", "ranzinza", "sonhador"];
+var OPENER = {
+  alegre: "Que alegria te ver por aqui!",
+  timido: "Ah... oi. Desculpe, n\xE3o vi voc\xEA chegar.",
+  curioso: "Ei, voc\xEA! De onde veio? Conta tudo!",
+  ranzinza: "Humpf. O que voc\xEA quer?",
+  sonhador: "Hmm... ah, ol\xE1. Estava longe daqui."
+};
+var CLOSER = {
+  alegre: "Passe sempre por aqui, vai ser um prazer!",
+  timido: "Bem... \xE9 s\xF3 isso. Obrigado por ouvir.",
+  curioso: "E voc\xEA, o que anda fazendo de interessante?",
+  ranzinza: "Agora, com licen\xE7a, tenho o que fazer.",
+  sonhador: "\xC0s vezes penso em como seria viver al\xE9m do mapa..."
+};
+var HUES = [0.09, 0.17, 0.25, 0.33, 0.42, 0.5, 0.58, 0.67, 0.75, 0.83, 0.92];
+var SATS = [0.9, 1, 1.1];
+var VALS = [0.86, 0.95, 1.04];
+var RESIDENT_BASES = NPC_IDS.filter((id) => id !== SMITH && id !== MERCHANT && id !== FLORIST_KEEPER);
+var NO_LOOK = { hue: 0, sat: 1, val: 1 };
+function makeResidents(seed, place, count, avoidNames = []) {
+  const salt = place === "town" ? 32337 : 20905;
+  const professions = place === "town" ? TOWN_PROFESSIONS : VILLAGE_PROFESSIONS;
+  const pick = (n, i, k) => Math.floor(hash2(seed ^ salt, i * 131 + k, 977 + k) * n);
+  const usedNames = new Set(avoidNames);
+  const usedLooks = /* @__PURE__ */ new Set();
+  const out = [];
+  for (let i = 0; i < count; i++) {
+    let name = "";
+    for (let t = 0; t < RESIDENT_NAMES.length; t++) {
+      const cand = RESIDENT_NAMES[(pick(RESIDENT_NAMES.length, i, 1) + t) % RESIDENT_NAMES.length];
+      if (!usedNames.has(cand)) {
+        name = cand;
+        break;
+      }
+    }
+    usedNames.add(name);
+    let base = RESIDENT_BASES[0], look = NO_LOOK;
+    for (let t = 0; t < RESIDENT_BASES.length * HUES.length; t++) {
+      const b = RESIDENT_BASES[(pick(RESIDENT_BASES.length, i, 2) + t) % RESIDENT_BASES.length];
+      const h = HUES[(pick(HUES.length, i, 3) + Math.floor(t / RESIDENT_BASES.length)) % HUES.length];
+      if (usedLooks.has(`${b}|${h}`)) continue;
+      usedLooks.add(`${b}|${h}`);
+      base = b;
+      look = { hue: h, sat: SATS[pick(SATS.length, i, 4)], val: VALS[pick(VALS.length, i, 5)] };
+      break;
+    }
+    const prof = professions[pick(professions.length, i, 6)];
+    const personality = PERSONALITIES[pick(PERSONALITIES.length, i, 7)];
+    out.push({
+      id: `r${place === "town" ? "t" : "v"}${i}`,
+      base,
+      name,
+      profession: prof.name,
+      personality,
+      look,
+      lines: [`${OPENER[personality]} ${prof.lines[0]}`, `${prof.lines[1]} ${CLOSER[personality]}`]
+    });
+  }
+  return out;
+}
+var NAMED_NPC_NAMES = new Set(NPCS.map((n) => n.name));
 
 // src/world/interiors.ts
 var SMITHY_INTERIOR = {
@@ -3760,6 +4118,9 @@ var LOVE_FRAMES = 16;
 var LOVE_SCALE = { sheep: 1, cow: 1.05, chicken: 0.7, horse: 1.25, capybara: 1 };
 var PAIR_RANGE = 6 * SUBDIV;
 var COURT_DISTANCE = 1.5 * SUBDIV;
+var NOTICE_RANGE = 3 * SUBDIV;
+var RESIDENTS_TOWN = 8;
+var RESIDENTS_VILLAGE = 5;
 var MAX_SHEEP = 16;
 var MAX_PER_SPECIES = { sheep: MAX_SHEEP, horse: 6, cow: 10, chicken: 12, capybara: 6 };
 function heroActorKind(body, equipped, attackTool, attacking) {
@@ -3784,6 +4145,14 @@ var Entities = class {
   horses = [];
   /** Moradores da cidade (só andam por ruas e praças; o golpe não os atinge). */
   villagers = [];
+  /** O que os moradores lembram da jogadora (ADR 0034, nível 3): vai no salvamento do jogador; a sala não guarda. */
+  memory = {};
+  /** Missões (ADR 0034): estado salvo no jogador; o `Game` o muda ao aceitar/entregar. */
+  quests = {};
+  /** Sinal sobre a cabeça dos NPCs com missão (o `Game` o recalcula todo quadro a partir do estado e do inventário). */
+  marks = {};
+  /** Hora do mundo (0..1) para a agenda dos moradores (o `Game` a atualiza todo quadro; -1 = sem relógio: sem rotina, como na sala). */
+  time = -1;
   /** Monstros da dungeon (presos no interior dela). */
   monsters = [];
   /** Monstros derrotados tocando a animação de morte. */
@@ -3934,21 +4303,60 @@ var Entities = class {
       people.push({ at: k.at, npc: FLORIST_KEEPER, walk });
     }
     people.forEach(({ at: [hx, hy], npc, walk }) => {
-      for (let r = 0; r <= 12; r++) {
-        for (let dy = -r; dy <= r; dy++) {
-          for (let dx = -r; dx <= r; dx++) {
-            if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
-            const cx = hx + dx;
-            const cy = hy + dy;
-            if (!walk(cx, cy) || !world.isWalkable(cx, cy)) continue;
-            const v = new Villager(cx + 0.5, cy + 0.5, npc, walk, this.rand);
-            if (this.all().some((w) => v.overlapsAt(v.x, v.y, w))) continue;
-            this.villagers.push(v);
-            return;
-          }
+      const v = this.placeVillager(world, hx, hy, npc, walk);
+      if (v && npc === MERCHANT) v.setHome(hx + 0.5, hy + 0.5);
+    });
+  }
+  /** Posta um morador na célula andável e livre mais perto de (hx, hy) (até 12 células); devolve-o, ou null se não coube. */
+  placeVillager(world, hx, hy, npc, walk, resident = null) {
+    for (let r = 0; r <= 12; r++) {
+      for (let dy = -r; dy <= r; dy++) {
+        for (let dx = -r; dx <= r; dx++) {
+          if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+          const cx = hx + dx;
+          const cy = hy + dy;
+          if (!walk(cx, cy) || !world.isWalkable(cx, cy)) continue;
+          const v = new Villager(cx + 0.5, cy + 0.5, npc, walk, this.rand, resident);
+          if (this.all().some((w) => v.overlapsAt(v.x, v.y, w))) continue;
+          this.villagers.push(v);
+          return v;
         }
       }
-    });
+    }
+    return null;
+  }
+  /**
+   * Moradores sorteados (ADR 0034, `game/residents.ts`): `RESIDENTS_TOWN` nas ruas da cidade e `RESIDENTS_VILLAGE` pelos caminhos da vila, cada um
+   * "primo" de um morador comum (cores trocadas no shader), com nome, profissão e falas próprias — sempre os mesmos para a mesma seed. Chamar
+   * depois de `spawnVillagers` (eles se espalham longe dos 16 nomeados). Só no aparelho (a sala não simula moradores).
+   */
+  spawnResidents(world, townCount = RESIDENTS_TOWN, villageCount = RESIDENTS_VILLAGE) {
+    const t = world.town;
+    let townNames = [];
+    if (t) {
+      const a = t.area;
+      const onStreet = (cx, cy) => cx > a.x0 && cx < a.x1 && cy > a.y0 && cy < t.gate.y0 && t.street[(cy - a.y0) * t.w + (cx - a.x0)] === 1;
+      const taken = this.villagers.map((v) => [v.cellX, v.cellY]);
+      const homes = homesFor(world, townCount, onStreet, taken, HOME_SPACING / 2);
+      townNames = makeResidents(world.seed, "town", townCount);
+      townNames.forEach((r, i) => this.placeVillager(world, homes[i][0], homes[i][1], r.base, onStreet, r));
+    }
+    const vl = world.village;
+    if (vl && villageCount > 0) {
+      const { x0, y0, x1, y1 } = vl.area;
+      const inside = (cx, cy) => cx > x0 && cx < x1 && cy > y0 && cy < y1;
+      const cells = [];
+      for (let cy = y0 + 1; cy < y1; cy++) for (let cx = x0 + 1; cx < x1; cx++) if (vl.ground[(cy - y0) * vl.w + (cx - x0)] === Block.PATH) cells.push([cx, cy, hash2(world.seed ^ 20905, cx, cy)]);
+      cells.sort((p, q) => p[2] - q[2]);
+      const homes = [];
+      for (const [cx, cy] of cells) {
+        if (homes.length >= villageCount) break;
+        if (homes.every(([hx, hy]) => Math.hypot(hx - cx, hy - cy) >= 4 * SUBDIV)) homes.push([cx, cy]);
+      }
+      makeResidents(world.seed, "village", villageCount, townNames.map((r) => r.name)).forEach((r, i) => {
+        if (homes[i]) this.placeVillager(world, homes[i][0], homes[i][1], r.base, inside, r);
+      });
+    }
   }
   /**
    * Bichos do mundo (os mesmos em qualquer aparelho e na sala, pela seed): rebanho, cavalo, vacas e galinhas no campo
@@ -4076,7 +4484,7 @@ var Entities = class {
     return this.player ? [this.player, ...this.avatars] : this.avatars;
   }
   all() {
-    return [...this.hunters(), ...this.npcs, ...this.horses, ...this.villagers, ...this.monsters];
+    return [...this.hunters(), ...this.npcs, ...this.horses, ...this.villagers.filter((v) => !v.hidden), ...this.monsters];
   }
   /** Alvo de um monstro: o jogador mais perto dentro do limite dele (senão o mais perto de todos). */
   targetOf(m) {
@@ -4105,7 +4513,21 @@ var Entities = class {
     return false;
   };
   update(dt, world) {
-    for (const v of this.villagers) v.update(dt, world, this.blocker);
+    if (!this.remote) {
+      for (const v of this.villagers) {
+        v.update(dt, world, this.blocker, this.time, v.leader ?? this.player ?? void 0);
+        if (v.hidden || v.moving || v.talking) continue;
+        let near = null, nd = NOTICE_RANGE;
+        for (const h of this.hunters()) {
+          const d = Math.hypot(h.x - v.x, h.y - v.y);
+          if (d <= nd) {
+            near = h;
+            nd = d;
+          }
+        }
+        if (near) v.faceTo(near.x, near.y);
+      }
+    }
     if (!this.remote) this.updateCreatures(dt, world);
     for (let i = this.dying.length - 1; i >= 0; i--) {
       this.dying[i].t += dt / MONSTERS[this.dying[i].kind].deathSeconds;
@@ -4412,6 +4834,7 @@ var Entities = class {
   villagerAt(wx, wy) {
     let hit = null;
     for (const v of this.villagers) {
+      if (v.hidden) continue;
       const lift = v.visualZ * CUBE_FRONT / TILE;
       if (Math.abs(wx - v.x) < 0.45 && wy > v.y - lift - 2.1 && wy < v.y - lift + 0.2 && (!hit || v.y > hit.y)) hit = v;
     }
@@ -4428,6 +4851,7 @@ var Entities = class {
     let best = null;
     let bestD = Infinity;
     for (const v of this.villagers) {
+      if (v.hidden) continue;
       const dx = v.x - p.x;
       const dy = v.y - p.y;
       const d = Math.hypot(dx, dy);
@@ -4512,6 +4936,7 @@ var Entities = class {
       });
     }
     for (const v of this.villagers) {
+      if (v.hidden) continue;
       out.push({
         kind: `npc-${v.npc}`,
         x: v.x,
@@ -4519,7 +4944,10 @@ var Entities = class {
         visualZ: v.visualZ,
         facing: v.facing,
         moving: v.moving,
-        walkTime: v.walkTime
+        walkTime: v.walkTime,
+        fade: v.fade > 0 ? v.fade : void 0,
+        look: v.look ?? void 0,
+        mark: v.resident ? void 0 : this.marks[v.npc]
       });
     }
     for (const m of this.monsters) {
@@ -4545,20 +4973,20 @@ var Entities = class {
   }
 };
 var HOME_SPACING = 16 * SUBDIV;
-function homesFor(world, n, onStreet) {
+function homesFor(world, n, onStreet, taken = [], spacing = HOME_SPACING) {
   const t = world.town;
   const [sx, sy] = t.start;
   const [kx, ky] = t.castleDoor;
-  const homes = [[sx - 5, sy - 1], [sx + 5, sy - 3], [Math.round((sx + kx) / 2), Math.round((sy + ky) / 2)], [kx + 3, ky + 2]].slice(0, n);
+  const homes = taken.length ? [] : [[sx - 5, sy - 1], [sx + 5, sy - 3], [Math.round((sx + kx) / 2), Math.round((sy + ky) / 2)], [kx + 3, ky + 2]].slice(0, n);
   const a = t.area;
   const cells = [];
   for (let cy = a.y0; cy < t.gate.y0; cy++) for (let cx = a.x0; cx <= a.x1; cx++) if (onStreet(cx, cy)) cells.push([cx, cy, hash2(7919, cx, cy)]);
   cells.sort((p, q) => p[2] - q[2]);
   for (const [cx, cy] of cells) {
     if (homes.length >= n) break;
-    if (homes.every(([hx, hy]) => Math.hypot(hx - cx, hy - cy) >= HOME_SPACING)) homes.push([cx, cy]);
+    if (homes.every(([hx, hy]) => Math.hypot(hx - cx, hy - cy) >= spacing) && taken.every(([hx, hy]) => Math.hypot(hx - cx, hy - cy) >= spacing)) homes.push([cx, cy]);
   }
-  while (homes.length < n) homes.push(homes[homes.length % 4]);
+  while (homes.length < n) homes.push(taken.length ? cells[homes.length % cells.length].slice(0, 2) : homes[homes.length % 4]);
   return homes;
 }
 
@@ -6654,6 +7082,8 @@ var MOBS_RADIUS = 22;
 var CREATURE_STEP = 0.1;
 var LOAD_RADIUS = 28;
 var FEED_REACH = 3;
+var TALK_REACH = 8;
+var TALK_MAX_SECONDS = 120;
 var round2 = (v) => Math.round(v * 100) / 100;
 function rescaleRoomSnapshot(s, to) {
   const f = rescaleFactor(s.sub ?? 1, to);
@@ -6698,6 +7128,9 @@ var Room = class {
     const d = this.world.dungeon;
     if (d) this.loadRect(d.area.x0, d.area.y0, d.area.x1, d.area.y1);
     e.spawnWildlife(this.world, true);
+    this.loadPeopleAreas();
+    e.spawnVillagers(this.world);
+    e.spawnResidents(this.world);
   }
   id;
   name;
@@ -6732,6 +7165,13 @@ var Room = class {
   /** Mensagens geradas pela simulação dos bichos (mordidas, números de dano, espólios), entregues no próximo retorno. */
   pending = [];
   hits = [];
+  /** Gera os chunks onde os moradores nascem e andam: a cidade, os cômodos (balcões) e a vila. */
+  loadPeopleAreas() {
+    const w = this.world;
+    if (w.town) this.loadRect(w.town.area.x0, w.town.area.y0, w.town.area.x1, w.town.area.y1);
+    for (const l of w.interiors) this.loadRect(l.area.x0, l.area.y0, l.area.x1, l.area.y1);
+    if (w.village) this.loadRect(w.village.area.x0, w.village.area.y0, w.village.area.x1, w.village.area.y1);
+  }
   /** Carrega (gera) os chunks em volta de (x, y). */
   loadAround(x, y, r) {
     this.loadRect(x - r, y - r, x + r, y + r);
@@ -6781,12 +7221,44 @@ var Room = class {
   }
   leave(id) {
     if (!this.players.delete(id)) return [];
+    this.releasePlayerVillagers(id);
     const av = this.avatars.get(id);
     if (av) {
       this.avatars.delete(id);
       this.entities.avatars.splice(this.entities.avatars.indexOf(av), 1);
     }
     return [{ to: "all", msg: { t: "left", id } }];
+  }
+  /** Moradores presos numa conversa (jogador → morador, quando começou) e quem tem uma conversa aberta há tempo demais é solto. */
+  talks = /* @__PURE__ */ new Map();
+  releaseTalk(id) {
+    const t = this.talks.get(id);
+    if (!t) return;
+    this.talks.delete(id);
+    if (![...this.talks.values()].some((o) => o.v === t.v)) t.v.freeze(false);
+  }
+  releaseStaleTalks() {
+    for (const [pid, t] of this.talks) if (this.clock - t.since > TALK_MAX_SECONDS) this.releaseTalk(pid);
+  }
+  /** O jogador saiu: solta a conversa dele e os moradores que o acompanhavam voltam ao posto. */
+  releasePlayerVillagers(id) {
+    this.releaseTalk(id);
+    const av = this.avatars.get(id);
+    for (const v of this.entities.villagers) {
+      if (av && v.leader === av) {
+        v.setCompanion(false);
+        v.leader = null;
+      }
+    }
+  }
+  villagerById(id) {
+    return this.entities.villagers.find((v) => this.mobIds.get(v) === id) ?? null;
+  }
+  playerIdOf(av) {
+    if (av) {
+      for (const [pid, a] of this.avatars) if (a === av) return pid;
+    }
+    return 0;
   }
   /** Mensagem de um jogador já na sala. Ações passam pelas regras do `World`; recusadas voltam só para quem mandou. */
   handle(id, m) {
@@ -6812,6 +7284,33 @@ var Room = class {
       av.facing = m.facing;
       this.entities.strikeFrom(av, m.facing, m.attack, this.world);
       return this.flush();
+    }
+    if (m.t === "talk" || m.t === "escort") {
+      const av = this.avatars.get(id);
+      const v = av ? this.villagerById(m.id) : null;
+      if (!av || !v) return [];
+      const close = Math.hypot(v.x - av.x, v.y - av.y) <= TALK_REACH;
+      if (m.t === "talk") {
+        this.releaseTalk(id);
+        if (m.on && close) {
+          v.freeze(true);
+          v.faceTo(av.x, av.y);
+          this.talks.set(id, { v, since: this.clock });
+        }
+        return [];
+      }
+      if (!m.on) {
+        if (v.leader === av) {
+          v.setCompanion(false);
+          v.leader = null;
+        }
+        return [];
+      }
+      if (v.escorting && v.leader !== av) return [{ to: id, msg: { t: "escort", id: m.id, ok: false } }];
+      if (!close && v.leader !== av) return [{ to: id, msg: { t: "escort", id: m.id, ok: false } }];
+      v.leader = av;
+      v.setCompanion(true);
+      return [{ to: id, msg: { t: "escort", id: m.id, ok: true } }];
     }
     if (m.t === "feed") {
       const av = this.avatars.get(id);
@@ -6885,6 +7384,8 @@ var Room = class {
     if (this.players.size) {
       this.dirty = true;
       for (const av of this.avatars.values()) this.loadAround(av.x, av.y, LOAD_RADIUS);
+      this.entities.time = this.time;
+      this.releaseStaleTalks();
       for (let left = dt; left > 1e-6; left -= CREATURE_STEP) this.entities.update(Math.min(CREATURE_STEP, left), this.world);
       out.push(...this.flush());
       this.mobTimer -= dt;
@@ -6930,6 +7431,16 @@ var Room = class {
       if (a.baby) s.b = 1;
       if (a.inLove && a.courtship <= 0) s.l = 1;
       if (a.canEat) s.e = 1;
+      list.push(s);
+    }
+    for (const v of e.villagers) {
+      if (v.hidden || !near(v)) continue;
+      const s = { i: this.mobId(v), k: `npc-${v.npc}`, x: round2(v.x), y: round2(v.y), f: FACING_ORDER.indexOf(v.facing) };
+      if (v.moving) s.m = 1;
+      if (v.resident) s.u = v.resident.id;
+      if (v.fade > 0) s.a = round2(v.fade);
+      const g = this.playerIdOf(v.leader);
+      if (g) s.g = g;
       list.push(s);
     }
     for (const m of e.monsters) {
