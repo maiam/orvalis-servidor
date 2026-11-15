@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.93.119 (b38e9a9) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.93.120 (3346f43) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -2371,7 +2371,7 @@ var Villager = class extends Wanderer {
     this.npc = npc;
     this.onStreet = onStreet;
     this.resident = resident;
-    this.role = npcDef(npc).role ?? null;
+    this.role = resident?.role ?? npcDef(npc).role ?? null;
     this.schedule = scheduleOf(npc);
     this.cruise = this.spec.speed;
   }
@@ -2698,6 +2698,19 @@ var HUES = [0.09, 0.17, 0.25, 0.33, 0.42, 0.5, 0.58, 0.67, 0.75, 0.83, 0.92];
 var SATS = [0.9, 1, 1.1];
 var VALS = [0.86, 0.95, 1.04];
 var RESIDENT_BASES = NPC_IDS.filter((id) => id !== SMITH && id !== MERCHANT && id !== FLORIST_KEEPER);
+var GUILD_MASTER = {
+  id: "guild",
+  base: "noel",
+  name: "Mestre Aldric",
+  profession: "Mestre da Guilda",
+  personality: "ranzinza",
+  role: "guild",
+  look: { hue: 0.93, sat: 1.05, val: 1 },
+  lines: [
+    "Bem-vindo \xE0 Guilda dos Aventureiros! Aqui os contratos da cidade passam por mim. Quem prova ser \xFAtil tem trabalho e moedas de sobra.",
+    "N\xE3o importa de onde veio. Na guilda, o que vale \xE9 o nome que voc\xEA faz com o que entrega."
+  ]
+};
 var NO_LOOK = { hue: 0, sat: 1, val: 1 };
 function makeResidents(seed, place, count, avoidNames = []) {
   const salt = place === "town" ? 32337 : 20905;
@@ -2875,7 +2888,51 @@ var FLORIST_INTERIOR = {
   ],
   keeper: { at: [11, 4], rows: [4, 4] }
 };
-var INTERIOR_DEFS = [SMITHY_INTERIOR, MARKET_INTERIOR, FLORIST_INTERIOR];
+var GUILD_INTERIOR = {
+  id: "guild",
+  name: "Guilda dos Aventureiros",
+  building: Block.GUILD,
+  map: [
+    "########################",
+    // 0  parede do fundo, janelas, estandartes
+    "########################",
+    // 1
+    "########################",
+    // 2
+    "########################",
+    // 3  estantes, mapa, armas
+    "########################",
+    // 4  lareira à direita
+    "#####..............#####",
+    // 5  atrás do balcão (o Mestre anda aqui); quadro e lareira
+    "####.##############.####",
+    // 6  balcão
+    "####.##############.####",
+    // 7
+    "####................####",
+    // 8
+    "####.####......####.####",
+    // 9  mesas de cima
+    "#....####......####....#",
+    // 10
+    "###..####......####...##",
+    // 11 barris | caixotes
+    "###.#####......#####..##",
+    // 12 mesas de baixo
+    "#...#####......#####...#",
+    // 13
+    "#...#####......#####...#",
+    // 14
+    "###...................##",
+    // 15 plantas nos cantos
+    "#########......#########",
+    // 16 entrada entre os pilares
+    "#########EEEEEE#########"
+    // 17 capacho
+  ],
+  keeper: { at: [11, 5], rows: [5, 5] }
+};
+var INTERIOR_DEFS = [SMITHY_INTERIOR, MARKET_INTERIOR, FLORIST_INTERIOR, GUILD_INTERIOR];
 var INTERIOR_ORIGIN = [0, -1e5];
 var INTERIOR_SPACING = 64 * SUBDIV;
 var INTERIOR_MARGIN = 2 * SUBDIV;
@@ -4305,6 +4362,11 @@ var Entities = class {
       const k = florist.keeper;
       const walk = (cx, cy) => cy >= k.rows[0] && cy <= k.rows[1] && interiorFloor(florist, cx, cy);
       people.push({ at: k.at, npc: FLORIST_KEEPER, walk });
+    }
+    const guild = world.interiors.find((l) => l.def.id === "guild");
+    if (guild?.keeper) {
+      const k = guild.keeper;
+      this.placeVillager(world, k.at[0], k.at[1], GUILD_MASTER.base, (cx, cy) => cy >= k.rows[0] && cy <= k.rows[1] && interiorFloor(guild, cx, cy), GUILD_MASTER);
     }
     people.forEach(({ at: [hx, hy], npc, walk }) => {
       const v = this.placeVillager(world, hx, hy, npc, walk);
