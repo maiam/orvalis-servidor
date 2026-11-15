@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.93.108 (fc8da26) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.93.110 (f4ab501) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -179,6 +179,8 @@ var Block = {
   TOWN_PART: 120,
   CASTLE: 121,
   GUILD: 122,
+  /** Floricultura (v0.93.110): 9×5, a oeste da Praça Central, abaixo da Guilda; o cômodo é `FLORIST_INTERIOR`. */
+  FLORIST: 130,
   INN: 123,
   SMITHY: 124,
   SHOP_POTION: 125,
@@ -233,6 +235,25 @@ var Block = {
   /** Cerca de Bétula e de Cerejeira (v0.93.96): a mesma cerca de estacas do Carvalho (`FENCE`), com outra madeira; emendam entre si e com o portão. */
   FENCE_BIRCH: 245,
   FENCE_CHERRY: 248,
+  /**
+   * As 15 Flores Fofas (v0.93.110): enfeites que a Floricultura vende e o jogador coloca no chão — só visual, sem efeito. Ids soltos em faixas livres
+   * (10–19, 146–149 e 249); a ordem é a da lista do dono do produto (`FLOWER_BLOCKS`), a mesma dos 15 quadros de `flowers.webp`.
+   */
+  FLOWER_HONEY: 10,
+  FLOWER_BELL: 11,
+  FLOWER_PEACH: 12,
+  FLOWER_SNOW: 13,
+  FLOWER_POM: 14,
+  FLOWER_TULIP: 15,
+  FLOWER_LANTERN: 16,
+  FLOWER_SHELL: 17,
+  FLOWER_BOW: 18,
+  FLOWER_ROSE: 19,
+  FLOWER_MOON: 146,
+  FLOWER_STRAWBERRY: 147,
+  FLOWER_CORAL: 148,
+  FLOWER_SAPPHIRE: 149,
+  FLOWER_VANILLA: 249,
   /** Cerca de Estacas (v0.93.90): 1 célula × 1 de altura (16 × 16 px), 4 estacas; o jogador fabrica (1 Tora → 4) e coloca. */
   FENCE_STAKE: 244,
   /** Vitória-régia comum (folha ou flor; 4 variantes): enfeite sobre a água rasa de rios e lagos, não bloqueia (a água não se pisa). */
@@ -316,6 +337,24 @@ var ground = (id, name, extra = {}) => ({
   stone: false,
   ...extra
 });
+var FLOWER_NAMES = [
+  [Block.FLOWER_HONEY, "Margarida de Mel"],
+  [Block.FLOWER_BELL, "Sininho de Orvalho"],
+  [Block.FLOWER_PEACH, "Cora\xE7\xE3o de P\xEAssego"],
+  [Block.FLOWER_SNOW, "Estrelinha de Neve"],
+  [Block.FLOWER_POM, "Pom-pom de Amora"],
+  [Block.FLOWER_TULIP, "Tulipa de Suspiro"],
+  [Block.FLOWER_LANTERN, "Lanterninha de Sol"],
+  [Block.FLOWER_SHELL, "Conchinha do Lago"],
+  [Block.FLOWER_BOW, "La\xE7o de Lavanda"],
+  [Block.FLOWER_ROSE, "Rosinha de Nuvem"],
+  [Block.FLOWER_MOON, "L\xEDrio de Lua"],
+  [Block.FLOWER_STRAWBERRY, "Bot\xE3o de Morango"],
+  [Block.FLOWER_CORAL, "Dan\xE7arina de Coral"],
+  [Block.FLOWER_SAPPHIRE, "Chuvinha de Safira"],
+  [Block.FLOWER_VANILLA, "Coroa de Baunilha"]
+];
+var FLOWER_BLOCKS = FLOWER_NAMES.map(([id]) => id);
 var object = (id, name, extra = {}) => ({
   id,
   name,
@@ -415,6 +454,8 @@ var defs = [
   object(Block.APPLE_TREE, "Macieira", { shape: "tree", placeable: false, organic: "wood" }),
   object(Block.APPLE_TREE_BARE, "Macieira", { shape: "tree", placeable: false, organic: "wood" }),
   object(Block.TALL_GRASS, "Capim", { shape: "decoration", solid: false, placeable: false, organic: "plant" }),
+  // As 15 Flores Fofas (v0.93.110): enfeite colocável e quebrável (volta como item), sem colisão e sem efeito algum além do visual.
+  ...FLOWER_NAMES.map(([id, name]) => object(id, name, { shape: "decoration", solid: false, placeable: true, organic: "plant" })),
   object(Block.FLOWER, "Flor", { shape: "decoration", solid: false, placeable: false, organic: "plant" }),
   // Dungeon: chão e cenário fixos (inquebráveis; o World também protege a área inteira).
   ground(Block.DUNGEON_DIRT, "Ch\xE3o da Caverna", { breakable: false }),
@@ -438,6 +479,7 @@ var defs = [
     [Block.GUILD, "Guilda dos Aventureiros"],
     [Block.INN, "Hospedaria"],
     [Block.SMITHY, "Ferreiro"],
+    [Block.FLORIST, "Floricultura"],
     [Block.SHOP_POTION, "Loja de Po\xE7\xF5es"],
     [Block.SHOP_GOODS, "Armaz\xE9m"],
     [Block.SHOP_TOOLS, "Loja de Ferramentas"],
@@ -586,7 +628,8 @@ var HOTBAR_BLOCKS = [
   Block.FENCE_GATE,
   Block.FENCE_GATE_BIRCH,
   Block.FENCE_GATE_CHERRY,
-  Block.FENCE_STAKE
+  Block.FENCE_STAKE,
+  ...FLOWER_BLOCKS
 ];
 var GROWTH_STAGE_ADULT = {
   [Block.OAK_SAPLING]: Block.OAK_TREE,
@@ -1360,7 +1403,7 @@ function toolDrops(tool, id, rand = Math.random) {
   return dropsFor(id, rand);
 }
 var TOOL_ORDER = [Tool.SWORD, Tool.HOE, Tool.PICKAXE, Tool.SHOVEL, Tool.AXE];
-var COLLECTABLE = /* @__PURE__ */ new Set([...MATERIALS, Block.OAK_DOOR, Block.TENT, Block.CHEST, Block.CAMPFIRE, Block.CAULDRON, Block.OVEN, Block.CHAIR, Block.FENCE, Block.FENCE_BIRCH, Block.FENCE_CHERRY, Block.FENCE_STAKE, Block.WALL_PLANKS, Block.WALL_STONE, Block.WALL_DOOR_PLANKS]);
+var COLLECTABLE = /* @__PURE__ */ new Set([...MATERIALS, Block.OAK_DOOR, Block.TENT, Block.CHEST, Block.CAMPFIRE, Block.CAULDRON, Block.OVEN, Block.CHAIR, ...FLOWER_BLOCKS, Block.FENCE, Block.FENCE_BIRCH, Block.FENCE_CHERRY, Block.FENCE_STAKE, Block.WALL_PLANKS, Block.WALL_STONE, Block.WALL_DOOR_PLANKS]);
 var ADULT_TREES = /* @__PURE__ */ new Set([Block.OAK_TREE, Block.APPLE_TREE, Block.APPLE_TREE_BARE]);
 function blockDrops(id, rand = Math.random) {
   if (ADULT_TREES.has(id)) return [{ item: blockStack(Block.OAK_LOG), count: 2 + (rand() < 0.5 ? 1 : 0) }];
@@ -2182,7 +2225,8 @@ var NPCS = [
   {
     id: "rosendo",
     name: "Rosendo",
-    who: "Jardineiro (cabelo rosa, colete verde)",
+    who: "Jardineiro e florista (cabelo rosa, colete verde) \u2014 mora na Floricultura",
+    role: "florist",
     lines: [
       "Gosto de flor e de \xE1rvore. Carvalho, b\xE9tula, cerejeira e macieira crescem todas por aqui, misturadas.",
       "Tora de cerejeira, de b\xE9tula ou de carvalho: cada \xE1rvore derrubada d\xE1 a sua madeira. D\xE1 para fazer t\xE1buas com elas!"
@@ -2277,6 +2321,7 @@ function npcDef(id) {
   return BY_ID.get(id);
 }
 var SMITH = "black";
+var FLORIST_KEEPER = "rosendo";
 var MERCHANT = "bento";
 
 // src/game/villager.ts
@@ -2434,7 +2479,41 @@ var MARKET_INTERIOR = {
   ],
   keeper: { at: [11, 4], rows: [4, 4] }
 };
-var INTERIOR_DEFS = [SMITHY_INTERIOR, MARKET_INTERIOR];
+var FLORIST_INTERIOR = {
+  id: "florist",
+  name: "Floricultura",
+  building: Block.FLORIST,
+  map: [
+    "########################",
+    // 0  parede do fundo, janelas e cortinas
+    "########################",
+    // 1
+    "########################",
+    // 2  prateleiras e vasos
+    "########################",
+    // 3
+    "########........########",
+    // 4  atrás do balcão (a florista anda aqui)
+    "##.......######.......##",
+    // 5  balcão
+    "##.......######.......##",
+    // 6
+    "##.#####........#####.##",
+    // 7  canteiros (esquerdo e direito)
+    "##.#####........#####.##",
+    // 8
+    "##.#####........#####.##",
+    // 9
+    "###########..###########",
+    // 10 entre os pilares (o muro de pedra da frente fecha o resto)
+    "###########..###########",
+    // 11 entrada (2 células)
+    "###########EE###########"
+    // 12 capacho de saída
+  ],
+  keeper: { at: [11, 4], rows: [4, 4] }
+};
+var INTERIOR_DEFS = [SMITHY_INTERIOR, MARKET_INTERIOR, FLORIST_INTERIOR];
 var INTERIOR_ORIGIN = [0, -1e5];
 var INTERIOR_SPACING = 64 * SUBDIV;
 var INTERIOR_MARGIN = 2 * SUBDIV;
@@ -2812,6 +2891,7 @@ var TOWN_SIZES = {
   [Block.CASTLE]: [26, 17, 17],
   [Block.GUILD]: [9, 9, 9],
   [Block.INN]: [9, 5, 5],
+  [Block.FLORIST]: [9, 5, 5],
   [Block.SMITHY]: [8, 5, 5],
   [Block.SHOP_POTION]: [5, 5, 4],
   [Block.SHOP_GOODS]: [5, 5, 5],
@@ -3000,6 +3080,8 @@ function buildTown() {
   const required = [
     place(Block.GUILD, W / 2 - 28, MID - 8, "Guilda dos Aventureiros", true),
     place(Block.INN, W / 2 + 20, MID - 4, "Hospedaria", true),
+    // Floricultura (v0.93.110): a oeste da Praça Central, logo abaixo da Guilda (que vai de MID-8 a MID); a rua chega pela porta, ao sul.
+    place(Block.FLORIST, W / 2 - 28, MID + 6, "Floricultura", true),
     place(Block.SMITHY, 30, MID + 18, "Ferreiro", true),
     place(Block.SHOP_POTION, W / 2 + 22, MID + 18, "Mercado", true),
     place(Block.SHOP_GOODS, W / 2 + 27, MID + 18, "Mercado", true),
@@ -3828,7 +3910,8 @@ var Entities = class {
     const a = t.area;
     const onStreet = (cx, cy) => cx > a.x0 && cx < a.x1 && cy > a.y0 && cy < t.gate.y0 && t.street[(cy - a.y0) * t.w + (cx - a.x0)] === 1;
     const market = world.interiors.find((l) => l.def.id === "market");
-    const common = NPC_IDS.filter((id) => id !== SMITH && !(id === MERCHANT && market?.keeper));
+    const florist = world.interiors.find((l) => l.def.id === "florist");
+    const common = NPC_IDS.filter((id) => id !== SMITH && !(id === MERCHANT && market?.keeper) && !(id === FLORIST_KEEPER && florist?.keeper));
     const homes = homesFor(world, common.length, onStreet);
     const people = common.map((npc, i) => ({ at: homes[i], npc, walk: onStreet }));
     const forge = world.interiors.find((l) => l.def.building === Block.SMITHY);
@@ -3844,6 +3927,11 @@ var Entities = class {
       const k = market.keeper;
       const walk = (cx, cy) => cy >= k.rows[0] && cy <= k.rows[1] && interiorFloor(market, cx, cy);
       people.push({ at: k.at, npc: MERCHANT, walk });
+    }
+    if (florist?.keeper) {
+      const k = florist.keeper;
+      const walk = (cx, cy) => cy >= k.rows[0] && cy <= k.rows[1] && interiorFloor(florist, cx, cy);
+      people.push({ at: k.at, npc: FLORIST_KEEPER, walk });
     }
     people.forEach(({ at: [hx, hy], npc, walk }) => {
       for (let r = 0; r <= 12; r++) {
