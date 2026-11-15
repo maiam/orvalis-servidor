@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.93.99 (9dc5a77) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.93.106 (92314f5) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -3656,11 +3656,13 @@ var ACTIVE_RADIUS = 48 * SUBDIV;
 var PACK_SPAWN_RADIUS = 56 * SUBDIV;
 var PACK_DROP_RADIUS = 80 * SUBDIV;
 var FLOCK_SIZE = 4;
+var VILLAGE_ANIMALS_EACH = 3;
 var VILLAGE_PENS = [
-  { kind: "chicken", count: 4, salt: 97, x0: 33, y0: 9, x1: 45, y1: 15 },
-  { kind: "cow", count: 2, salt: 91, x0: 3, y0: 30, x1: 12, y1: 35 },
-  { kind: "sheep", count: FLOCK_SIZE, salt: 71, x0: 33, y0: 29, x1: 44, y1: 34 },
-  { kind: "capybara", count: 3, salt: 103, x0: 8, y0: 6, x1: 16, y1: 9 }
+  { kind: "chicken", count: VILLAGE_ANIMALS_EACH, salt: 97, x0: 33, y0: 9, x1: 45, y1: 15 },
+  { kind: "cow", count: VILLAGE_ANIMALS_EACH, salt: 91, x0: 3, y0: 30, x1: 12, y1: 35 },
+  { kind: "sheep", count: VILLAGE_ANIMALS_EACH, salt: 71, x0: 33, y0: 29, x1: 44, y1: 34 },
+  { kind: "capybara", count: VILLAGE_ANIMALS_EACH, salt: 103, x0: 8, y0: 6, x1: 16, y1: 9 },
+  { kind: "horse", count: VILLAGE_ANIMALS_EACH, salt: 81, x0: 30, y0: 40, x1: 44, y1: 42 }
 ];
 var SWORD_REACH = 1.45 * SUBDIV;
 var SWORD_ARC_COS = 0.3;
@@ -3758,13 +3760,13 @@ var Entities = class {
     }
   }
   /**
-   * Animais domésticos na Vila Camponesa (`world/village.ts`, v0.93.91): ovelhas, vacas, galinhas e capivaras nascem DENTRO da vila, cada
+   * Animais domésticos na Vila Camponesa (`world/village.ts`, v0.93.91; v0.93.106: 3 de cada, cavalos incluídos): ovelhas, vacas, galinhas, capivaras e cavalos nascem DENTRO da vila, cada
    * espécie numa faixa de grama da planta dela (`VILLAGE_PENS`, em células da vila); a posição sai da seed, só em grama andável e livre.
-   * Devolve quantos de cada espécie nasceram. O cavalo continua no campo diante do portão da cidade.
+   * Devolve quantos de cada espécie nasceram.
    */
   spawnVillageAnimals(world) {
     const v = world.village;
-    const placed = { sheep: 0, cow: 0, chicken: 0, capybara: 0 };
+    const placed = { sheep: 0, cow: 0, chicken: 0, capybara: 0, horse: 0 };
     if (!v) return placed;
     for (const pen of VILLAGE_PENS) {
       for (let i = 0; i < 400 && placed[pen.kind] < pen.count; i++) {
@@ -3839,8 +3841,8 @@ var Entities = class {
       const s = SUBDIV;
       if (inVillage) this.spawnVillageAnimals(world);
       else this.spawnFlock(world, gx, gy + (town ? 8 : 0) * s);
-      this.spawnHorse(world, gx + 9 * s, gy + (town ? 10 : 2) * s);
       if (!inVillage) {
+        this.spawnHorse(world, gx + 9 * s, gy + (town ? 10 : 2) * s);
         this.spawnAnimals(world, "cow", gx - 9 * s, gy + (town ? 10 : 2) * s, 2, 91);
         this.spawnAnimals(world, "chicken", gx - 6 * s, gy + (town ? 6 : 1) * s, 4, 97);
         this.spawnAnimals(world, "capybara", gx - 8 * s, gy + (town ? 4 : 1) * s, 3, 103);
@@ -4467,6 +4469,8 @@ var Player = class extends Walker {
   attackTool = null;
   /** Golpes começados (a sala repassa aos outros, que tocam a animação ao ver o número mudar). */
   swings = 0;
+  /** Quantos golpes já chegaram ao ponto de acerto (`consumeHit`): o render usa a mudança para tocar o efeito no instante da pancada. */
+  impacts = 0;
   /** Tempo do golpe em andamento (do personagem e da ferramenta, `attackTimingFor`); o `Game` liga `timingFor`. */
   timingFor = null;
   timing = DEFAULT_ATTACK_TIMING;
@@ -4543,6 +4547,7 @@ var Player = class extends Walker {
     if (this.hitDone || !this.attacking) return false;
     if (this.attackPhase < this.timing.hitAt) return false;
     this.hitDone = true;
+    this.impacts++;
     return true;
   }
   get dead() {
