@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.93.117 (f47b110) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.93.118 (e47d0ce) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -63,6 +63,25 @@ var SANCTUARY_MAX_STACK = 5;
 var STEP_HEIGHT = 1;
 var CHUNK_SIZE = 16;
 var UNLOAD_MARGIN = 3;
+
+// src/world/random.ts
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = a + 1831565813 >>> 0;
+    let t = a;
+    t = Math.imul(t ^ t >>> 15, t | 1);
+    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function hash2(seed, x, y) {
+  let h = (seed ^ Math.imul(x | 0, 668265261) ^ Math.imul(y | 0, 374761393)) >>> 0;
+  h = Math.imul(h ^ h >>> 15, 2246822507);
+  h = Math.imul(h ^ h >>> 13, 3266489909);
+  h ^= h >>> 16;
+  return (h >>> 0) / 4294967296;
+}
 
 // src/world/blocks.ts
 var Block = {
@@ -355,6 +374,9 @@ var FLOWER_NAMES = [
   [Block.FLOWER_VANILLA, "Coroa de Baunilha"]
 ];
 var FLOWER_BLOCKS = FLOWER_NAMES.map(([id]) => id);
+function wildFlowerIndex(seed, x, y) {
+  return Math.floor(hash2(seed, x * 7 + 3, y * 13 - 1) * FLOWER_BLOCKS.length);
+}
 var object = (id, name, extra = {}) => ({
   id,
   name,
@@ -708,25 +730,6 @@ function toggled(id) {
 }
 function isOpen(id) {
   return id === Block.OAK_DOOR_OPEN || isGateOpen(id) || id === Block.WALL_DOOR_PLANKS_OPEN || id === Block.V_GATE || id === Block.V_GATE_GAP;
-}
-
-// src/world/random.ts
-function mulberry32(seed) {
-  let a = seed >>> 0;
-  return () => {
-    a = a + 1831565813 >>> 0;
-    let t = a;
-    t = Math.imul(t ^ t >>> 15, t | 1);
-    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
-    return ((t ^ t >>> 14) >>> 0) / 4294967296;
-  };
-}
-function hash2(seed, x, y) {
-  let h = (seed ^ Math.imul(x | 0, 668265261) ^ Math.imul(y | 0, 374761393)) >>> 0;
-  h = Math.imul(h ^ h >>> 15, 2246822507);
-  h = Math.imul(h ^ h >>> 13, 3266489909);
-  h ^= h >>> 16;
-  return (h >>> 0) / 4294967296;
 }
 
 // src/world/dungeon.ts
@@ -1403,7 +1406,7 @@ function toolDrops(tool, id, rand = Math.random) {
   return dropsFor(id, rand);
 }
 var TOOL_ORDER = [Tool.SWORD, Tool.HOE, Tool.PICKAXE, Tool.SHOVEL, Tool.AXE];
-var COLLECTABLE = /* @__PURE__ */ new Set([...MATERIALS, Block.OAK_DOOR, Block.TENT, Block.CHEST, Block.CAMPFIRE, Block.CAULDRON, Block.OVEN, Block.CHAIR, Block.FLOWER, ...FLOWER_BLOCKS, Block.FENCE, Block.FENCE_BIRCH, Block.FENCE_CHERRY, Block.FENCE_STAKE, Block.WALL_PLANKS, Block.WALL_STONE, Block.WALL_DOOR_PLANKS]);
+var COLLECTABLE = /* @__PURE__ */ new Set([...MATERIALS, Block.OAK_DOOR, Block.TENT, Block.CHEST, Block.CAMPFIRE, Block.CAULDRON, Block.OVEN, Block.CHAIR, ...FLOWER_BLOCKS, Block.FENCE, Block.FENCE_BIRCH, Block.FENCE_CHERRY, Block.FENCE_STAKE, Block.WALL_PLANKS, Block.WALL_STONE, Block.WALL_DOOR_PLANKS]);
 var ADULT_TREES = /* @__PURE__ */ new Set([Block.OAK_TREE, Block.APPLE_TREE, Block.APPLE_TREE_BARE]);
 function blockDrops(id, rand = Math.random) {
   if (ADULT_TREES.has(id)) return [{ item: blockStack(Block.OAK_LOG), count: 2 + (rand() < 0.5 ? 1 : 0) }];
@@ -1416,7 +1419,8 @@ function blockDrops(id, rand = Math.random) {
   if (id === Block.ROCK_BOULDER) return [{ item: blockStack(Block.STONE), count: 1 + Math.floor(rand() * 3) }];
   return COLLECTABLE.has(id) ? [{ item: blockStack(id), count: 1 }] : [];
 }
-function breakDrops(tool, id, collect, rand = Math.random) {
+function breakDrops(tool, id, collect, rand = Math.random, at) {
+  if (collect && id === Block.FLOWER && at) return [{ item: blockStack(FLOWER_BLOCKS[wildFlowerIndex(at.seed, at.x, at.y)]), count: 1 }];
   return [...toolDrops(tool, id, rand), ...collect ? blockDrops(id, rand) : []];
 }
 var RECIPES = [
@@ -7340,7 +7344,7 @@ var Room = class {
       const out = [{ to: "all", msg: { t: "applied", ...applied } }];
       let loot = [];
       if (a.kind === "break" && breaking !== null) {
-        loot = [...wasChest ? chestLoot : [], ...breakDrops(a.tool, breaking, this.world.profile.collectBlocks, this.rand)];
+        loot = [...wasChest ? chestLoot : [], ...breakDrops(a.tool, breaking, this.world.profile.collectBlocks, this.rand, { seed: this.world.seed, x: a.x, y: a.y })];
       }
       if (a.kind === "pick") loot = pickDrops(this.rand);
       const list = this.spawnDrops(a.x + 0.5, a.y + 0.7, loot);
