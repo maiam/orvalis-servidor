@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.93.96 (2ead559) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.93.99 (9dc5a77) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -127,6 +127,11 @@ var Block = {
   FENCE_GATE: 49,
   /** Portão aberto: passável. Só existe no mundo (a bolsa coloca o fechado). */
   FENCE_GATE_OPEN: 76,
+  /** Portões de Bétula e de Cerejeira (v0.93.99), fechado e aberto: o mesmo portão do Carvalho (`FENCE_GATE`) com a madeira da cerca. */
+  FENCE_GATE_BIRCH: 77,
+  FENCE_GATE_BIRCH_OPEN: 78,
+  FENCE_GATE_CHERRY: 79,
+  FENCE_GATE_CHERRY_OPEN: 99,
   // --- variações de pedra (prancha de pedras; por receita ou, no futuro, em construções prontas) ---
   STONE_COBBLE: 34,
   STONE_BRICK: 35,
@@ -393,6 +398,10 @@ var defs = [
   object(Block.FENCE_STAKE, "Cerca de Estacas", { shape: "building", organic: "wood" }),
   object(Block.FENCE_GATE, "Port\xE3o de Madeira", { shape: "fence", organic: "wood" }),
   object(Block.FENCE_GATE_OPEN, "Port\xE3o de Madeira (aberto)", { shape: "fence", solid: false, placeable: false, organic: "wood" }),
+  object(Block.FENCE_GATE_BIRCH, "Port\xE3o de B\xE9tula", { shape: "fence", organic: "wood" }),
+  object(Block.FENCE_GATE_BIRCH_OPEN, "Port\xE3o de B\xE9tula (aberto)", { shape: "fence", solid: false, placeable: false, organic: "wood" }),
+  object(Block.FENCE_GATE_CHERRY, "Port\xE3o de Cerejeira", { shape: "fence", organic: "wood" }),
+  object(Block.FENCE_GATE_CHERRY_OPEN, "Port\xE3o de Cerejeira (aberto)", { shape: "fence", solid: false, placeable: false, organic: "wood" }),
   object(Block.CACTUS, "Cacto", { placeable: false, organic: "plant" }),
   object(Block.OAK_TREE, "Carvalho", { shape: "tree", placeable: false, organic: "wood" }),
   object(Block.SAKURA_TREE, "Cerejeira", { shape: "tree", placeable: false, organic: "wood" }),
@@ -575,6 +584,8 @@ var HOTBAR_BLOCKS = [
   Block.FENCE_BIRCH,
   Block.FENCE_CHERRY,
   Block.FENCE_GATE,
+  Block.FENCE_GATE_BIRCH,
+  Block.FENCE_GATE_CHERRY,
   Block.FENCE_STAKE
 ];
 var GROWTH_STAGE_ADULT = {
@@ -612,8 +623,23 @@ function isWaterPlant(id) {
 function isDoor(id) {
   return id === Block.OAK_DOOR || id === Block.OAK_DOOR_OPEN;
 }
-function isGate(id) {
-  return id === Block.FENCE_GATE || id === Block.FENCE_GATE_OPEN;
+function gateClosed(id) {
+  switch (id) {
+    case Block.FENCE_GATE:
+    case Block.FENCE_GATE_OPEN:
+      return Block.FENCE_GATE;
+    case Block.FENCE_GATE_BIRCH:
+    case Block.FENCE_GATE_BIRCH_OPEN:
+      return Block.FENCE_GATE_BIRCH;
+    case Block.FENCE_GATE_CHERRY:
+    case Block.FENCE_GATE_CHERRY_OPEN:
+      return Block.FENCE_GATE_CHERRY;
+    default:
+      return null;
+  }
+}
+function isGateOpen(id) {
+  return id === Block.FENCE_GATE_OPEN || id === Block.FENCE_GATE_BIRCH_OPEN || id === Block.FENCE_GATE_CHERRY_OPEN;
 }
 var TOGGLES = {
   [Block.OAK_DOOR]: Block.OAK_DOOR_OPEN,
@@ -622,6 +648,10 @@ var TOGGLES = {
   [Block.WALL_DOOR_PLANKS_OPEN]: Block.WALL_DOOR_PLANKS,
   [Block.FENCE_GATE]: Block.FENCE_GATE_OPEN,
   [Block.FENCE_GATE_OPEN]: Block.FENCE_GATE,
+  [Block.FENCE_GATE_BIRCH]: Block.FENCE_GATE_BIRCH_OPEN,
+  [Block.FENCE_GATE_BIRCH_OPEN]: Block.FENCE_GATE_BIRCH,
+  [Block.FENCE_GATE_CHERRY]: Block.FENCE_GATE_CHERRY_OPEN,
+  [Block.FENCE_GATE_CHERRY_OPEN]: Block.FENCE_GATE_CHERRY,
   [Block.V_GATE]: Block.V_GATE_CLOSED,
   [Block.V_GATE_CLOSED]: Block.V_GATE,
   [Block.V_GATE_GAP]: Block.V_GATE_GAP_CLOSED,
@@ -634,7 +664,7 @@ function toggled(id) {
   return TOGGLES[id] ?? null;
 }
 function isOpen(id) {
-  return id === Block.OAK_DOOR_OPEN || id === Block.FENCE_GATE_OPEN || id === Block.WALL_DOOR_PLANKS_OPEN || id === Block.V_GATE || id === Block.V_GATE_GAP;
+  return id === Block.OAK_DOOR_OPEN || isGateOpen(id) || id === Block.WALL_DOOR_PLANKS_OPEN || id === Block.V_GATE || id === Block.V_GATE_GAP;
 }
 
 // src/world/random.ts
@@ -1337,7 +1367,8 @@ function blockDrops(id, rand = Math.random) {
   if (id === Block.SAKURA_TREE) return [{ item: blockStack(Block.CHERRY_LOG), count: 2 + (rand() < 0.5 ? 1 : 0) }];
   if (id === Block.BIRCH_TREE) return [{ item: blockStack(Block.BIRCH_LOG), count: 2 + (rand() < 0.5 ? 1 : 0) }];
   if (isDoor(id)) return [{ item: blockStack(Block.OAK_DOOR), count: 1 }];
-  if (isGate(id)) return [{ item: blockStack(Block.FENCE_GATE), count: 1 }];
+  const gate = gateClosed(id);
+  if (gate !== null) return [{ item: blockStack(gate), count: 1 }];
   if (isWallDoor(id)) return [{ item: blockStack(Block.WALL_DOOR_PLANKS), count: 1 }];
   if (id === Block.ROCK_BOULDER) return [{ item: blockStack(Block.STONE), count: 1 + Math.floor(rand() * 3) }];
   return COLLECTABLE.has(id) ? [{ item: blockStack(id), count: 1 }] : [];
@@ -1458,6 +1489,21 @@ var RECIPES = [
     profession: "builder",
     inputs: [{ item: blockStack(Block.OAK_PLANKS), count: 4 }],
     output: { item: blockStack(Block.FENCE_GATE), count: 1 }
+  },
+  // Portões de Bétula e de Cerejeira (v0.93.99): a mesma receita do de Carvalho, com a tábua da madeira.
+  {
+    id: "birch-gate",
+    name: "Port\xE3o de B\xE9tula",
+    profession: "builder",
+    inputs: [{ item: blockStack(Block.BIRCH_PLANKS), count: 4 }],
+    output: { item: blockStack(Block.FENCE_GATE_BIRCH), count: 1 }
+  },
+  {
+    id: "cherry-gate",
+    name: "Port\xE3o de Cerejeira",
+    profession: "builder",
+    inputs: [{ item: blockStack(Block.CHERRY_PLANKS), count: 4 }],
+    output: { item: blockStack(Block.FENCE_GATE_CHERRY), count: 1 }
   },
   // Cozinha (dono do produto, 2026-11-05): por enquanto só se fabricam e se colocam; cozinhar vem com a comida.
   {
