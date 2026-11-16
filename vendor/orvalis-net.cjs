@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.93.123 (6316f1f) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.93.124 (51b948b) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -1673,8 +1673,8 @@ function applyAction(world, a) {
 var PROTOCOL_VERSION = 29;
 var MAX_PLAYERS = 10;
 var ROOM_RULES = {
-  normal: { mode: "survival", infiniteBlocks: false, collectBlockDrops: true, allowCameraModes: false, protectTown: true, maxBuildLevels: MAX_STACK },
-  sanctuary: { mode: "creative", infiniteBlocks: true, collectBlockDrops: false, allowCameraModes: true, protectTown: true, maxBuildLevels: MAX_STACK }
+  normal: { mode: "survival", infiniteBlocks: false, collectBlockDrops: true, allowCameraModes: false, protectTown: true, goddessOnly: false, maxBuildLevels: MAX_STACK },
+  sanctuary: { mode: "creative", infiniteBlocks: true, collectBlockDrops: false, allowCameraModes: true, protectTown: true, goddessOnly: true, maxBuildLevels: MAX_STACK }
 };
 var ROOMS = [
   { id: 1, name: "Sala 1", seed: 20261106, kind: "normal" },
@@ -1779,7 +1779,7 @@ function parseAppearance(v) {
   if (!v || typeof v !== "object") return DEFAULT_APPEARANCE;
   const o = v;
   const body = APPEARANCE_BODIES.includes(o.body) ? o.body : "heroine";
-  return { body };
+  return o.goddess === true ? { body, goddess: true } : { body };
 }
 function parseChestSlots(v, size = 27) {
   if (!Array.isArray(v) || v.length !== size) return null;
@@ -7421,7 +7421,9 @@ var Room = class {
     if (this.players.size >= MAX_PLAYERS) return fail("full", `${this.name} cheia (m\xE1ximo ${MAX_PLAYERS} jogadores). Tente daqui a pouco.`);
     if ([...this.players.values()].some((p) => bagKey(p.name) === bagKey(name))) return fail("name", `J\xE1 tem algu\xE9m com o nome ${name} na sala: escolha outro.`);
     const id = this.nextId++;
-    const player = { id, name, state: null, appearance: hello.appearance ?? DEFAULT_APPEARANCE };
+    const base = hello.appearance ?? DEFAULT_APPEARANCE;
+    const appearance = this.rules.goddessOnly ? { body: base.body, goddess: true } : { body: base.body };
+    const player = { id, name, state: null, appearance };
     const others = [...this.players.values()];
     this.players.set(id, player);
     return {
