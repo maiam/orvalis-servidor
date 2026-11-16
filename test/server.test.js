@@ -86,7 +86,7 @@ test('dois jogadores na mesma sala: entrada, posição, ação aplicada para tod
   await b.wait((m) => m.t === 'left' && m.id === wa.you);
   b.ws.close();
   await new Promise((r) => setTimeout(r, 50));
-  assert.equal(s.rooms.size, 1); // sala fixa: continua aberta, vazia
+  assert.equal(s.rooms.size, net.ROOMS.length); // salas fixas (Sala 1 e Santuário): continuam abertas, vazias
   await s.close();
 });
 
@@ -111,7 +111,10 @@ test('sala fixa salva em disco: mundo e bolsa voltam depois de reiniciar; /salas
   const dir = tempDir();
   let { s, url, port } = await boot(dir);
   const lista = await (await fetch(`http://127.0.0.1:${port}/salas`)).json();
-  assert.deepEqual(lista, [{ numero: 1, nome: 'Sala 1', jogadores: 0, maximo: net.MAX_PLAYERS }]);
+  assert.deepEqual(lista, [
+    { numero: 1, nome: 'Sala 1', jogadores: 0, maximo: net.MAX_PLAYERS },
+    { numero: 2, nome: 'Santuário', jogadores: 0, maximo: net.MAX_PLAYERS }, // v0.93.123: a Sala 2 (criativa) tem seu próprio mundo e arquivo
+  ]);
   const a = client(url); await a.open;
   a.send({ t: 'hello', v: net.PROTOCOL_VERSION, sub: 2, name: 'Ana', room: 1 });
   await a.wait((m) => m.t === 'welcome');
@@ -188,5 +191,33 @@ test('arquivo antigo (protocolo 20, sem sub) ainda abre: vale como grade 1', asy
   writeFileSync(join(dir, 'sala-1.json'), JSON.stringify(old));
   const { s } = await boot(dir);
   assert.ok(Math.abs(s.rooms.get(1).room.time - 0.77) < 0.01);
+  await s.close();
+});
+
+test('Santuário (Sala 2): sala própria, seed e arquivo separados; a obra de lá não aparece na Sala 1 e volta depois de reiniciar', async () => {
+  const dir = tempDir();
+  let { s, url } = await boot(dir);
+  const def = net.roomById(2);
+  assert.equal(def.name, 'Santuário');
+  assert.notEqual(def.seed, net.roomById(1).seed);
+  const a = client(url); await a.open;
+  a.send({ t: 'hello', v: net.PROTOCOL_VERSION, sub: 2, name: 'Ana', room: 2 });
+  const w = await a.wait((m) => m.t === 'welcome');
+  assert.equal(w.seed, def.seed);
+  const room = s.rooms.get(2).room;
+  const [gx, gy] = room.world.outsideGate();
+  const spot = [gx + 6, gy + 4];
+  a.send({ t: 'state', s: { x: spot[0] + 0.5, y: spot[1] + 1.6, facing: 'down', moving: false } });
+  a.send({ t: 'action', seq: 1, a: { kind: 'place', x: spot[0], y: spot[1], block: 25 } });
+  await a.wait((m) => m.t === 'applied');
+  assert.equal(room.world.getObject(spot[0], spot[1]), 25);
+  assert.notEqual(s.rooms.get(1).room.world.getObject(spot[0], spot[1]), 25); // a Sala 1 não vê a obra
+  a.ws.close();
+  await new Promise((r) => setTimeout(r, 50));
+  s.saveAll(true);
+  await s.close();
+  ({ s } = await boot(dir)); // reinício do servidor
+  assert.equal(s.rooms.get(2).room.world.getObject(spot[0], spot[1]), 25);
+  assert.notEqual(s.rooms.get(1).room.world.getObject(spot[0], spot[1]), 25);
   await s.close();
 });
