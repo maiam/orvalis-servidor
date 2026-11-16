@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.93.122 (4f229d6) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.93.123 (6316f1f) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -1670,11 +1670,19 @@ function applyAction(world, a) {
 }
 
 // src/net/protocol.ts
-var PROTOCOL_VERSION = 28;
+var PROTOCOL_VERSION = 29;
 var MAX_PLAYERS = 10;
+var ROOM_RULES = {
+  normal: { mode: "survival", infiniteBlocks: false, collectBlockDrops: true, allowCameraModes: false, protectTown: true, maxBuildLevels: MAX_STACK },
+  sanctuary: { mode: "creative", infiniteBlocks: true, collectBlockDrops: false, allowCameraModes: true, protectTown: true, maxBuildLevels: MAX_STACK }
+};
 var ROOMS = [
-  { id: 1, name: "Sala 1", seed: 20261106 }
+  { id: 1, name: "Sala 1", seed: 20261106, kind: "normal" },
+  { id: 2, name: "Santu\xE1rio", seed: 20261115, kind: "sanctuary" }
 ];
+function roomRules(id) {
+  return ROOM_RULES[roomById(id)?.kind ?? "normal"];
+}
 function roomById(id) {
   return ROOMS.find((r) => r.id === id);
 }
@@ -7322,6 +7330,7 @@ var Room = class {
     this.name = name;
     this.seed = seed;
     this.rand = rand;
+    this.rules = roomRules(id);
     this.world = new World(seed);
     this.entities = new Entities(null, rand);
     const e = this.entities;
@@ -7382,6 +7391,8 @@ var Room = class {
   /** Mensagens geradas pela simulação dos bichos (mordidas, números de dano, espólios), entregues no próximo retorno. */
   pending = [];
   hits = [];
+  /** Regras desta sala (`ROOM_RULES`): modo, blocos infinitos, coleta, câmeras e proteção da cidade. */
+  rules;
   /** Gera os chunks onde os moradores nascem e andam: a cidade, os cômodos (balcões) e a vila. */
   loadPeopleAreas() {
     const w = this.world;
@@ -7562,7 +7573,7 @@ var Room = class {
       const out = [{ to: "all", msg: { t: "applied", ...applied } }];
       let loot = [];
       if (a.kind === "break" && breaking !== null) {
-        loot = [...wasChest ? chestLoot : [], ...breakDrops(a.tool, breaking, this.world.profile.collectBlocks, this.rand, { seed: this.world.seed, x: a.x, y: a.y })];
+        loot = [...wasChest ? chestLoot : [], ...breakDrops(a.tool, breaking, this.rules.collectBlockDrops && this.world.profile.collectBlocks, this.rand, { seed: this.world.seed, x: a.x, y: a.y })];
       }
       if (a.kind === "pick") loot = pickDrops(this.rand);
       const list = this.spawnDrops(a.x + 0.5, a.y + 0.7, loot);
