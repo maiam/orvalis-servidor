@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.93.121 (a7512aa) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.93.122 (4f229d6) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -1670,7 +1670,7 @@ function applyAction(world, a) {
 }
 
 // src/net/protocol.ts
-var PROTOCOL_VERSION = 27;
+var PROTOCOL_VERSION = 28;
 var MAX_PLAYERS = 10;
 var ROOMS = [
   { id: 1, name: "Sala 1", seed: 20261106 }
@@ -1764,7 +1764,8 @@ function parseBag(v) {
     if (!o.hotbar.every((s) => s === null || typeof s === "string" && STACK_RE.test(s))) return null;
     hotbar = o.hotbar.map((s) => s !== null && isRemovedStack(s) ? null : s);
   }
-  return { inventory, hotbar, x: o.x, y: o.y };
+  const coins = Number.isInteger(o.coins) && o.coins >= 0 && o.coins <= 999999999 ? o.coins : void 0;
+  return { inventory, ...coins !== void 0 ? { coins } : {}, hotbar, x: o.x, y: o.y };
 }
 function parseAppearance(v) {
   if (!v || typeof v !== "object") return DEFAULT_APPEARANCE;
