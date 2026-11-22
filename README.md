@@ -9,6 +9,11 @@ o que se faz nela, os baús e a bolsa de cada jogador (pelo nome) ficam guardado
 chão são da sala (quem pega primeiro leva). O servidor é autoritativo: as regras são as do jogo, vindas de `vendor/orvalis-net.cjs`
 (a classe `Room` do jogo, empacotada — **nunca edite à mão**; atualize com `npm run sync-net`).
 
+**Salas do Titã (v0.29.0, ADR 0104 do jogo):** `TITAN_ROOMS` (hoje **Titã 1**, número 101) são salas **cooperativas de sobrevivência** do mundo Titã
+(`?mundo=titan`): outro motor (voxel) e outro protocolo (`TITAN_PROTOCOL_VERSION`, `src/net/titan/protocol.ts` no jogo), com a `TitanRoom` do mesmo
+pacote. Mesmo `/ws`: o **primeiro `hello`** decide o protocolo da conexão (sala ≥ 100 = Titã); mesmos limites, origens, tick de 10×/s (o do Titã
+limita o passo a 0,25 s) e gravação em disco (`sala-101.json`). `/salas` e `/saude` listam também a sala do Titã.
+
 | Rota | O que faz |
 |---|---|
 | `GET /` | Página de teste: entrar numa sala pelo número e ver quem está nela |
