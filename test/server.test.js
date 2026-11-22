@@ -86,7 +86,7 @@ test('dois jogadores na mesma sala: entrada, posição, ação aplicada para tod
   await b.wait((m) => m.t === 'left' && m.id === wa.you);
   b.ws.close();
   await new Promise((r) => setTimeout(r, 50));
-  assert.equal(s.rooms.size, net.ROOMS.length); // salas fixas (Sala 1 e Santuário): continuam abertas, vazias
+  assert.equal(s.rooms.size, net.ROOMS.length + net.TITAN_ROOMS.length); // salas fixas (Sala 1, Santuário e Titã 1): continuam abertas, vazias
   await s.close();
 });
 
@@ -114,6 +114,7 @@ test('sala fixa salva em disco: mundo e bolsa voltam depois de reiniciar; /salas
   assert.deepEqual(lista, [
     { numero: 1, nome: 'Sala 1', jogadores: 0, maximo: net.MAX_PLAYERS },
     { numero: 2, nome: 'Santuário', jogadores: 0, maximo: net.MAX_PLAYERS }, // v0.93.123: a Sala 2 (criativa) tem seu próprio mundo e arquivo
+    ...net.TITAN_ROOMS.map((r) => ({ numero: r.id, nome: r.name, jogadores: 0, maximo: net.MAX_PLAYERS })), // salas do Titã (ADR 0104 do jogo)
   ]);
   const a = client(url); await a.open;
   a.send({ t: 'hello', v: net.PROTOCOL_VERSION, sub: 2, name: 'Ana', room: 1 });
@@ -219,5 +220,97 @@ test('Santuário (Sala 2): sala própria, seed e arquivo separados; a obra de l�
   ({ s } = await boot(dir)); // reinício do servidor
   assert.equal(s.rooms.get(2).room.world.getObject(spot[0], spot[1]), 25);
   assert.notEqual(s.rooms.get(1).room.world.getObject(spot[0], spot[1]), 25);
+  await s.close();
+});
+
+// ---- Salas do Titã (ADR 0104 do jogo): outro motor e outro protocolo, mesmas regras de rede e disco ----
+const TITAN_Y = 150;
+const titanHello = (name, v = net.TITAN_PROTOCOL_VERSION) => ({ t: 'hello', v, name, room: 101 });
+
+test('/salas e /saude listam a sala do Titã junto das do mundo principal', async () => {
+  const { s, port } = await boot();
+  const salas = await (await fetch(`http://127.0.0.1:${port}/salas`)).json();
+  assert.deepEqual(salas.map((x) => x.numero), [...net.ROOMS.map((r) => r.id), ...net.TITAN_ROOMS.map((r) => r.id)]);
+  const tita = salas.find((x) => x.numero === 101);
+  assert.equal(tita.nome, 'Titã 1'); assert.equal(tita.jogadores, 0); assert.equal(tita.maximo, net.MAX_PLAYERS);
+  const saude = await (await fetch(`http://127.0.0.1:${port}/saude`)).json();
+  assert.ok(101 in saude.dados.salas);
+  await s.close();
+});
+
+test('Titã: o hello abre o mundo da sala, o segundo jogador entra e a versão errada é recusada', async () => {
+  const { s, url } = await boot();
+  const a = client(url); await a.open;
+  a.send(titanHello('Ana'));
+  const w = await a.wait((m) => m.t === 'welcome');
+  assert.equal(w.header.world, 'titan'); assert.equal(w.header.seed, net.TITAN_ROOMS[0].seed);
+  const b = client(url); await b.open;
+  b.send(titanHello('Beto'));
+  const wb = await b.wait((m) => m.t === 'welcome');
+  assert.deepEqual(wb.players.map((p) => p.name), ['Ana']);
+  await a.wait((m) => m.t === 'joined' && m.p.name === 'Beto');
+  assert.equal(s.rooms.get(101).room.size, 2);
+  const c = client(url); await c.open;
+  c.send(titanHello('Carla', 99));
+  const err = await c.wait((m) => m.t === 'error');
+  assert.equal(err.code, 'version');
+  a.ws.close(); b.ws.close();
+  await s.close();
+});
+
+test('Titã: colocar um bloco vale na sala (applied) e chega ao outro jogador como edição', async () => {
+  const { s, url } = await boot();
+  const room = s.rooms.get(101).room;
+  const arr = room.world.volume.gen.arrival, x = Math.floor(arr.x) + 6, z = Math.floor(arr.z) + 6;
+  for (let dx = -3; dx <= 3; dx++) for (let dz = -3; dz <= 3; dz++) { room.world.volume.set(x + dx, TITAN_Y - 1, z + dz, 3); for (let yy = TITAN_Y; yy < TITAN_Y + 4; yy++) room.world.volume.set(x + dx, yy, z + dz, 0); }
+  const a = client(url), b = client(url); await Promise.all([a.open, b.open]);
+  a.send(titanHello('Ana')); const wa = await a.wait((m) => m.t === 'welcome');
+  b.send(titanHello('Beto')); await b.wait((m) => m.t === 'welcome');
+  const view = room.viewOf(wa.id);
+  view.inventory.add(3, 4); view.inventory.move([...Array(36).keys()].find((i) => view.inventory.get(i) && view.inventory.get(i).item === 3), 0);
+  a.send({ t: 'state', s: { x: x + 0.5, y: TITAN_Y, z: z + 2.5, yaw: 0, pitch: 0, sel: 0 } });
+  await new Promise((r) => setTimeout(r, 150)); // o `state` chega antes da ação
+  a.send({ t: 'act', seq: 1, a: { k: 'place', hit: { x, y: TITAN_Y - 1, z, nx: 0, ny: 1, nz: 0 }, slot: 0 } });
+  const ap = await a.wait((m) => m.t === 'applied');
+  assert.equal(ap.ok, true);
+  const ed = await b.wait((m) => m.t === 'edits' && m.cells.some((c) => c[0] === x && c[1] === TITAN_Y && c[2] === z && c[3] === 3));
+  assert.ok(ed);
+  assert.equal(room.world.volume.get(x, TITAN_Y, z), 3);
+  a.ws.close(); b.ws.close();
+  await s.close();
+});
+
+test('Titã: a sala é gravada em disco e volta ao reiniciar (mundo e bolsa por nome)', async () => {
+  const dir = tempDir();
+  let { s, url } = await boot(dir);
+  const room = s.rooms.get(101).room;
+  const arr = room.world.volume.gen.arrival, x = Math.floor(arr.x) + 6, z = Math.floor(arr.z) + 6;
+  room.world.volume.set(x, TITAN_Y - 1, z, 3); room.world.volume.set(x, TITAN_Y, z, 3);
+  const a = client(url); await a.open;
+  a.send(titanHello('Ana')); await a.wait((m) => m.t === 'welcome');
+  a.ws.close();
+  await new Promise((r) => setTimeout(r, 200)); // a saída marca a sala como alterada
+  assert.equal(room.dirty, true);
+  s.saveAll();
+  assert.ok(readdirSync(dir).includes('sala-101.json'));
+  await s.close();
+  ({ s, url } = await boot(dir));
+  assert.equal(s.rooms.get(101).room.world.volume.get(x, TITAN_Y, z), 3);
+  const saude = await (await fetch(`http://127.0.0.1:${s.http.address().port}/saude`)).json();
+  assert.equal(saude.dados.salas[101].carregadaDoDisco, true);
+  await s.close();
+});
+
+test('Titã: mensagem do mundo principal numa conexão do Titã é recusada (e o contrário também)', async () => {
+  const { s, url } = await boot();
+  const a = client(url); await a.open;
+  a.send(titanHello('Ana')); await a.wait((m) => m.t === 'welcome');
+  a.send({ t: 'action', seq: 1, a: { kind: 'place', x: 1, y: 1, block: 25 } });
+  const err = await a.wait((m) => m.t === 'error');
+  assert.equal(err.code, 'bad');
+  const b = client(url); await b.open;
+  b.send({ t: 'hello', v: net.PROTOCOL_VERSION, sub: 2, name: 'Beto', room: 1 });
+  await b.wait((m) => m.t === 'welcome'); // o mundo principal segue igual
+  a.ws.close(); b.ws.close();
   await s.close();
 });
