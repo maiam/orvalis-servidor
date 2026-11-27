@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.185.0 (d4264eb) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.186.0 (e8a3ad0) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -149,9 +149,10 @@ var carpentryTurnFacing = (yaw) => (Math.round(yaw / (Math.PI / 2)) % 4 + 4) % 4
 Object.assign(BLOCK_NAMES, { 107: "Pedra Lisa", 108: "Tijolo de Pedra", 109: "Laje de Pedra", 110: "Laje de Pedra", 111: "Degrau de Pedra", 112: "Degrau de Pedra", 113: "Degrau de Pedra", 114: "Degrau de Pedra" });
 for (let m = 0; m < 16; m++) BLOCK_NAMES[115 + m] = "Mureta de Pedra";
 Object.assign(BLOCK_NAMES, { 131: "Terra Arada Seca", 132: "Terra Arada \xDAmida", 133: "Caminho de Terra", 134: "Terra Inf\xE9rtil", 135: "Bloco de Argila", 136: "Bloco de Tijolos" });
+var isLeaves = (id) => id === T.LEAVES_OAK || id === T.LEAVES_CHERRY || id === T.LEAVES_BIRCH;
 var isSolid = (id) => id !== T.AIR && id !== T.LAKE && id !== T.LANTERN && !isMarco(id) && id !== T.MAT && !isLadder(id);
 var isTarget = (id) => isSolid(id) || id === T.LANTERN || isMarco(id) || id === T.MAT || isLadder(id);
-var blocksLight = (id) => isSolid(id) && !isPanel(id);
+var blocksLight = (id) => isFull(id) && !isLeaves(id);
 var isOccupied = isTarget;
 var blockHeight = (id) => blockSpan(id)[1];
 var isSlab = (id) => id === T.SLAB || id === T.SLAB_TOP || id === T.REED_SLAB || id === T.REED_SLAB_TOP || id === T.STONE_SLAB || id === T.STONE_SLAB_TOP;
