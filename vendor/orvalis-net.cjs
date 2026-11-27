@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.207.0 (f89af83) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.208.0 (ec1d179) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -2761,9 +2761,16 @@ var GROUP_SPREAD = 4;
 var GROUP_CHANCE = 0.1;
 var GROUP_CHANCE_V3 = 0.4;
 var groupChanceFor = (version) => version >= 4 ? GROUP_CHANCE : GROUP_CHANCE_V3;
+var PANIC_S = 5;
+var WALK_REF = 4.3;
+var WANDER_RADIUS = 6;
 var SPAWN_MIN_Y = 64;
+var LOVE_S = 30;
 var BREED_COOLDOWN_S = 300;
 var GROW_S = 1200;
+var GROW_FEED = 0.1;
+var MATE_RANGE = 8;
+var MATE_TOUCH = 1.2;
 var MAX_FAUNA = 200;
 var BREED_FOOD = {
   porco: [Item.CENOURA, Item.BATATA, Item.BETERRABA],
@@ -2771,6 +2778,7 @@ var BREED_FOOD = {
   ovelha: [Item.TRIGO],
   galinha: [Item.SEMENTE_TRIGO]
 };
+var isBreedFood = (kind, item) => !!item && BREED_FOOD[kind].includes(item);
 var hasFauna = (g) => g.world === "orvalis" && g.version >= 3;
 function faunaSpecs(g) {
   if (!hasFauna(g)) return [];
@@ -2798,12 +2806,156 @@ function faunaSpecs(g) {
   }
   return out;
 }
+var faunaYaw = (dx, dz) => Math.atan2(-dx, -dz);
 function newFauna(sp, seed) {
   const hx = sp.x + 0.5, hz = sp.z + 0.5, salt = [...sp.id].reduce((a, ch) => Math.imul(a, 31) + ch.charCodeAt(0) >>> 0, 7);
   return { id: sp.id, kind: sp.kind, body: newBody(hx, sp.y, hz), yaw: hash2(seed, salt, 3) * Math.PI * 2, phase: "wander", t: 0, home: { x: hx, z: hz }, goal: { x: hx, z: hz }, pause: 0.5 + 2 * hash2(seed, salt, 4), stuck: 0, hp: FAUNA_KINDS[sp.kind].hp, hurt: 99, from: { x: hx, z: hz }, clock: 0, seed: (seed >>> 0) + salt >>> 0, baby: false, grow: 0, love: 0, rest: 0 };
 }
 var newFaunaFromSpecs = (specs, seed) => specs.map((sp) => newFauna(sp, seed));
+function pickGoal2(f, vol) {
+  const k0 = Math.floor(f.clock * 0.37) + 1, y = Math.floor(f.body.y + 0.01);
+  for (let i = 0; i < 8; i++) {
+    const a = hash2(f.seed, k0 + i * 31, 11) * Math.PI * 2, r = WANDER_RADIUS * (0.3 + 0.7 * hash2(f.seed, k0 + i * 31, 23));
+    const x = f.home.x + Math.cos(a) * r, z = f.home.z + Math.sin(a) * r, cx = Math.floor(x), cz = Math.floor(z);
+    if (isSolid(vol.get(cx, y - 1, cz)) && vol.get(cx, y - 1, cz) !== T.LAKE && vol.get(cx, y, cz) === T.AIR && vol.get(cx, y + 1, cz) === T.AIR) return { x, z };
+  }
+  return { x: f.body.x, z: f.body.z };
+}
+function stepFauna(f, vol, dt) {
+  const K = FAUNA_KINDS[f.kind];
+  f.clock += dt;
+  f.t += dt;
+  f.hurt += dt;
+  if (f.love > 0) f.love = Math.max(0, f.love - dt);
+  if (f.rest > 0) f.rest = Math.max(0, f.rest - dt);
+  if (f.baby) {
+    f.grow -= dt;
+    if (f.grow <= 0) {
+      f.baby = false;
+      f.grow = 0;
+      f.hp = FAUNA_KINDS[f.kind].hp;
+    }
+  }
+  const b = f.body;
+  let dirX = 0, dirZ = 0, speed = 0;
+  const walkTo = (tx, tz, mps) => {
+    const dx = tx - b.x, dz = tz - b.z, d = Math.hypot(dx, dz);
+    if (d < 1e-6) return;
+    dirX = dx / d;
+    dirZ = dz / d;
+    speed = mps / WALK_REF;
+    f.yaw = faunaYaw(dirX, dirZ);
+  };
+  if (f.phase === "panic") {
+    if (f.t >= PANIC_S) {
+      f.home = { x: b.x, z: b.z };
+      f.pause = 0.8;
+      f.phase = "wander";
+      f.t = 0;
+    } else {
+      const away = Math.atan2(b.z - f.from.z, b.x - f.from.x) + (hash2(f.seed, Math.floor(f.clock * 1.4), 41) - 0.5) * 1.2;
+      walkTo(b.x + Math.cos(away) * 4, b.z + Math.sin(away) * 4, K.walk * K.panic);
+    }
+  } else if (f.pause > 0) {
+    f.pause -= dt;
+    f.stuck = 0;
+  } else if (Math.hypot(b.x - f.goal.x, b.z - f.goal.z) < 0.4 || f.stuck > 5) {
+    f.pause = 1.5 + 3 * hash2(f.seed, Math.floor(f.clock), 5);
+    f.goal = pickGoal2(f, vol);
+    f.stuck = 0;
+  } else {
+    walkTo(f.goal.x, f.goal.z, K.walk);
+    f.stuck += dt;
+  }
+  stepBody(vol, b, { dirX: dirX * speed, dirZ: dirZ * speed, jump: false }, dt);
+  return { moving: speed > 0 && Math.hypot(b.vx, b.vz) > 0.05 };
+}
+function hurtFauna(f, damage, fromX, fromZ) {
+  f.hp = Math.max(0, f.hp - Math.max(0, damage));
+  f.hurt = 0;
+  f.phase = "panic";
+  f.t = 0;
+  f.from = { x: fromX, z: fromZ };
+  return { dead: f.hp <= 0 };
+}
+function faunaLoot(kind, seed, roll2, baby = false) {
+  if (baby) return [];
+  const r = (i, lo, hi) => lo + Math.floor(hash2(seed, roll2, 700 + i) * (hi - lo + 1));
+  const out = [];
+  const add = (item, count) => {
+    if (count > 0) out.push({ item, count });
+  };
+  if (kind === "porco") add(Item.PORCO_CRU, r(0, 1, 3));
+  else if (kind === "vaca") {
+    add(Item.COURO, r(0, 0, 2));
+    add(Item.BOVINA_CRUA, r(1, 1, 3));
+  } else if (kind === "ovelha") {
+    add(Item.LA, 1);
+    add(Item.CARNEIRO_CRU, r(0, 1, 2));
+  } else {
+    add(Item.PENA, r(0, 0, 2));
+    add(Item.FRANGO_CRU, 1);
+  }
+  return out;
+}
 var maxHp = (f) => f.baby ? Math.ceil(FAUNA_KINDS[f.kind].hp / 2) : FAUNA_KINDS[f.kind].hp;
+function newBaby(a, b, n) {
+  const x = (a.body.x + b.body.x) / 2, z = (a.body.z + b.body.z) / 2;
+  const f = newFauna({ id: `${a.id}~${n}`, kind: a.kind, x: Math.floor(x), y: a.body.y, z: Math.floor(z) }, a.seed);
+  f.body.x = x;
+  f.body.z = z;
+  f.body.y = Math.max(a.body.y, b.body.y);
+  f.baby = true;
+  f.grow = GROW_S;
+  f.hp = maxHp(f);
+  return f;
+}
+function feedFauna(f, item) {
+  if (!isBreedFood(f.kind, item)) return { ok: false, reason: "food" };
+  if (f.baby) {
+    f.grow = Math.max(0, f.grow * (1 - GROW_FEED));
+    return { ok: true, effect: "grow" };
+  }
+  if (f.love > 0) return { ok: false, reason: "love" };
+  if (f.rest > 0) return { ok: false, reason: "rest" };
+  f.love = LOVE_S;
+  return { ok: true, effect: "love" };
+}
+function tickBreeding(list, counter) {
+  const born = [];
+  const dist2 = (a, b) => Math.hypot(a.body.x - b.body.x, a.body.z - b.body.z);
+  for (const a of list) {
+    if (a.baby || a.love <= 0 || a.phase === "panic") continue;
+    let mate = null;
+    for (const b of list) if (b !== a && !b.baby && b.kind === a.kind && b.love > 0 && b.phase !== "panic" && Math.abs(b.body.y - a.body.y) < 2 && (!mate || dist2(a, b) < dist2(a, mate))) mate = b;
+    if (!mate || dist2(a, mate) > MATE_RANGE) continue;
+    if (dist2(a, mate) <= MATE_TOUCH) {
+      if (list.length + born.length >= MAX_FAUNA) continue;
+      const baby = newBaby(a, mate, counter.n++);
+      a.love = 0;
+      mate.love = 0;
+      a.rest = BREED_COOLDOWN_S;
+      mate.rest = BREED_COOLDOWN_S;
+      born.push(baby);
+    } else {
+      a.goal = { x: mate.body.x, z: mate.body.z };
+      a.pause = 0;
+      a.stuck = 0;
+    }
+  }
+  for (const f of list) {
+    if (!f.baby) continue;
+    let adult = null;
+    for (const b of list) if (!b.baby && b.kind === f.kind && dist2(f, b) <= 12 && (!adult || dist2(f, b) < dist2(f, adult))) adult = b;
+    if (adult && dist2(f, adult) > 2.5) {
+      f.goal = { x: adult.body.x, z: adult.body.z };
+      f.pause = 0;
+      f.stuck = 0;
+    }
+  }
+  list.push(...born);
+  return born;
+}
 var r2 = (n) => Math.round(n * 100) / 100;
 var faunaToData = (list) => list.map((f) => ({ id: f.id, k: f.kind, x: r2(f.body.x), y: r2(f.body.y), z: r2(f.body.z), hp: f.hp, ...f.baby ? { b: 1, g: r2(f.grow) } : {}, ...f.rest > 0 ? { r: r2(f.rest) } : {} }));
 function faunaFromData(raw, seed, inRegion2) {
@@ -2886,6 +3038,35 @@ function tickRespawn(s, dt) {
     s.metaRev++;
   }
   return back;
+}
+function attackFauna(s, index) {
+  const f = s.fauna[index];
+  if (!f) return { ok: false, damage: 0, dead: false, broken: false };
+  const damage = damageOf(s.inventory.get(s.selected)?.item);
+  const w = wearHeldTool(s, { type: "attack" });
+  const r = hurtFauna(f, damage, s.body.x, s.body.z);
+  const broke = w.broken ? `${w.name} quebrou` : void 0;
+  if (!r.dead) return { ok: true, damage, dead: false, broken: w.broken, toolName: w.name, msg: broke };
+  s.fauna.splice(index, 1);
+  s.metaRev++;
+  const loot = faunaLoot(f.kind, s.seed, Math.floor(f.clock * 10) + index * 7919, f.baby), base = `m:${f.id}`;
+  let n = 0;
+  while (loot.some((_, i) => s.drops.has(`${base}:${n}:${i}`))) n++;
+  loot.forEach((l, i) => restDrop(s, `${base}:${n}:${i}`, l.item, f.body.x, f.body.y, f.body.z, l.count));
+  const txt = loot.map((l) => `${l.count} ${ITEM_NAMES[l.item]}`).join(", ");
+  return { ok: true, damage, dead: true, broken: w.broken, toolName: w.name, msg: `${FAUNA_KINDS[f.kind].name}${f.baby ? " (filhote)" : ""} abatido${txt ? `: ${txt}` : ""}${broke ? `; ${broke}` : ""}` };
+}
+
+// src/titan/faunaFeed.ts
+function feedFaunaFromSlot(s, index) {
+  const f = s.fauna[index], stack = s.inventory.get(s.selected);
+  if (!f || !stack) return { ok: false, consumed: false };
+  const r = feedFauna(f, stack.item);
+  const name = FAUNA_KINDS[f.kind].name;
+  if (!r.ok) return { ok: false, consumed: false, msg: r.reason === "love" ? `${name} j\xE1 est\xE1 em amor` : r.reason === "rest" ? `${name} ainda descansa` : void 0 };
+  s.inventory.consume(s.selected);
+  s.metaRev++;
+  return { ok: true, consumed: true, msg: r.effect === "love" ? `${name} com vontade de cruzar` : `${name} (filhote) cresce mais r\xE1pido` };
 }
 
 // src/world/noise.ts
@@ -4907,7 +5088,7 @@ function headerOf(s) {
 }
 
 // src/net/titan/protocol.ts
-var TITAN_PROTOCOL_VERSION = 3;
+var TITAN_PROTOCOL_VERSION = 4;
 var TITAN_MAX_PLAYERS = 10;
 var TITAN_NAME_MIN = 2;
 var TITAN_NAME_MAX = 16;
@@ -4967,6 +5148,7 @@ function parseTitanAction(v) {
     return null;
   }
   if (a.k === "strike") return typeof o.id === "string" && o.id.length > 0 && o.id.length <= 20 ? { k: "strike", id: o.id } : null;
+  if (a.k === "strikeFauna" || a.k === "feedFauna") return typeof o.id === "string" && o.id.length > 0 && o.id.length <= 40 ? { k: a.k, id: o.id } : null;
   if (a.k === "die") return { k: "die" };
   return null;
 }
@@ -5008,6 +5190,11 @@ var TITAN_SIM_RADIUS = 56;
 var TITAN_SHOW_RADIUS = 64;
 var TITAN_CREATURES_EVERY = 0.1;
 var TITAN_FURNACES_EVERY = 1;
+var TITAN_FAUNA_SIM_RADIUS = 48;
+var TITAN_FAUNA_SHOW_RADIUS = 64;
+var TITAN_FAUNA_SHOW_MAX = 40;
+var TITAN_FAUNA_EVERY = 0.2;
+var TITAN_FAUNA_SAVE_EVERY = 60;
 var TITAN_STRIKE_REACH = ATTACK_REACH + 2;
 function playerView(world, own) {
   const v = Object.create(world);
@@ -5020,7 +5207,7 @@ function playerView(world, own) {
   return v;
 }
 var TitanRoom = class {
-  /** `kind` = o mundo da sala (ADR 0138): o Titã ou o Orvalis em voxel, cada um com o gerador, os itens e as regras dele. A fauna, a pesca e os botes do Orvalis ainda não vão pela sala (próximas entregas). */
+  /** `kind` = o mundo da sala (ADR 0138): o Titã ou o Orvalis em voxel, cada um com o gerador, os itens e as regras dele. A fauna de fazenda é da sala (entrega B); a pesca e os botes ainda não (entrega C). */
   constructor(id, name, seed, rand = Math.random, kind = "titan") {
     this.id = id;
     this.name = name;
@@ -5028,7 +5215,6 @@ var TitanRoom = class {
     this.rand = rand;
     this.kind = kind;
     this.world = fresh(kind === "orvalis" ? new OrvalisGenerator(seed) : new TitanGenerator(seed));
-    if (kind === "orvalis") this.world.fauna = [];
     this.hook();
   }
   id;
@@ -5048,6 +5234,10 @@ var TitanRoom = class {
   sinceFurnaces = 0;
   clock = 0;
   timeDirty = false;
+  sinceFauna = 0;
+  sinceFaunaSave = 0;
+  faunaMoving = /* @__PURE__ */ new Map();
+  faunaCounter = { n: 0 };
   hook() {
     this.world.volume.onSet = (x, y, z, id) => {
       this.pending.push([x, y, z, id]);
@@ -5095,6 +5285,7 @@ var TitanRoom = class {
     const p = { id: this.nextId++, name, view, moved: false, struckAt: -1e9, bed: null };
     this.players.set(p.id, p);
     const header = headerOf(this.world);
+    delete header.fauna;
     const chunks = this.world.volume.dirtyChunks().map(({ cx, cz, edits }) => ({ cx, cz, edits }));
     const me = this.info(p);
     return { id: p.id, out: [
@@ -5190,6 +5381,12 @@ var TitanRoom = class {
         case "strike":
           r = this.strike(p, a.id);
           break;
+        case "strikeFauna":
+          r = this.strikeFauna(p, a.id);
+          break;
+        case "feedFauna":
+          r = this.feedFauna(p, a.id);
+          break;
         case "die":
           r = this.die(p, out);
           break;
@@ -5223,6 +5420,35 @@ var TitanRoom = class {
     const r = attackCreature(p.view, idx);
     this.sinceCreatures = TITAN_CREATURES_EVERY;
     return { ok: r.ok, ...r.msg ? { msg: r.msg } : {} };
+  }
+  /** Animal de fazenda pelo id, ao alcance de `p` (o olho até o centro do corpo). */
+  faunaNear(p, id) {
+    const idx = this.world.fauna.findIndex((e) => e.id === id), f = this.world.fauna[idx], b = p.view.body;
+    return f && Math.hypot(f.body.x - b.x, f.body.y - (b.y + EYE_HEIGHT), f.body.z - b.z) <= TITAN_STRIKE_REACH ? { idx, f } : null;
+  }
+  /** Golpe num animal de fazenda (ADR 0138): alcance, pausa entre golpes e `attackFauna` (o espólio cai no chão da sala). */
+  strikeFauna(p, id) {
+    if (!this.world.fauna.some((e) => e.id === id)) return { ok: false };
+    const hit = this.faunaNear(p, id);
+    if (!hit) return { ok: false, msg: "Longe demais" };
+    if (this.clock - p.struckAt < ATTACK_COOLDOWN_S - 0.05) return { ok: false };
+    p.struckAt = this.clock;
+    const r = attackFauna(p.view, hit.idx);
+    this.sinceFauna = TITAN_FAUNA_EVERY;
+    return { ok: r.ok, ...r.msg ? { msg: r.msg } : {} };
+  }
+  /** Alimenta um animal com a comida da mão (ADR 0125 e 0138): só gasta se tem efeito. */
+  feedFauna(p, id) {
+    if (!this.world.fauna.some((e) => e.id === id)) return { ok: false };
+    const hit = this.faunaNear(p, id);
+    if (!hit) return { ok: false, msg: "Longe demais" };
+    const r = feedFaunaFromSlot(p.view, hit.idx);
+    this.sinceFauna = TITAN_FAUNA_EVERY;
+    return { ok: r.ok, ...r.msg ? { msg: r.msg } : {} };
+  }
+  wireFauna(f) {
+    const r22 = (v) => Math.round(v * 100) / 100;
+    return { id: f.id, k: f.kind, x: r22(f.body.x), y: r22(f.body.y), z: r22(f.body.z), yaw: r22(f.yaw), ph: f.phase, b: f.baby ? 1 : 0, hp: f.hp, l: f.love > 0 ? 1 : 0, m: this.faunaMoving.get(f.id) ? 1 : 0, hu: Math.round(Math.min(f.hurt, 9) * 10) / 10, c: r22(f.clock) };
   }
   /** Morte: só vale com a vida zerada no último `state`; solta as pilhas, renasce e manda o renascer. */
   die(p, out) {
@@ -5292,6 +5518,31 @@ var TitanRoom = class {
         if (ev.hit) out.push({ to: near.id, msg: { t: "hurt", damage: ev.damage, kind: f.kind } });
       }
     }
+    if (list.length && w.fauna.length) {
+      for (const f of w.fauna) {
+        let nd = Infinity;
+        for (const p of list) nd = Math.min(nd, Math.hypot(f.body.x - p.view.body.x, f.body.z - p.view.body.z));
+        if (f.phase === "wander" && nd > TITAN_FAUNA_SIM_RADIUS) continue;
+        this.faunaMoving.set(f.id, stepFauna(f, w.volume, dt).moving);
+      }
+      if (tickBreeding(w.fauna, this.faunaCounter).length) {
+        this.dirty = true;
+        w.metaRev++;
+      }
+      this.sinceFaunaSave += dt;
+      if (this.sinceFaunaSave >= TITAN_FAUNA_SAVE_EVERY) {
+        this.sinceFaunaSave = 0;
+        this.dirty = true;
+      }
+    }
+    this.sinceFauna += dt;
+    if (this.sinceFauna >= TITAN_FAUNA_EVERY && list.length && w.fauna.length) {
+      this.sinceFauna = 0;
+      for (const p of list) {
+        const near = w.fauna.map((f) => ({ f, d: Math.hypot(f.body.x - p.view.body.x, f.body.z - p.view.body.z) })).filter((e) => e.d <= TITAN_FAUNA_SHOW_RADIUS).sort((a, b) => a.d - b.d).slice(0, TITAN_FAUNA_SHOW_MAX);
+        out.push({ to: p.id, msg: { t: "fauna", list: near.map((e) => this.wireFauna(e.f)) } });
+      }
+    }
     this.sinceCreatures += dt;
     this.sinceFurnaces += dt;
     if (this.sinceCreatures >= TITAN_CREATURES_EVERY && list.length) {
@@ -5325,7 +5576,7 @@ var TitanRoom = class {
   snapshot() {
     this.dirty = false;
     for (const p of this.players.values()) this.keep(p);
-    return { v: TITAN_SNAPSHOT_VERSION, header: headerOf(this.world), chunks: this.world.volume.dirtyChunks().map(({ cx, cz, edits }) => ({ cx, cz, edits })), players: Object.fromEntries(this.saved) };
+    return { v: TITAN_SNAPSHOT_VERSION, fauna: 1, header: headerOf(this.world), chunks: this.world.volume.dirtyChunks().map(({ cx, cz, edits }) => ({ cx, cz, edits })), players: Object.fromEntries(this.saved) };
   }
   /** Restaura uma sala vazia a partir de um `snapshot`; devolve `false` (sem mudar nada) se a seed ou o gerador não batem. */
   restore(snap) {
@@ -5334,7 +5585,7 @@ var TitanRoom = class {
     const gen = this.kind === "orvalis" ? orvalisGeneratorFor(snap.header.seed, snap.header.generatorVersion) : generatorFor(snap.header.seed, snap.header.generatorVersion);
     if (!gen) return false;
     this.world = resume(gen, { header: snap.header, chunks: snap.chunks });
-    if (this.kind === "orvalis") this.world.fauna = [];
+    if (this.kind === "orvalis" && !snap.fauna) this.world.fauna = fresh(gen).fauna;
     this.saved.clear();
     for (const [k, v] of Object.entries(snap.players ?? {})) this.saved.set(k, v);
     this.pending = [];
