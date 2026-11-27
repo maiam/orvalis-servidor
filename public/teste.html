@@ -21,13 +21,13 @@
   <h1>Orvalis — teste do servidor</h1>
   <p id="estado">Conectando…</p>
   <label>Seu nome <input id="nome" value="Teste" maxlength="16"></label>
-  <label>Número da sala <input id="sala" value="1" maxlength="3" inputmode="numeric"></label>
+  <label>Número da sala <input id="sala" value="101" maxlength="3" inputmode="numeric"></label>
   <button id="entrar">Entrar na sala</button>
   <p>Sala: <b id="codigo">–</b> · Na sala: <b id="gente">–</b></p>
   <pre id="log"></pre>
 </main>
 <script>
-  // Mesmo protocolo do jogo (src/net/protocol.ts, PROTOCOL_VERSION abaixo deve bater com /saude).
+  // Protocolo do Titã (src/net/titan/protocol.ts do jogo; a versão vem de /saude). Sala do Titã: 101.
   const log = (t) => { const el = document.getElementById('log'); el.textContent = (new Date().toLocaleTimeString() + '  ' + t + '\n' + el.textContent).slice(0, 4000); };
   const estado = document.getElementById('estado');
   const url = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws';
@@ -43,12 +43,12 @@
     ws.onmessage = (e) => {
       const m = JSON.parse(e.data);
       if (m.t === 'welcome') {
-        document.getElementById('codigo').textContent = m.roomName;
-        nomes.clear(); nomes.set(m.you, document.getElementById('nome').value + ' (você)');
+        document.getElementById('codigo').textContent = 'sala ' + document.getElementById('sala').value;
+        nomes.clear(); nomes.set(m.id, document.getElementById('nome').value + ' (você)');
         for (const p of m.players) nomes.set(p.id, p.name);
         mostrarGente();
-        log('entrou na ' + m.roomName + ' (seed ' + m.seed + ', ' + m.chunks.length + ' chunks editados)');
-      } else if (m.t === 'joined') { nomes.set(m.player.id, m.player.name); mostrarGente(); log(m.player.name + ' entrou'); }
+        log('entrou na sala (' + (m.header ? m.header.world + ', seed ' + m.header.seed : 'mundo') + ')');
+      } else if (m.t === 'joined') { nomes.set(m.p.id, m.p.name); mostrarGente(); log(m.p.name + ' entrou'); }
       else if (m.t === 'left') { log((nomes.get(m.id) || m.id) + ' saiu'); nomes.delete(m.id); mostrarGente(); }
       else if (m.t === 'error') log('erro: ' + m.message);
       else if (m.t !== 'state') log(JSON.stringify(m));
@@ -56,7 +56,7 @@
   }
   conectar();
   document.getElementById('entrar').onclick = () => {
-    const hello = { t: 'hello', v: versao, name: document.getElementById('nome').value, room: Number(document.getElementById('sala').value) || 1 };
+    const hello = { t: 'hello', v: versao, name: document.getElementById('nome').value, room: Number(document.getElementById('sala').value) || 101 };
     if (ws.readyState !== 1) { conectar(); ws.addEventListener('open', () => ws.send(JSON.stringify(hello)), { once: true }); return; }
     ws.send(JSON.stringify(hello));
   };
