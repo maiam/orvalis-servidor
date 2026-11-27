@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.183.0 (3ce5ce6) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.185.0 (d4264eb) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -702,22 +702,55 @@ function furnaceFromData(d) {
   return f;
 }
 
+// src/titan/weather.ts
+var TICKS_PER_SECOND = 20;
+var RAIN_ON_S = [12e3 / TICKS_PER_SECOND, 24e3 / TICKS_PER_SECOND];
+var RAIN_OFF_S = [12e3 / TICKS_PER_SECOND, 18e4 / TICKS_PER_SECOND];
+var RAIN_SKY_FACTOR = 12 / 15;
+var hasWeather = (world) => world === "orvalis";
+var roll = (range, rng) => range[0] + rng() * (range[1] - range[0]);
+var newWeather = (rng) => ({ raining: false, timer: roll(RAIN_OFF_S, rng) });
+function stepWeather(w, dt, rng) {
+  w.timer -= dt;
+  if (w.timer > 0) return false;
+  w.raining = !w.raining;
+  w.timer = roll(w.raining ? RAIN_ON_S : RAIN_OFF_S, rng);
+  return true;
+}
+function clearWeather(w) {
+  const was = w.raining;
+  w.raining = false;
+  return was;
+}
+var weatherToData = (w) => ({ raining: w.raining, timer: Math.round(w.timer * 10) / 10 });
+function weatherFromData(d, rng) {
+  const o = d;
+  if (o && typeof o.raining === "boolean" && typeof o.timer === "number" && Number.isFinite(o.timer) && o.timer > 0) return { raining: o.raining, timer: Math.min(o.timer, (o.raining ? RAIN_ON_S : RAIN_OFF_S)[1]) };
+  return newWeather(rng);
+}
+
 // src/titan/sky.ts
 var DAY_TICKS = 24e3;
-var TICKS_PER_SECOND = 20;
-var DAY_SECONDS = DAY_TICKS / TICKS_PER_SECOND;
+var TICKS_PER_SECOND2 = 20;
+var DAY_SECONDS = DAY_TICKS / TICKS_PER_SECOND2;
 var PHASE_TICKS = { sunsetStart: 12e3, nightStart: 13800, sunriseStart: 22200 };
 var tickFrac = (ticks) => ticks / DAY_TICKS;
 var AFTERNOON = tickFrac(9e3);
 var WAKE_TICKS = 600;
-var isNightTime = (frac) => frac * DAY_TICKS >= PHASE_TICKS.nightStart;
+var START_FRAC = 0;
+var SLEEP_WINDOW = { clear: [12542, 23460], rain: [12010, 23992] };
+function canSleep(frac, raining) {
+  const [from, to] = raining ? SLEEP_WINDOW.rain : SLEEP_WINDOW.clear;
+  const t = (frac % 1 + 1) % 1 * DAY_TICKS;
+  return t >= from && t < to;
+}
 var FIXED_HOURS = { manha: tickFrac(720), tarde: tickFrac(9e3), crepusculo: tickFrac(12900), noite: tickFrac(18e3) };
 function advanceDay(frac, dtSeconds) {
   const f = (frac + dtSeconds / DAY_SECONDS) % 1;
   return f < 0 ? f + 1 : f;
 }
 function validDay(f) {
-  return typeof f === "number" && Number.isFinite(f) && f >= 0 && f < 1 ? f : AFTERNOON;
+  return typeof f === "number" && Number.isFinite(f) && f >= 0 && f < 1 ? f : START_FRAC;
 }
 var hex = (n) => [(n >> 16 & 255) / 255, (n >> 8 & 255) / 255, (n & 255) / 255];
 var MANHA = { zenith: hex(11565650), mid: hex(14259804), horizon: hex(16040090), fog: hex(14725256), ambient: 0.85, tint: [1, 0.97, 0.92] };
@@ -736,6 +769,13 @@ var looksOf = (m, t, n) => [
 var LOOKS_BY = { titan: looksOf(MANHA, TARDE, NOITE), orvalis: looksOf(MANHA_O, TARDE_O, NOITE_O) };
 var mix = (a, b, k) => [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k];
 var ease = (k) => k * k * (3 - 2 * k);
+var moonPhaseOf = (days) => Number.isInteger(days) && days >= 0 ? days % 8 : 0;
+function arcDir(frac) {
+  const u = frac / tickFrac(PHASE_TICKS.sunsetStart), up = u >= 0 && u <= 1;
+  const elev = up ? Math.sin(Math.PI * u) : -0.2, az = Math.PI * Math.min(1, Math.max(0, u));
+  const d = [Math.cos(az), Math.max(elev, -0.2) + 0.05, -0.35], m = Math.hypot(d[0], d[1], d[2]);
+  return { dir: [d[0] / m, d[1] / m, d[2] / m], up, elev };
+}
 var unit = (x, y, z) => {
   const m = Math.hypot(x, y, z);
   return [x / m, y / m, z / m];
@@ -749,7 +789,7 @@ var COOL = [0.86, 0.93, 1.06];
 var SUNSET = PHASE_TICKS.sunsetStart;
 var NIGHT = PHASE_TICKS.nightStart;
 var SUNRISE = PHASE_TICKS.sunriseStart;
-function skyAt(frac, palette = "titan") {
+function skyAt(frac, palette = "titan", rain = 0, days = 0) {
   const LOOKS = LOOKS_BY[palette];
   const f = (frac % 1 + 1) % 1;
   let i = LOOKS.length - 1;
@@ -784,21 +824,28 @@ function skyAt(frac, palette = "titan") {
   }
   const dayK = T2 < SUNSET ? 1 : T2 < NIGHT ? 1 - smooth(SUNSET, NIGHT, T2) * 0.7 : T2 < SUNRISE ? 0.3 - 0.2 * smooth(NIGHT, 16500, T2) : 0.1 + 0.9 * smooth(SUNRISE, DAY_TICKS, T2);
   const stars = T2 < NIGHT ? 0 : T2 < 15600 ? smooth(NIGHT, 15600, T2) : T2 < 21e3 ? 1 : T2 < 22600 ? 1 - smooth(21e3, 22600, T2) : 0;
+  const r = clamp01(rain), moon = arcDir((f + 0.5) % 1);
+  const grey = (c, kk) => {
+    const l = 0.3 * c[0] + 0.59 * c[1] + 0.11 * c[2];
+    return mix(c, [l * 0.85, l * 0.88, l * 0.92], kk * r);
+  };
   return {
     tint: mix(a.tint, b.tint, k),
     glowDir,
-    glow,
-    glowK,
+    glow: grey(glow, 0.4),
+    glowK: glowK * (1 - 0.4 * r),
     cool: COOL,
     coolK: 0.65 * dayK,
     haze: 0.45 + 0.55 * dayK,
-    stars,
-    zenith: mix(a.zenith, b.zenith, k),
-    mid: mix(a.mid, b.mid, k),
-    horizon: mix(a.horizon, b.horizon, k),
-    fog: mix(a.fog, b.fog, k),
-    ambient: a.ambient + (b.ambient - a.ambient) * k,
-    sun: { dir: [d[0] / m, d[1] / m, d[2] / m], alpha: up ? Math.min(1, Math.max(0, (elev - 0.55) / 0.2)) : 0 }
+    stars: stars * (1 - r),
+    zenith: grey(mix(a.zenith, b.zenith, k), 0.8),
+    mid: grey(mix(a.mid, b.mid, k), 0.8),
+    horizon: grey(mix(a.horizon, b.horizon, k), 0.75),
+    fog: grey(mix(a.fog, b.fog, k), 0.8),
+    ambient: (a.ambient + (b.ambient - a.ambient) * k) * (1 - (1 - RAIN_SKY_FACTOR) * r),
+    sun: { dir: [d[0] / m, d[1] / m, d[2] / m], alpha: (up ? Math.min(1, Math.max(0, (elev - 0.55) / 0.2)) : 0) * (1 - r) },
+    moon: { dir: moon.dir, alpha: (moon.up ? Math.min(1, Math.max(0, (moon.elev - 0.35) / 0.2)) : 0) * (1 - r), phase: moonPhaseOf(days) },
+    rain: r
   };
 }
 
@@ -1725,11 +1772,12 @@ function useBed(s, x, y, z, sleep = true) {
   const [dx, dz] = bedPartnerOffset(id), footX = isBedFoot(id) ? x : x + dx, footZ = isBedFoot(id) ? z : z + dz;
   s.spawn = { x: footX, y, z: footZ };
   s.metaRev++;
-  if (!isNightTime(s.time)) return { ok: true, msg: "Ponto de retorno marcado. S\xF3 se dorme \xE0 noite." };
+  if (!canSleep(s.time, s.weather.raining && hasWeather(s.volume.gen.world))) return { ok: true, msg: "Ponto de retorno marcado. S\xF3 se dorme \xE0 noite." };
   if (!sleep) return { ok: true, msg: "Ponto de retorno marcado." };
   const wake = tickFrac(WAKE_TICKS);
   if (s.time > wake) s.days++;
   s.time = wake;
+  clearWeather(s.weather);
   return { ok: true, msg: "Voc\xEA dormiu at\xE9 o amanhecer. Ponto de retorno marcado." };
 }
 function bedSpawn(s) {
@@ -3700,7 +3748,7 @@ function fresh(gen) {
   const regrow = /* @__PURE__ */ new Map();
   const crops = /* @__PURE__ */ new Map();
   const grants = {};
-  const s = { seed: gen.seed, volume, body: newBody(a.x, a.y, a.z), yaw: a.yaw, pitch: -0.12, selected: 0, resumed: false, relocated: false, time: AFTERNOON, days: 0, inventory: Inventory.starting(), collected, collectedRev: 0, regrow, crops, furnaces: /* @__PURE__ */ new Map(), chests: /* @__PURE__ */ new Map(), spawn: null, respawn: /* @__PURE__ */ new Map(), creatures: creaturesFor(gen), savedStateRev: -1, drops: /* @__PURE__ */ new Map(), dropFx: /* @__PURE__ */ new Map(), dropsRev: 0, vitals: newVitals(), known: /* @__PURE__ */ new Set(), grants, metaRev: 0, items: makeItems({ volume, collected, grants, regrow, crops }) };
+  const s = { seed: gen.seed, volume, body: newBody(a.x, a.y, a.z), yaw: a.yaw, pitch: -0.12, selected: 0, resumed: false, relocated: false, time: START_FRAC, days: 0, weather: newWeather(Math.random), inventory: Inventory.starting(), collected, collectedRev: 0, regrow, crops, furnaces: /* @__PURE__ */ new Map(), chests: /* @__PURE__ */ new Map(), spawn: null, respawn: /* @__PURE__ */ new Map(), creatures: creaturesFor(gen), savedStateRev: -1, drops: /* @__PURE__ */ new Map(), dropFx: /* @__PURE__ */ new Map(), dropsRev: 0, vitals: newVitals(), known: /* @__PURE__ */ new Set(), grants, metaRev: 0, items: makeItems({ volume, collected, grants, regrow, crops }) };
   return s;
 }
 function resume(gen, save) {
@@ -3723,7 +3771,7 @@ function resume(gen, save) {
   const crops = validCrops(save.header.crops, volume);
   const respawn = validRespawn(save.header.respawn, new Set(creatureSpecs(gen).map((c) => c.id)));
   const known = new Set((save.header.recipes ?? []).filter((x) => typeof x === "string"));
-  const s = { seed: gen.seed, volume, body: newBody(safe.x, safe.y, safe.z), yaw: p.yaw, pitch: p.pitch, selected: Math.max(0, Math.min(HOTBAR - 1, save.header.selected | 0)), resumed: true, relocated: moved, time: validDay(save.header.time), days: Number.isInteger(save.header.days) && save.header.days >= 0 ? save.header.days : 0, inventory: inv, collected, collectedRev: 0, regrow, crops, furnaces: validFurnaces(save.header.furnaces, volume), chests: validChests(save.header.chests, volume), spawn: validSpawn(save.header.spawn, volume), respawn, creatures: creaturesFor(gen).filter((c) => !respawn.has(c.id)), savedStateRev: -1, drops: validDrops(save.header.drops, gen), dropFx: /* @__PURE__ */ new Map(), dropsRev: 0, known, grants, metaRev: 0, vitals: vitalsFromData(save.header.vitals), items: makeItems({ volume, collected, grants, regrow, crops }) };
+  const s = { seed: gen.seed, volume, body: newBody(safe.x, safe.y, safe.z), yaw: p.yaw, pitch: p.pitch, selected: Math.max(0, Math.min(HOTBAR - 1, save.header.selected | 0)), resumed: true, relocated: moved, time: validDay(save.header.time), days: Number.isInteger(save.header.days) && save.header.days >= 0 ? save.header.days : 0, weather: weatherFromData(save.header.weather, Math.random), inventory: inv, collected, collectedRev: 0, regrow, crops, furnaces: validFurnaces(save.header.furnaces, volume), chests: validChests(save.header.chests, volume), spawn: validSpawn(save.header.spawn, volume), respawn, creatures: creaturesFor(gen).filter((c) => !respawn.has(c.id)), savedStateRev: -1, drops: validDrops(save.header.drops, gen), dropFx: /* @__PURE__ */ new Map(), dropsRev: 0, known, grants, metaRev: 0, vitals: vitalsFromData(save.header.vitals), items: makeItems({ volume, collected, grants, regrow, crops }) };
   const granted = gen.version < 4 && !grants.ember ? grantEmber(s) : false;
   discoverRecipes(s);
   const clean = save.header.inventory && inv.rev === revBefore && !converted && !granted && save.header.v >= TITAN_SAVE_VERSION;
@@ -3769,13 +3817,16 @@ function tickRegrow(s, dt) {
   }
   return ripened;
 }
+var isRaining = (s) => s.weather.raining && hasWeather(s.volume.gen.world);
+function tickWeather(s, dt, rng) {
+  return hasWeather(s.volume.gen.world) && stepWeather(s.weather, dt, rng);
+}
+function skyOpenAbove(s, x, y, z) {
+  for (let yy = y + 1; yy <= Y_MAX; yy++) if (isSolid(s.volume.get(x, yy, z))) return false;
+  return true;
+}
 function cropLight(s, x, y, z) {
-  let open = true;
-  for (let yy = y + 1; yy <= Y_MAX; yy++) if (isSolid(s.volume.get(x, yy, z))) {
-    open = false;
-    break;
-  }
-  return Math.max(open ? skyAt(s.time).ambient * 15 : 0, s.volume.light(x, y + 1, z));
+  return Math.max(skyOpenAbove(s, x, y, z) ? skyAt(s.time, "titan", isRaining(s) ? 1 : 0).ambient * 15 : 0, s.volume.light(x, y + 1, z));
 }
 function tickCrops(s, dt, rng, near) {
   let changed = false;
@@ -3784,7 +3835,7 @@ function tickCrops(s, dt, rng, near) {
     if (Math.hypot(c.x + 0.5 - near.x, c.z + 0.5 - near.z) > CROP_SIM_RADIUS || rng() >= pTick) continue;
     const kindAt = (dx, dz) => soilKindFor(c.species, s.volume.get(c.x + dx, c.y - 1, c.z + dz));
     if (isGarden(c.species)) {
-      const below = s.volume.get(c.x, c.y - 1, c.z), wet = isHydrated(s.volume, c.x, c.y - 1, c.z);
+      const below = s.volume.get(c.x, c.y - 1, c.z), wet = isHydrated(s.volume, c.x, c.y - 1, c.z) || isRaining(s) && skyOpenAbove(s, c.x, c.y - 1, c.z);
       if (below === T.FARMLAND_DRY && wet) {
         s.volume.set(c.x, c.y - 1, c.z, T.FARMLAND_WET);
         changed = true;
@@ -3803,11 +3854,11 @@ function tickCrops(s, dt, rng, near) {
   return changed;
 }
 function headerOf(s) {
-  return { v: TITAN_SAVE_VERSION, world: s.volume.gen.world, seed: s.seed, generatorVersion: s.volume.gen.version, savedAt: Date.now(), player: { x: s.body.x, y: s.body.y, z: s.body.z, yaw: s.yaw, pitch: s.pitch }, selected: s.selected, time: s.time, days: s.days, inventory: { bag: s.inventory.toData(), collected: [...s.collected].sort() }, recipes: [...s.known].sort(), grants: s.grants.ember ? { ember: s.grants.ember } : void 0, drops: [...s.drops.values()].sort((a, b) => a.id < b.id ? -1 : 1), vitals: vitalsToData(s.vitals), ...s.respawn.size ? { respawn: Object.fromEntries(s.respawn) } : {}, ...s.spawn ? { spawn: s.spawn } : {}, ...s.chests.size ? { chests: Object.fromEntries([...s.chests].filter(([, c]) => !chestIsEmpty(c)).map(([k, c]) => [k, chestToData(c)])) } : {}, ...s.furnaces.size ? { furnaces: Object.fromEntries([...s.furnaces].map(([k, f]) => [k, furnaceToData(f)])) } : {}, ...s.regrow.size ? { regrow: Object.fromEntries([...s.regrow].map(([id, t]) => [id, Math.round(t * 10) / 10])) } : {}, ...s.crops.size ? { crops: Object.fromEntries([...s.crops.values()].map((c) => [cropKey(c.x, c.y, c.z), c.species === "junco" ? c.age : { s: c.species, a: c.age }])) } : {} };
+  return { v: TITAN_SAVE_VERSION, world: s.volume.gen.world, seed: s.seed, generatorVersion: s.volume.gen.version, savedAt: Date.now(), player: { x: s.body.x, y: s.body.y, z: s.body.z, yaw: s.yaw, pitch: s.pitch }, selected: s.selected, time: s.time, days: s.days, ...hasWeather(s.volume.gen.world) ? { weather: weatherToData(s.weather) } : {}, inventory: { bag: s.inventory.toData(), collected: [...s.collected].sort() }, recipes: [...s.known].sort(), grants: s.grants.ember ? { ember: s.grants.ember } : void 0, drops: [...s.drops.values()].sort((a, b) => a.id < b.id ? -1 : 1), vitals: vitalsToData(s.vitals), ...s.respawn.size ? { respawn: Object.fromEntries(s.respawn) } : {}, ...s.spawn ? { spawn: s.spawn } : {}, ...s.chests.size ? { chests: Object.fromEntries([...s.chests].filter(([, c]) => !chestIsEmpty(c)).map(([k, c]) => [k, chestToData(c)])) } : {}, ...s.furnaces.size ? { furnaces: Object.fromEntries([...s.furnaces].map(([k, f]) => [k, furnaceToData(f)])) } : {}, ...s.regrow.size ? { regrow: Object.fromEntries([...s.regrow].map(([id, t]) => [id, Math.round(t * 10) / 10])) } : {}, ...s.crops.size ? { crops: Object.fromEntries([...s.crops.values()].map((c) => [cropKey(c.x, c.y, c.z), c.species === "junco" ? c.age : { s: c.species, a: c.age }])) } : {} };
 }
 
 // src/net/titan/protocol.ts
-var TITAN_PROTOCOL_VERSION = 2;
+var TITAN_PROTOCOL_VERSION = 3;
 var TITAN_MAX_PLAYERS = 10;
 var TITAN_NAME_MIN = 2;
 var TITAN_NAME_MAX = 16;
@@ -4001,7 +4052,7 @@ var TitanRoom = class {
     this.dirty = true;
     this.players.delete(id);
     const rest = [...this.players.values()];
-    if (rest.length && rest.every((o) => o.bed) && isNightTime(this.world.time)) {
+    if (rest.length && rest.every((o) => o.bed) && canSleep(this.world.time, isRaining(this.world))) {
       const o = rest[0];
       useBed(o.view, o.bed.x, o.bed.y, o.bed.z, true);
       for (const q of rest) q.bed = null;
@@ -4093,7 +4144,7 @@ var TitanRoom = class {
     if (isDoor(id)) return useDoor(p.view, x, y, z);
     if (!isBed(id)) return { ok: false };
     const r = useBed(p.view, x, y, z, false);
-    if (!isNightTime(this.world.time)) return r;
+    if (!canSleep(this.world.time, isRaining(this.world))) return r;
     p.bed = { x, y, z };
     const asleep = [...this.players.values()].filter((o) => o.bed).length, total = this.players.size;
     if (asleep < total) return { ok: true, msg: `Na cama: ${asleep} de ${total}. A noite passa quando todos dormirem.` };
@@ -4147,6 +4198,10 @@ var TitanRoom = class {
     const before = w.time;
     w.time = advanceDay(w.time, dt);
     if (w.time < before) w.days++;
+    if (tickWeather(w, dt, this.rand)) {
+      this.timeDirty = true;
+      this.dirty = true;
+    }
     this.clock += dt;
     if (tickFurnaces(w, dt)) this.dirty = true;
     if (tickRegrow(w, dt)) this.dirty = true;
@@ -4189,7 +4244,7 @@ var TitanRoom = class {
     }
     if (this.timeDirty) {
       this.timeDirty = false;
-      out.push({ to: "all", msg: { t: "time", time: w.time, days: w.days } });
+      out.push({ to: "all", msg: { t: "time", time: w.time, days: w.days, rain: isRaining(w) } });
     }
     this.sincePlayers += dt;
     this.sinceTime += dt;
@@ -4201,7 +4256,7 @@ var TitanRoom = class {
     }
     if (this.sinceTime >= TITAN_TIME_EVERY) {
       this.sinceTime = 0;
-      out.push({ to: "all", msg: { t: "time", time: w.time, days: w.days } });
+      out.push({ to: "all", msg: { t: "time", time: w.time, days: w.days, rain: isRaining(w) } });
     }
     return [...out, ...this.flush()];
   }
