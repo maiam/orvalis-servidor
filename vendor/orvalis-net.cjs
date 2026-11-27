@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.208.0 (ec1d179) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.209.0 (9237ac4) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -630,6 +630,9 @@ var isHoe = (item) => toolOf(item)?.kind === "hoe";
 // src/titan/fishing.ts
 var FISH_WAIT_MIN_S = 5;
 var FISH_WAIT_MAX_S = 30;
+var FISH_WINDOW_MIN_S = 1;
+var FISH_WINDOW_MAX_S = 2;
+var FISH_MAX_DISTANCE = 33;
 var FISH_TABLE = [
   { item: Item.BACALHAU_CRU, weight: 60 },
   { item: Item.SALMAO_CRU, weight: 25 },
@@ -646,6 +649,29 @@ function rollFish(rng = Math.random) {
     if (r < 0) return e.item;
   }
   return FISH_TABLE[0].item;
+}
+function tickBobber(b, dt, rng = Math.random) {
+  b.t -= Math.max(0, dt);
+  if (b.t > 0) return null;
+  if (b.phase === "wait") {
+    b.phase = "bite";
+    b.t = span(FISH_WINDOW_MIN_S, FISH_WINDOW_MAX_S, rng);
+    return "bite";
+  }
+  b.phase = "wait";
+  b.t = span(FISH_WAIT_MIN_S, FISH_WAIT_MAX_S, rng);
+  return "escape";
+}
+var bobberTooFar = (b, px, py, pz) => Math.hypot(b.x + 0.5 - px, b.y - py, b.z + 0.5 - pz) > FISH_MAX_DISTANCE;
+function stepFishing(s, dt, rng = Math.random) {
+  const f = s.fishing;
+  if (!f) return null;
+  const b = s.body;
+  if (s.inventory.get(s.selected)?.item !== Item.VARA_PESCA || bobberTooFar(f, b.x, b.y, b.z)) {
+    s.fishing = null;
+    return "lost";
+  }
+  return tickBobber(f, dt, rng);
 }
 
 // src/titan/coral.ts
@@ -678,9 +704,12 @@ function stepCoral(s, dt) {
 // src/titan/boat.ts
 var BOAT_KINDS = ["carvalho", "betula", "cerejeira"];
 var BOAT_NAMES = ["Bote de Carvalho", "Bote de B\xE9tula", "Bote de Cerejeira"];
+var BOAT_MAX_SPEED = 8;
 var BOAT_HALF_LENGTH = 1.2;
 var BOAT_HALF_WIDTH = 0.62;
 var BOAT_Y = LAKE_SURFACE_Y - 0.1;
+var BOAT_SEAT_Y = 0.25;
+var BOAT_REACH = 4;
 var boatHeading = (yaw) => [-Math.sin(yaw), -Math.cos(yaw)];
 var boatWater = (vol, x, z) => {
   const cx = Math.floor(x), cz = Math.floor(z);
@@ -691,6 +720,7 @@ function boatFits(vol, x, z, yaw) {
   const L = BOAT_HALF_LENGTH * 0.95, W = BOAT_HALF_WIDTH * 0.9;
   return [[0, 0], [L, 0], [-L, 0], [0, W], [0, -W]].every(([f, s]) => boatWater(vol, x + hx * f + sx * s, z + hz * f + sz * s));
 }
+var boatSeat = (b) => ({ x: b.x, y: b.y + BOAT_SEAT_Y, z: b.z });
 var newBoatId = (list) => {
   let n = 0;
   for (const b of list) {
@@ -2018,6 +2048,30 @@ function placeBoat(s, hit, slot, kind) {
   s.inventory.consume(slot);
   s.metaRev++;
   return { ok: true, msg: BOAT_NAMES[kind] };
+}
+function mountBoat(s, id) {
+  const b = s.boats.find((e) => e.id === id);
+  if (!b || s.boatRide) return { ok: false };
+  if (Math.hypot(b.x - s.body.x, b.z - s.body.z) > BOAT_REACH + 1.5) return { ok: false, msg: "Longe demais do bote" };
+  s.boatRide = { id, speed: 0 };
+  const p = boatSeat(b);
+  s.body.x = p.x;
+  s.body.y = p.y;
+  s.body.z = p.z;
+  s.body.vx = s.body.vy = s.body.vz = 0;
+  s.body.inLiquid = false;
+  s.body.onGround = true;
+  return { ok: true, msg: "A bordo \xB7 W e S remam, A e D giram, pular desembarca" };
+}
+function dismountBoat(s) {
+  const ride = s.boatRide, b = ride && s.boats.find((e) => e.id === ride.id);
+  s.boatRide = null;
+  if (b) {
+    s.body.x = b.x;
+    s.body.z = b.z;
+    s.body.y = b.y + 0.6;
+    s.body.vx = s.body.vy = s.body.vz = 0;
+  }
 }
 function pickBoat(s, id) {
   const i = s.boats.findIndex((e) => e.id === id), b = s.boats[i];
@@ -5088,7 +5142,7 @@ function headerOf(s) {
 }
 
 // src/net/titan/protocol.ts
-var TITAN_PROTOCOL_VERSION = 4;
+var TITAN_PROTOCOL_VERSION = 5;
 var TITAN_MAX_PLAYERS = 10;
 var TITAN_NAME_MIN = 2;
 var TITAN_NAME_MAX = 16;
@@ -5148,6 +5202,8 @@ function parseTitanAction(v) {
     return null;
   }
   if (a.k === "strike") return typeof o.id === "string" && o.id.length > 0 && o.id.length <= 20 ? { k: "strike", id: o.id } : null;
+  if (a.k === "dismountBoat") return { k: "dismountBoat" };
+  if (a.k === "mountBoat") return typeof o.id === "string" && o.id.length > 0 && o.id.length <= 20 ? { k: "mountBoat", id: o.id } : null;
   if (a.k === "strikeFauna" || a.k === "feedFauna") return typeof o.id === "string" && o.id.length > 0 && o.id.length <= 40 ? { k: a.k, id: o.id } : null;
   if (a.k === "die") return { k: "die" };
   return null;
@@ -5169,6 +5225,10 @@ function parseTitanClientMessage(text) {
     case "state": {
       const s = parseTitanState(m.s), v = m.v === void 0 ? void 0 : parseVitals(m.v);
       return s && (m.v === void 0 || v) ? { t: "state", s, ...v ? { v } : {} } : null;
+    }
+    case "boat": {
+      const b = m.b;
+      return b && num2(b.x) && num2(b.z) && num2(b.r, 1e3) ? { t: "boat", b: { x: b.x, z: b.z, r: b.r } } : null;
     }
     case "act": {
       const a = parseTitanAction(m.a);
@@ -5235,6 +5295,7 @@ var TitanRoom = class {
   clock = 0;
   timeDirty = false;
   sinceFauna = 0;
+  lastBoatsSig = "[]";
   sinceFaunaSave = 0;
   faunaMoving = /* @__PURE__ */ new Map();
   faunaCounter = { n: 0 };
@@ -5280,9 +5341,12 @@ var TitanRoom = class {
       inventory,
       vitals: sv ? vitalsFromData(sv.vitals) : newVitals(),
       spawn: sv?.spawn ?? null,
-      known: new Set(sv?.known ?? [])
+      known: new Set(sv?.known ?? []),
+      fishing: null,
+      boatRide: null
+      // a pesca e o bote em que se está são de cada jogador (ADR 0138, entrega C)
     });
-    const p = { id: this.nextId++, name, view, moved: false, struckAt: -1e9, bed: null };
+    const p = { id: this.nextId++, name, view, moved: false, struckAt: -1e9, bed: null, lastBoatAt: -1e9 };
     this.players.set(p.id, p);
     const header = headerOf(this.world);
     delete header.fauna;
@@ -5296,6 +5360,7 @@ var TitanRoom = class {
   leave(id) {
     const p = this.players.get(id);
     if (!p) return [];
+    dismountBoat(p.view);
     this.keep(p);
     this.dirty = true;
     this.players.delete(id);
@@ -5336,6 +5401,26 @@ var TitanRoom = class {
         if (p.bed && Math.hypot(b.x - (p.bed.x + 0.5), b.z - (p.bed.z + 0.5)) > 3) p.bed = null;
         return [];
       }
+      case "boat": {
+        const ride = p.view.boatRide, boat = ride ? this.world.boats.find((e) => e.id === ride.id) : void 0;
+        if (!ride || !boat) return [];
+        const dt = Math.max(0.02, Math.min(1, this.clock - p.lastBoatAt));
+        p.lastBoatAt = this.clock;
+        const { x, z, r } = m.b;
+        if (Math.hypot(x - boat.x, z - boat.z) > BOAT_MAX_SPEED * 1.5 * dt + 0.6 || !boatFits(this.world.volume, x, z, r)) {
+          this.lastBoatsSig = "";
+          return [];
+        }
+        boat.x = x;
+        boat.z = z;
+        boat.yaw = r;
+        const seat = boatSeat(boat), body = p.view.body;
+        body.x = seat.x;
+        body.y = seat.y;
+        body.z = seat.z;
+        p.moved = true;
+        return [];
+      }
       case "bag": {
         p.view.inventory = Inventory.fromData(m.bag);
         this.dirty = true;
@@ -5351,19 +5436,18 @@ var TitanRoom = class {
     const v = p.view, b = v.body, out = [];
     const cell = "hit" in a ? a.hit : "x" in a ? a : null;
     let r = { ok: false, msg: "Longe demais" };
+    const fishBefore = v.fishing ? { ...v.fishing } : null;
     const near = !cell || Math.hypot(cell.x + 0.5 - b.x, cell.y + 0.5 - (b.y + EYE_HEIGHT), cell.z + 0.5 - b.z) <= TITAN_ROOM_REACH;
     if (near) {
       r = { ok: false };
       switch (a.k) {
-        case "place": {
-          const held = v.inventory.get(a.slot)?.item;
-          r = held === Item.VARA_PESCA || isBoatItem(held) ? { ok: false, msg: "Ainda n\xE3o dispon\xEDvel nas salas" } : placeFromSlot(v, a.hit, a.slot);
+        case "place":
+          r = placeFromSlot(v, a.hit, a.slot);
           break;
-        }
-        // pesca e botes: próximas entregas (ADR 0138)
         case "break":
-          r = breakOrCollect(v, a.hit);
+          r = this.boatRidden(a.hit.item) ? { ok: false, msg: "H\xE1 algu\xE9m a bordo" } : breakOrCollect(v, a.hit);
           break;
+        // o bote com piloto não se recolhe
         case "use":
           r = this.useCell(p, a.x, a.y, a.z);
           break;
@@ -5381,6 +5465,14 @@ var TitanRoom = class {
         case "strike":
           r = this.strike(p, a.id);
           break;
+        case "mountBoat":
+          r = this.occupied(p, a.id) ? { ok: false, msg: "Bote ocupado" } : mountBoat(v, a.id);
+          if (r.ok) p.lastBoatAt = this.clock;
+          break;
+        case "dismountBoat":
+          dismountBoat(v);
+          r = { ok: true };
+          break;
         case "strikeFauna":
           r = this.strikeFauna(p, a.id);
           break;
@@ -5392,6 +5484,7 @@ var TitanRoom = class {
           break;
       }
     }
+    if (!!v.fishing !== !!fishBefore || v.fishing?.phase !== fishBefore?.phase) out.push(this.bobberMsg(p));
     this.dirty = true;
     return [{ to: p.id, msg: { t: "applied", seq, ok: r.ok, ...r.msg ? { msg: r.msg } : {}, ...r.open !== void 0 ? { open: r.open } : {}, bag: v.inventory.toData() } }, ...out, ...this.flush()];
   }
@@ -5420,6 +5513,26 @@ var TitanRoom = class {
     const r = attackCreature(p.view, idx);
     this.sinceCreatures = TITAN_CREATURES_EVERY;
     return { ok: r.ok, ...r.msg ? { msg: r.msg } : {} };
+  }
+  /** Alguém pilota o bote `id`? (O recolher e o embarcar de outro jogador valem só com o bote vazio.) */
+  occupied(except, id) {
+    for (const o of this.players.values()) if (o !== except && o.view.boatRide?.id === id) return true;
+    return false;
+  }
+  /** O alvo da ação é um bote (`bt:<id>`) com piloto? */
+  boatRidden(item) {
+    return !!item && item.startsWith("bt:") && [...this.players.values()].some((o) => o.view.boatRide?.id === item.slice(3));
+  }
+  /** A boia do jogador (lançada, com ou sem fisgada) ou `null` quando não há; `e` diz o evento que a causou. */
+  bobberMsg(p, e) {
+    const f = p.view.fishing;
+    return { to: p.id, msg: { t: "bobber", b: f ? { x: f.x, y: f.y, z: f.z, bite: f.phase === "bite" ? 1 : 0 } : null, ...e ? { e } : {} } };
+  }
+  /** Todos os botes da sala (com o id de quem pilota). */
+  wireBoats() {
+    const rider = /* @__PURE__ */ new Map();
+    for (const o of this.players.values()) if (o.view.boatRide) rider.set(o.view.boatRide.id, o.id);
+    return this.world.boats.map((b) => ({ id: b.id, k: b.kind, x: Math.round(b.x * 100) / 100, y: Math.round(b.y * 100) / 100, z: Math.round(b.z * 100) / 100, r: Math.round(b.yaw * 100) / 100, d: rider.get(b.id) ?? 0 }));
   }
   /** Animal de fazenda pelo id, ao alcance de `p` (o olho até o centro do corpo). */
   faunaNear(p, id) {
@@ -5473,6 +5586,12 @@ var TitanRoom = class {
       out.push({ to: "all", msg: { t: "edits", cells: this.pending } });
       this.pending = [];
     }
+    const boats = this.wireBoats(), sig = JSON.stringify(boats);
+    if (sig !== this.lastBoatsSig) {
+      this.lastBoatsSig = sig;
+      out.push({ to: "all", msg: { t: "boats", list: boats } });
+      this.dirty = true;
+    }
     if (this.world.dropsRev !== this.lastDropsRev) {
       this.lastDropsRev = this.world.dropsRev;
       out.push({ to: "all", msg: { t: "drops", drops: [...this.world.drops.values()] } });
@@ -5517,6 +5636,12 @@ var TitanRoom = class {
         const ev = stepFarejador(f, w.volume, { x: near.view.body.x, y: near.view.body.y, z: near.view.body.z }, dt);
         if (ev.hit) out.push({ to: near.id, msg: { t: "hurt", damage: ev.damage, kind: f.kind } });
       }
+    }
+    for (const p of list) {
+      if (!p.view.fishing) continue;
+      const ev = stepFishing(p.view, dt, this.rand);
+      if (ev === "bite") out.push(this.bobberMsg(p, "bite"));
+      else if (ev === "lost") out.push(this.bobberMsg(p, "lost"));
     }
     if (list.length && w.fauna.length) {
       for (const f of w.fauna) {
