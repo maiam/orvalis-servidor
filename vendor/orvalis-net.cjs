@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.191.0 (c5e1fa3) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.192.0 (e73a474) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -3806,6 +3806,8 @@ var TitanVolume = class _TitanVolume {
     return (this.sky ??= this.buildSky()).at(x, y, z);
   }
   sky = null;
+  /** Sobe a cada mudança real do céu depois de calculado: o renderer relê o céu das plantas (que não passam pelas instâncias de modelo). */
+  skyRev = 0;
   static skyKind(id) {
     return blocksLight(id) ? 2 : isLeaves(id) || id === T.LAKE ? 1 : 0;
   }
@@ -3860,7 +3862,10 @@ var TitanVolume = class _TitanVolume {
         this.markLightCell(cx, cy, cz);
       });
       this.flushLightTouched();
-      if (moved) this.modelVersion++;
+      if (moved) {
+        this.modelVersion++;
+        this.skyRev++;
+      }
     }
     const lvBefore = lightLevelOf(before), lvAfter = lightLevelOf(after);
     if (lvBefore !== lvAfter) {
