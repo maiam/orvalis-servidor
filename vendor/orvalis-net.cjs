@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.209.0 (9237ac4) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.213.0 (6010135) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -143,7 +143,13 @@ var tiles_default = {
     "orvalis/coral-bloco-cerebro-morto",
     "orvalis/coral-bloco-bolha-morto",
     "orvalis/coral-bloco-fogo-morto",
-    "orvalis/coral-bloco-chifre-morto"
+    "orvalis/coral-bloco-chifre-morto",
+    "orvalis/laje-carvalho-topo",
+    "orvalis/laje-carvalho-face",
+    "orvalis/laje-cerejeira-topo",
+    "orvalis/laje-cerejeira-face",
+    "orvalis/laje-betula-topo",
+    "orvalis/laje-betula-face"
   ]
 };
 
@@ -159,8 +165,8 @@ var REGION_V6 = { min: -64, max: 64 };
 var regionFor = (generatorVersion) => generatorVersion >= 6 ? REGION_V6 : REGION_LEGACY;
 var REGION_MIN = REGION_LEGACY.min;
 var REGION_MAX = REGION_LEGACY.max;
-var T = { AIR: 0, SAND: 1, DAMP_SAND: 2, DARK_ROCK: 3, FROST: 4, LAKE: 5, BEDROCK: 6, LANTERN: 7, VEIN_ROCK: 8, VEIN_FROST: 9, WORKBENCH: 10, EMBER: 11, SLAB: 12, WORKBENCH_90: 13, WORKBENCH_180: 14, WORKBENCH_270: 15, SLAB_TOP: 16, SLAB_DOUBLE: 17, MARCO: 18, MARCO_90: 19, MARCO_180: 20, MARCO_270: 21, PAINEL: 22, PAINEL_Z: 23, VEIN_COPPER: 24, BRAZIER: 25, BRAZIER_LIT: 26, CARAPACE: 27, EMBER_VEIN: 28, EMBER_BLOCK: 29, MAT: 30, LADDER: 31, LADDER_90: 32, LADDER_180: 33, LADDER_270: 34, CHEST: 35, CHEST_90: 36, CHEST_180: 37, CHEST_270: 38, BED: 39, BED_90: 40, BED_180: 41, BED_270: 42, BED_HEAD: 43, BED_HEAD_90: 44, BED_HEAD_180: 45, BED_HEAD_270: 46, REED_BLOCK: 47, REED_SLAB: 48, REED_SLAB_TOP: 49, REED_STAIR: 50, REED_STAIR_90: 51, REED_STAIR_180: 52, REED_STAIR_270: 53, REED_CHAIR: 54, REED_CHAIR_90: 55, REED_CHAIR_180: 56, REED_CHAIR_270: 57, DOOR: 58, DOOR_LAST: 89, GRASS: 90, DIRT: 91, STONE: 92, BEACH: 93, LOG_OAK: 94, LEAVES_OAK: 95, LOG_CHERRY: 96, LEAVES_CHERRY: 97, LOG_BIRCH: 98, LEAVES_BIRCH: 99, PLANKS_OAK: 100, PLANKS_CHERRY: 101, PLANKS_BIRCH: 102, CARPENTRY: 103, CARPENTRY_90: 104, CARPENTRY_180: 105, CARPENTRY_270: 106, STONE_SMOOTH: 107, STONE_BRICK: 108, STONE_SLAB: 109, STONE_SLAB_TOP: 110, STONE_STAIR: 111, STONE_STAIR_90: 112, STONE_STAIR_180: 113, STONE_STAIR_270: 114, STONE_WALL: 115, STONE_WALL_LAST: 130, FARMLAND_DRY: 131, FARMLAND_WET: 132, PATH: 133, DIRT_INFERTILE: 134, CLAY_BLOCK: 135, BRICK_BLOCK: 136, FURNACE: 137, FURNACE_90: 138, FURNACE_180: 139, FURNACE_270: 140, FURNACE_LIT: 141, FURNACE_LIT_90: 142, FURNACE_LIT_180: 143, FURNACE_LIT_270: 144, TORCH: 145, TORCH_WALL: 146, TORCH_WALL_90: 147, TORCH_WALL_180: 148, TORCH_WALL_270: 149, COAL_ORE: 150, COAL_BLOCK: 151, MELON: 152, PUMPKIN: 153, SEAGRASS: 154, SEAGRASS_TALL: 155, SEAGRASS_TALL_TOP: 156, KELP: 157, KELP_TOP: 158, DRIED_KELP_BLOCK: 159, CORAL: 160, CORAL_FAN: 170, CORAL_BLOCK: 180 };
-var T_MAX = T.CORAL_BLOCK + 9;
+var T = { AIR: 0, SAND: 1, DAMP_SAND: 2, DARK_ROCK: 3, FROST: 4, LAKE: 5, BEDROCK: 6, LANTERN: 7, VEIN_ROCK: 8, VEIN_FROST: 9, WORKBENCH: 10, EMBER: 11, SLAB: 12, WORKBENCH_90: 13, WORKBENCH_180: 14, WORKBENCH_270: 15, SLAB_TOP: 16, SLAB_DOUBLE: 17, MARCO: 18, MARCO_90: 19, MARCO_180: 20, MARCO_270: 21, PAINEL: 22, PAINEL_Z: 23, VEIN_COPPER: 24, BRAZIER: 25, BRAZIER_LIT: 26, CARAPACE: 27, EMBER_VEIN: 28, EMBER_BLOCK: 29, MAT: 30, LADDER: 31, LADDER_90: 32, LADDER_180: 33, LADDER_270: 34, CHEST: 35, CHEST_90: 36, CHEST_180: 37, CHEST_270: 38, BED: 39, BED_90: 40, BED_180: 41, BED_270: 42, BED_HEAD: 43, BED_HEAD_90: 44, BED_HEAD_180: 45, BED_HEAD_270: 46, REED_BLOCK: 47, REED_SLAB: 48, REED_SLAB_TOP: 49, REED_STAIR: 50, REED_STAIR_90: 51, REED_STAIR_180: 52, REED_STAIR_270: 53, REED_CHAIR: 54, REED_CHAIR_90: 55, REED_CHAIR_180: 56, REED_CHAIR_270: 57, DOOR: 58, DOOR_LAST: 89, GRASS: 90, DIRT: 91, STONE: 92, BEACH: 93, LOG_OAK: 94, LEAVES_OAK: 95, LOG_CHERRY: 96, LEAVES_CHERRY: 97, LOG_BIRCH: 98, LEAVES_BIRCH: 99, PLANKS_OAK: 100, PLANKS_CHERRY: 101, PLANKS_BIRCH: 102, CARPENTRY: 103, CARPENTRY_90: 104, CARPENTRY_180: 105, CARPENTRY_270: 106, STONE_SMOOTH: 107, STONE_BRICK: 108, STONE_SLAB: 109, STONE_SLAB_TOP: 110, STONE_STAIR: 111, STONE_STAIR_90: 112, STONE_STAIR_180: 113, STONE_STAIR_270: 114, STONE_WALL: 115, STONE_WALL_LAST: 130, FARMLAND_DRY: 131, FARMLAND_WET: 132, PATH: 133, DIRT_INFERTILE: 134, CLAY_BLOCK: 135, BRICK_BLOCK: 136, FURNACE: 137, FURNACE_90: 138, FURNACE_180: 139, FURNACE_270: 140, FURNACE_LIT: 141, FURNACE_LIT_90: 142, FURNACE_LIT_180: 143, FURNACE_LIT_270: 144, TORCH: 145, TORCH_WALL: 146, TORCH_WALL_90: 147, TORCH_WALL_180: 148, TORCH_WALL_270: 149, COAL_ORE: 150, COAL_BLOCK: 151, MELON: 152, PUMPKIN: 153, SEAGRASS: 154, SEAGRASS_TALL: 155, SEAGRASS_TALL_TOP: 156, KELP: 157, KELP_TOP: 158, DRIED_KELP_BLOCK: 159, CORAL: 160, CORAL_FAN: 170, CORAL_BLOCK: 180, SLAB_OAK: 190, SLAB_OAK_TOP: 191, SLAB_CHERRY: 192, SLAB_CHERRY_TOP: 193, SLAB_BIRCH: 194, SLAB_BIRCH_TOP: 195, STAIR_OAK: 196, STAIR_OAK_270: 199, STAIR_CHERRY: 200, STAIR_BIRCH: 204, STAIR_BIRCH_270: 207, FENCE_OAK: 208, FENCE_BIRCH_LAST: 255, GATE_OAK: 256, GATE_BIRCH_LAST: 279, DOOR_WOOD: 280, DOOR_WOOD_LAST: 375, TRAPDOOR: 376, TRAPDOOR_LAST: 423 };
+var T_MAX = T.TRAPDOOR_LAST;
 var BLOCK_NAMES = { 1: "Areia ocre", 2: "Areia \xFAmida", 3: "Rocha escura", 4: "Gelo fosco", 5: "Lago escuro", 6: "Rocha-m\xE3e", 7: "Lanterna da margem", 8: "Rocha com veio", 9: "Gelo com veio", 10: "Mesa de Trabalho", 11: "Brasa de \xE2mbar", 12: "Laje de rocha", 13: "Mesa de Trabalho", 14: "Mesa de Trabalho", 15: "Mesa de Trabalho", 16: "Laje de rocha", 17: "Laje dupla de rocha", 18: "Marco de Margem", 19: "Marco de Margem", 20: "Marco de Margem", 21: "Marco de Margem", 22: "Painel de Junco", 23: "Painel de Junco", 24: "Veio de Cobre de Duna", 25: "Braseiro de Rocha", 26: "Braseiro de Rocha (aceso)", 27: "Revestimento de Carapa\xE7a", 28: "Veio de \xC2mbar", 29: "Bloco de \xC2mbar Compactado", 30: "Esteira de Junco", 31: "Escada de Junco", 32: "Escada de Junco", 33: "Escada de Junco", 34: "Escada de Junco", 35: "Ba\xFA de Rocha e Junco", 36: "Ba\xFA de Rocha e Junco", 37: "Ba\xFA de Rocha e Junco", 38: "Ba\xFA de Rocha e Junco", 39: "Cama de Junco", 40: "Cama de Junco", 41: "Cama de Junco", 42: "Cama de Junco", 43: "Cama de Junco", 44: "Cama de Junco", 45: "Cama de Junco", 46: "Cama de Junco", 47: "Bloco de Junco", 48: "Laje de Junco", 49: "Laje de Junco", 50: "Degrau de Junco", 51: "Degrau de Junco", 52: "Degrau de Junco", 53: "Degrau de Junco", 54: "Cadeira de Junco", 55: "Cadeira de Junco", 56: "Cadeira de Junco", 57: "Cadeira de Junco" };
 for (let id = T.DOOR; id <= T.DOOR_LAST; id++) BLOCK_NAMES[id] = "Porta de Junco";
 for (let t = 0; t < 4; t++) {
@@ -182,6 +188,19 @@ for (let i = 0; i < 10; i++) {
   BLOCK_NAMES[T.CORAL + i] = `Coral de ${nome}${morto}`;
   BLOCK_NAMES[T.CORAL_FAN + i] = `Gorg\xF4nia de ${nome}${morto}`;
   BLOCK_NAMES[T.CORAL_BLOCK + i] = `Bloco de Coral de ${nome}${morto}`;
+}
+for (const [i, w] of ["Carvalho", "Cerejeira", "B\xE9tula"].entries()) {
+  BLOCK_NAMES[T.SLAB_OAK + 2 * i] = `Laje de ${w}`;
+  BLOCK_NAMES[T.SLAB_OAK + 2 * i + 1] = `Laje de ${w}`;
+  for (let t = 0; t < 4; t++) BLOCK_NAMES[T.STAIR_OAK + 4 * i + t] = `Degrau de ${w}`;
+}
+for (const [i, w] of ["Carvalho", "Cerejeira", "B\xE9tula"].entries()) {
+  for (let m = 0; m < 16; m++) BLOCK_NAMES[T.FENCE_OAK + 16 * i + m] = `Cerca de ${w}`;
+  for (let t = 0; t < 8; t++) BLOCK_NAMES[T.GATE_OAK + 8 * i + t] = `Port\xE3o de ${w}`;
+}
+for (const [i, w] of ["Carvalho", "Cerejeira", "B\xE9tula"].entries()) {
+  for (let b = 0; b < 32; b++) BLOCK_NAMES[T.DOOR_WOOD + 32 * i + b] = `Porta de ${w}`;
+  for (let b = 0; b < 16; b++) BLOCK_NAMES[T.TRAPDOOR + 16 * i + b] = `Al\xE7ap\xE3o de ${w}`;
 }
 BLOCK_NAMES[T.MELON] = "Melancia";
 BLOCK_NAMES[T.PUMPKIN] = "Ab\xF3bora";
@@ -213,16 +232,18 @@ var coralBase = (id) => isCoralPlant(id) ? T.CORAL : isCoralFan(id) ? T.CORAL_FA
 var isCoralLive = (id) => isCoral(id) && id - coralBase(id) < 5;
 var deadCoral = (id) => isCoralLive(id) ? id + 5 : id;
 var isLiquidCell = (id) => id === T.LAKE || isWaterPlant(id);
-var isSolid = (id) => id !== T.AIR && id !== T.LAKE && !isWaterPlant(id) && id !== T.LANTERN && !isMarco(id) && id !== T.MAT && !isLadder(id) && !isTorch(id);
-var isTarget = (id) => isSolid(id) || isWaterPlant(id) || id === T.LANTERN || isMarco(id) || id === T.MAT || isLadder(id) || isTorch(id);
+var isSolid = (id) => id !== T.AIR && id !== T.LAKE && !isWaterPlant(id) && id !== T.LANTERN && !isMarco(id) && id !== T.MAT && !isLadder(id) && !isTorch(id) && !isGateOpen(id);
+var isTarget = (id) => isSolid(id) || isWaterPlant(id) || id === T.LANTERN || isMarco(id) || id === T.MAT || isLadder(id) || isTorch(id) || isGateOpen(id);
 var blocksLight = (id) => isFull(id) && !isLeaves(id);
 var isOccupied = isTarget;
 var blockHeight = (id) => blockSpan(id)[1];
-var isSlab = (id) => id === T.SLAB || id === T.SLAB_TOP || id === T.REED_SLAB || id === T.REED_SLAB_TOP || id === T.STONE_SLAB || id === T.STONE_SLAB_TOP;
-var isSlabBottom = (id) => id === T.SLAB || id === T.REED_SLAB || id === T.STONE_SLAB;
+var isWoodSlab = (id) => id >= T.SLAB_OAK && id <= T.SLAB_BIRCH_TOP;
+var woodOf = (id) => isWoodSlab(id) ? id - T.SLAB_OAK >> 1 : id >= T.STAIR_OAK && id <= T.STAIR_BIRCH_270 ? id - T.STAIR_OAK >> 2 : isFence(id) ? id - T.FENCE_OAK >> 4 : isGate(id) ? id - T.GATE_OAK >> 3 : isDoor(id) && doorFamily(id) > 0 ? doorFamily(id) - 1 : isTrapdoor(id) ? id - T.TRAPDOOR >> 4 : -1;
+var isSlab = (id) => id === T.SLAB || id === T.SLAB_TOP || id === T.REED_SLAB || id === T.REED_SLAB_TOP || id === T.STONE_SLAB || id === T.STONE_SLAB_TOP || isWoodSlab(id);
+var isSlabBottom = (id) => id === T.SLAB || id === T.REED_SLAB || id === T.STONE_SLAB || isWoodSlab(id) && (id - T.SLAB_OAK & 1) === 0;
 function blockSpan(id) {
   if (isWall(id)) return [0, WALL_HEIGHT];
-  if (isStair(id) || isChair(id) || isDoor(id)) return [0, 1];
+  if (isStair(id) || isChair(id) || isDoor(id) || isTrapdoor(id) || isFence(id) || isGate(id) && !isGateOpen(id)) return [0, 1];
   if (isBrazier(id)) return [0, BRAZIER_HEIGHT];
   if (isChest(id)) return [0, CHEST_HEIGHT];
   if (isBed(id)) return [0, BED_HEIGHT];
@@ -230,16 +251,51 @@ function blockSpan(id) {
   if (isSlab(id)) return isSlabBottom(id) ? [0, 0.5] : [0.5, 1];
   return isSolid(id) ? [0, 1] : [0, 0];
 }
-var isFull = (id) => isSolid(id) && !isSlab(id) && !isPanel(id) && !isChest(id) && !isBed(id) && !isBrazier(id) && !isStair(id) && !isChair(id) && !isDoor(id) && !isWall(id);
+var isFull = (id) => isSolid(id) && !isSlab(id) && !isPanel(id) && !isChest(id) && !isBed(id) && !isBrazier(id) && !isStair(id) && !isChair(id) && !isDoor(id) && !isTrapdoor(id) && !isWall(id) && !isFence(id) && !isGate(id);
 var isVein = (id) => id === T.VEIN_ROCK || id === T.VEIN_FROST;
 var isReedStair = (id) => id >= T.REED_STAIR && id <= T.REED_STAIR_270;
 var isStoneStair = (id) => id >= T.STONE_STAIR && id <= T.STONE_STAIR_270;
-var isStair = (id) => isReedStair(id) || isStoneStair(id);
+var isWoodStair = (id) => id >= T.STAIR_OAK && id <= T.STAIR_BIRCH_270;
+var isStair = (id) => isReedStair(id) || isStoneStair(id) || isWoodStair(id);
 var isChair = (id) => id >= T.REED_CHAIR && id <= T.REED_CHAIR_270;
-var stairTurn = (id) => isReedStair(id) ? id - T.REED_STAIR : isStoneStair(id) ? id - T.STONE_STAIR : 0;
+var stairTurn = (id) => isReedStair(id) ? id - T.REED_STAIR : isStoneStair(id) ? id - T.STONE_STAIR : isWoodStair(id) ? id - T.STAIR_OAK & 3 : 0;
 var chairTurn = (id) => isChair(id) ? id - T.REED_CHAIR : 0;
 var stairId = (turn, stone = false) => (stone ? T.STONE_STAIR : T.REED_STAIR) + (turn % 4 + 4) % 4;
+var woodStairId = (wood, turn) => T.STAIR_OAK + wood * 4 + (turn % 4 + 4) % 4;
 var chairId = (turn) => T.REED_CHAIR + (turn % 4 + 4) % 4;
+var isFence = (id) => id >= T.FENCE_OAK && id <= T.FENCE_BIRCH_LAST;
+var fenceId = (wood, mask) => T.FENCE_OAK + wood * 16 + (mask & 15);
+var isGate = (id) => id >= T.GATE_OAK && id <= T.GATE_BIRCH_LAST;
+var gateTurn = (id) => isGate(id) ? id - T.GATE_OAK & 3 : 0;
+var isGateOpen = (id) => isGate(id) && (id - T.GATE_OAK & 4) !== 0;
+var gateId = (wood, turn, open) => T.GATE_OAK + wood * 8 + (open ? 4 : 0) + (turn % 4 + 4) % 4;
+var isOpenable = (id) => isDoor(id) || isGate(id) || isTrapdoor(id);
+var gateAxisX = (id) => (gateTurn(id) & 1) === 0;
+function fenceConnects(id, bit) {
+  if (isFence(id)) return true;
+  if (isGate(id)) return gateAxisX(id) ? bit === WALL_E || bit === WALL_W : bit === WALL_N || bit === WALL_S;
+  return isFull(id) && !isLeaves(id);
+}
+function fenceMaskFor(get, x, y, z) {
+  return (fenceConnects(get(x, y, z - 1), WALL_S) ? WALL_N : 0) | (fenceConnects(get(x + 1, y, z), WALL_W) ? WALL_E : 0) | (fenceConnects(get(x, y, z + 1), WALL_N) ? WALL_S : 0) | (fenceConnects(get(x - 1, y, z), WALL_E) ? WALL_W : 0);
+}
+function fenceBoxes(mask) {
+  const out = [[0.375, 0, 0.375, 0.625, 1, 0.625]];
+  if (mask & WALL_N) out.push([0.375, 0, 0, 0.625, 1, 0.375]);
+  if (mask & WALL_E) out.push([0.625, 0, 0.375, 1, 1, 0.625]);
+  if (mask & WALL_S) out.push([0.375, 0, 0.625, 0.625, 1, 1]);
+  if (mask & WALL_W) out.push([0, 0, 0.375, 0.375, 1, 0.625]);
+  return out;
+}
+function gateBoxes(turn, open) {
+  const base = open ? [[0, 0, 0.4375, 0.125, 1, 1], [0.875, 0, 0.4375, 1, 1, 1]] : [[0, 0, 0.375, 1, 1, 0.625]];
+  return base.map((b) => rotateBox(b, turn));
+}
+function tallBoxes(belowId) {
+  if (!isFence(belowId) && !(isGate(belowId) && !isGateOpen(belowId))) return null;
+  const bb = blockBoxes(belowId);
+  return bb ? bb.map((b) => [b[0], 0, b[2], b[3], 0.5, b[5]]) : null;
+}
 var WALL_N = 1;
 var WALL_E = 2;
 var WALL_S = 4;
@@ -274,13 +330,25 @@ function rotateBox(b, turn) {
   return [x0, y0, z0, x1, y1, z1];
 }
 var DOOR_THICK = 0.1875;
-var isDoor = (id) => id >= T.DOOR && id <= T.DOOR_LAST;
-var isDoorUpper = (id) => isDoor(id) && (id - T.DOOR & 16) !== 0;
-var doorTurn = (id) => isDoor(id) ? id - T.DOOR & 3 : 0;
-var isDoorOpen = (id) => isDoor(id) && (id - T.DOOR & 4) !== 0;
-var isDoorHingeRight = (id) => isDoor(id) && (id - T.DOOR & 8) !== 0;
-var doorId = (turn, hingeRight, open, upper) => T.DOOR + (turn % 4 + 4) % 4 + (open ? 4 : 0) + (hingeRight ? 8 : 0) + (upper ? 16 : 0);
+var doorBits = (id) => id >= T.DOOR && id <= T.DOOR_LAST ? id - T.DOOR : id >= T.DOOR_WOOD && id <= T.DOOR_WOOD_LAST ? id - T.DOOR_WOOD & 31 : -1;
+var isDoor = (id) => doorBits(id) >= 0;
+var doorFamily = (id) => id >= T.DOOR_WOOD && id <= T.DOOR_WOOD_LAST ? 1 + (id - T.DOOR_WOOD >> 5) : 0;
+var isDoorUpper = (id) => isDoor(id) && (doorBits(id) & 16) !== 0;
+var doorTurn = (id) => isDoor(id) ? doorBits(id) & 3 : 0;
+var isDoorOpen = (id) => isDoor(id) && (doorBits(id) & 4) !== 0;
+var isDoorHingeRight = (id) => isDoor(id) && (doorBits(id) & 8) !== 0;
+var doorId = (turn, hingeRight, open, upper, family = 0) => (family === 0 ? T.DOOR : T.DOOR_WOOD + (family - 1) * 32) + (turn % 4 + 4) % 4 + (open ? 4 : 0) + (hingeRight ? 8 : 0) + (upper ? 16 : 0);
 var doorToggled = (id) => isDoor(id) ? isDoorOpen(id) ? id - 4 : id + 4 : id;
+var isTrapdoor = (id) => id >= T.TRAPDOOR && id <= T.TRAPDOOR_LAST;
+var trapdoorTurn = (id) => isTrapdoor(id) ? id - T.TRAPDOOR & 3 : 0;
+var isTrapdoorOpen = (id) => isTrapdoor(id) && (id - T.TRAPDOOR & 4) !== 0;
+var isTrapdoorTop = (id) => isTrapdoor(id) && (id - T.TRAPDOOR & 8) !== 0;
+var trapdoorId = (wood, turn, open, top) => T.TRAPDOOR + wood * 16 + (turn % 4 + 4) % 4 + (open ? 4 : 0) + (top ? 8 : 0);
+var trapdoorToggled = (id) => isTrapdoor(id) ? isTrapdoorOpen(id) ? id - 4 : id + 4 : id;
+function trapdoorBoxes(turn, open, top) {
+  const t = DOOR_THICK, b = open ? [0, 0, 0, 1, 1, t] : top ? [0, 1 - t, 0, 1, 1, 1] : [0, 0, 0, 1, t, 1];
+  return [rotateBox(b, turn)];
+}
 var doorRight = (turn) => {
   const [fx, fz] = ladderFacing(turn);
   return [fz === 0 ? 0 : fz, fx === 0 ? 0 : -fx];
@@ -290,11 +358,17 @@ function doorBox(hingeRight, open) {
   return hingeRight ? [1 - DOOR_THICK, 0, 0, 1, 1, 1] : [0, 0, 0, DOOR_THICK, 1, 1];
 }
 var BOXES = /* @__PURE__ */ new Map();
-for (let t = 0; t < 4; t++) for (const hr of [false, true]) for (const op of [false, true]) for (const up of [false, true]) BOXES.set(doorId(t, hr, op, up), [rotateBox(doorBox(hr, op), t)]);
+for (let fam = 0; fam < 4; fam++) for (let t = 0; t < 4; t++) for (const hr of [false, true]) for (const op of [false, true]) for (const up of [false, true]) BOXES.set(doorId(t, hr, op, up, fam), [rotateBox(doorBox(hr, op), t)]);
+for (let w = 0; w < 3; w++) for (let t = 0; t < 4; t++) for (const op of [false, true]) for (const top of [false, true]) BOXES.set(trapdoorId(w, t, op, top), trapdoorBoxes(t, op, top));
 for (let m = 0; m < 16; m++) BOXES.set(T.STONE_WALL + m, wallBoxes(m));
+for (let w = 0; w < 3; w++) {
+  for (let m = 0; m < 16; m++) BOXES.set(fenceId(w, m), fenceBoxes(m));
+  for (let t = 0; t < 4; t++) for (const op of [false, true]) BOXES.set(gateId(w, t, op), gateBoxes(t, op));
+}
 for (let t = 0; t < 4; t++) {
   BOXES.set(T.REED_STAIR + t, STAIR_BASE.map((b) => rotateBox(b, t)));
   BOXES.set(T.STONE_STAIR + t, STAIR_BASE.map((b) => rotateBox(b, t)));
+  for (let w = 0; w < 3; w++) BOXES.set(woodStairId(w, t), STAIR_BASE.map((b) => rotateBox(b, t)));
   BOXES.set(T.REED_CHAIR + t, CHAIR_BASE.map((b) => rotateBox(b, t)));
 }
 var blockBoxes = (id) => BOXES.get(id) ?? null;
@@ -342,6 +416,11 @@ function bedPartnerOffset(id) {
   return isBedFoot(id) ? [fx, fz] : [fx === 0 ? 0 : -fx, fz === 0 ? 0 : -fz];
 }
 var MURETA_KINDS = ["mureta0", "mureta1", "mureta2", "mureta3", "mureta4", "mureta5", "mureta6", "mureta7", "mureta8", "mureta9", "mureta10", "mureta11", "mureta12", "mureta13", "mureta14", "mureta15"];
+var WOOD_STAIR_KINDS = ["degrauCarvalho", "degrauCerejeira", "degrauBetula"];
+var FENCE_KINDS = Array.from({ length: 48 }, (_, i) => `cerca${i}`);
+var GATE_KINDS = ["portao0", "portao0Aberto", "portao1", "portao1Aberto", "portao2", "portao2Aberto"];
+var WOOD_DOOR_KINDS = ["portaCarvalho", "portaCerejeira", "portaBetula"];
+var TRAPDOOR_KINDS = ["alcapaoCarvalhoBaixo", "alcapaoCarvalhoCima", "alcapaoCarvalhoAberto", "alcapaoCerejeiraBaixo", "alcapaoCerejeiraCima", "alcapaoCerejeiraAberto", "alcapaoBetulaBaixo", "alcapaoBetulaCima", "alcapaoBetulaAberto"];
 var CORAL_KINDS = ["coral0", "coral1", "coral2", "coral3", "coral4", "coral5", "coral6", "coral7", "coral8", "coral9", "coral10", "coral11", "coral12", "coral13", "coral14", "coral15", "coral16", "coral17", "coral18", "coral19"];
 function modelOf(id) {
   if (isWorkbench(id)) return { kind: "workbench", turn: workbenchTurn(id) };
@@ -354,8 +433,12 @@ function modelOf(id) {
   if (isReedStair(id)) return { kind: "degrau", turn: stairTurn(id) };
   if (isWall(id)) return { kind: MURETA_KINDS[wallMask(id)], turn: 0 };
   if (isStoneStair(id)) return { kind: "degrauPedra", turn: stairTurn(id) };
+  if (isWoodStair(id)) return { kind: WOOD_STAIR_KINDS[woodOf(id)], turn: stairTurn(id) };
+  if (isFence(id)) return { kind: FENCE_KINDS[id - T.FENCE_OAK], turn: 0 };
+  if (isGate(id)) return { kind: GATE_KINDS[woodOf(id) * 2 + (isGateOpen(id) ? 1 : 0)], turn: gateTurn(id) };
+  if (isTrapdoor(id)) return { kind: TRAPDOOR_KINDS[woodOf(id) * 3 + (isTrapdoorOpen(id) ? 2 : isTrapdoorTop(id) ? 1 : 0)], turn: trapdoorTurn(id) };
   if (isChair(id)) return { kind: "cadeira", turn: chairTurn(id) };
-  if (isDoor(id) && !isDoorUpper(id)) return { kind: "porta", turn: id - T.DOOR & 15 };
+  if (isDoor(id) && !isDoorUpper(id)) return { kind: doorFamily(id) === 0 ? "porta" : WOOD_DOOR_KINDS[doorFamily(id) - 1], turn: doorBits(id) & 15 };
   if (isCoralPlant(id)) return { kind: CORAL_KINDS[id - T.CORAL], turn: 0 };
   if (isCoralFan(id)) return { kind: CORAL_KINDS[10 + id - T.CORAL_FAN], turn: 0 };
   if (id === T.SEAGRASS) return { kind: "ervaMarinha", turn: 0 };
@@ -416,6 +499,10 @@ BLOCK_TILES[T.STONE_SMOOTH] = ot("pedra-lisa");
 BLOCK_TILES[T.STONE_BRICK] = ot("tijolo-pedra");
 BLOCK_TILES[T.STONE_SLAB] = ot("laje-topo", "laje-face", "laje-topo");
 BLOCK_TILES[T.STONE_SLAB_TOP] = BLOCK_TILES[T.STONE_SLAB];
+for (const [i, w] of ["carvalho", "cerejeira", "betula"].entries()) {
+  BLOCK_TILES[T.SLAB_OAK + 2 * i] = ot(`laje-${w}-topo`, `laje-${w}-face`, `laje-${w}-topo`);
+  BLOCK_TILES[T.SLAB_OAK + 2 * i + 1] = BLOCK_TILES[T.SLAB_OAK + 2 * i];
+}
 BLOCK_TILES[T.FARMLAND_DRY] = ot("terra-arada-seca-topo", "terra-arada-seca-lateral", "terra");
 BLOCK_TILES[T.FARMLAND_WET] = ot("terra-arada-umida-topo", "terra-arada-umida-lateral", "terra");
 BLOCK_TILES[T.PATH] = ot("caminho-topo", "caminho-lateral", "terra");
@@ -463,7 +550,7 @@ function hoeResult(v, block, x, y, z) {
 var shovelResult = (block) => block === T.GRASS || block === T.DIRT ? T.PATH : null;
 
 // src/titan/items.ts
-var Item = { SAND: 1, DAMP_SAND: 2, DARK_ROCK: 3, FROST: 4, ROCK_SHARD: 5, FROST_SHARD: 6, CAPSULE: 7, LANTERN: 8, WORKBENCH: 9, ICE_LENS: 10, EMBER: 11, GLASS_REED: 12, SLAB: 13, MARCO: 14, PAINEL: 15, NOZ: 16, COPPER_SHARD: 17, COPPER_INGOT: 18, DRY_REED: 19, STONE_PICK: 20, BRAZIER: 21, STONE_DAGGER: 22, COPPER_PICK: 23, COPPER_DAGGER: 24, PLATE: 25, CARAPACE: 26, RAW_MEAT: 27, COOKED_MEAT: 28, EMBER_BLOCK: 29, NOZ_TORRADA: 30, ESTEIRA: 31, ESCADA: 32, BAU: 33, CAMA: 34, BALDE: 35, BALDE_CHEIO: 36, BLOCO_JUNCO: 37, LAJE_JUNCO: 38, DEGRAU_JUNCO: 39, CADEIRA_JUNCO: 40, PORTA_JUNCO: 41, GRASS: 42, DIRT: 43, STONE: 44, BEACH: 45, LOG_OAK: 46, LEAVES_OAK: 47, LOG_CHERRY: 48, LEAVES_CHERRY: 49, LOG_BIRCH: 50, LEAVES_BIRCH: 51, TABUA_CARVALHO: 52, TABUA_CEREJEIRA: 53, TABUA_BETULA: 54, HASTE: 55, MESA_CARPINTARIA: 56, PEDRA_LISA: 57, TIJOLO_PEDRA: 58, LAJE_PEDRA: 59, DEGRAU_PEDRA: 60, MURETA_PEDRA: 61, TERRA_ARADA_SECA: 62, TERRA_ARADA_UMIDA: 63, CAMINHO_TERRA: 64, TERRA_INFERTIL: 65, BLOCO_ARGILA: 66, BLOCO_TIJOLOS: 67, BOLA_ARGILA: 68, TIJOLO: 69, PICARETA_MADEIRA: 70, PICARETA_PEDRA: 71, MACHADO_MADEIRA: 72, MACHADO_PEDRA: 73, PA_MADEIRA: 74, PA_PEDRA: 75, ENXADA_MADEIRA: 76, ENXADA_PEDRA: 77, SEMENTE_TRIGO: 78, TRIGO: 79, CENOURA: 80, BATATA: 81, TOMATE: 82, FORNALHA: 83, CARVAO_VEGETAL: 84, TOCHA: 85, CARVAO: 87, BLOCO_CARVAO: 88, COURO: 89, LA: 90, PENA: 91, PORCO_CRU: 92, PORCO_ASSADO: 93, BOVINA_CRUA: 94, BIFE: 95, CARNEIRO_CRU: 96, CARNEIRO_ASSADO: 97, FRANGO_CRU: 98, FRANGO_ASSADO: 99, BETERRABA: 100, SEMENTE_BETERRABA: 101, SEMENTE_ABOBORA: 102, SEMENTE_MELANCIA: 103, FATIA_MELANCIA: 104, BLOCO_ABOBORA: 105, VARA_PESCA: 106, BACALHAU_CRU: 107, SALMAO_CRU: 108, BAIACU: 109, PEIXE_TROPICAL: 110, BACALHAU_ASSADO: 111, SALMAO_ASSADO: 112, BOIA: 113, LINHA: 114, ERVA_MARINHA: 115, ALGA: 116, ALGA_SECA: 117, BLOCO_ALGA_SECA: 118, CORAL_VIVO: 123, CORAL_MORTO: 128, GORGONIA_VIVA: 133, GORGONIA_MORTA: 138, BLOCO_CORAL_VIVO: 143, BLOCO_CORAL_MORTO: 148, BOTE_CARVALHO: 153, BOTE_BETULA: 154, BOTE_CEREJEIRA: 155 };
+var Item = { SAND: 1, DAMP_SAND: 2, DARK_ROCK: 3, FROST: 4, ROCK_SHARD: 5, FROST_SHARD: 6, CAPSULE: 7, LANTERN: 8, WORKBENCH: 9, ICE_LENS: 10, EMBER: 11, GLASS_REED: 12, SLAB: 13, MARCO: 14, PAINEL: 15, NOZ: 16, COPPER_SHARD: 17, COPPER_INGOT: 18, DRY_REED: 19, STONE_PICK: 20, BRAZIER: 21, STONE_DAGGER: 22, COPPER_PICK: 23, COPPER_DAGGER: 24, PLATE: 25, CARAPACE: 26, RAW_MEAT: 27, COOKED_MEAT: 28, EMBER_BLOCK: 29, NOZ_TORRADA: 30, ESTEIRA: 31, ESCADA: 32, BAU: 33, CAMA: 34, BALDE: 35, BALDE_CHEIO: 36, BLOCO_JUNCO: 37, LAJE_JUNCO: 38, DEGRAU_JUNCO: 39, CADEIRA_JUNCO: 40, PORTA_JUNCO: 41, GRASS: 42, DIRT: 43, STONE: 44, BEACH: 45, LOG_OAK: 46, LEAVES_OAK: 47, LOG_CHERRY: 48, LEAVES_CHERRY: 49, LOG_BIRCH: 50, LEAVES_BIRCH: 51, TABUA_CARVALHO: 52, TABUA_CEREJEIRA: 53, TABUA_BETULA: 54, HASTE: 55, MESA_CARPINTARIA: 56, PEDRA_LISA: 57, TIJOLO_PEDRA: 58, LAJE_PEDRA: 59, DEGRAU_PEDRA: 60, MURETA_PEDRA: 61, TERRA_ARADA_SECA: 62, TERRA_ARADA_UMIDA: 63, CAMINHO_TERRA: 64, TERRA_INFERTIL: 65, BLOCO_ARGILA: 66, BLOCO_TIJOLOS: 67, BOLA_ARGILA: 68, TIJOLO: 69, PICARETA_MADEIRA: 70, PICARETA_PEDRA: 71, MACHADO_MADEIRA: 72, MACHADO_PEDRA: 73, PA_MADEIRA: 74, PA_PEDRA: 75, ENXADA_MADEIRA: 76, ENXADA_PEDRA: 77, SEMENTE_TRIGO: 78, TRIGO: 79, CENOURA: 80, BATATA: 81, TOMATE: 82, FORNALHA: 83, CARVAO_VEGETAL: 84, TOCHA: 85, CARVAO: 87, BLOCO_CARVAO: 88, COURO: 89, LA: 90, PENA: 91, PORCO_CRU: 92, PORCO_ASSADO: 93, BOVINA_CRUA: 94, BIFE: 95, CARNEIRO_CRU: 96, CARNEIRO_ASSADO: 97, FRANGO_CRU: 98, FRANGO_ASSADO: 99, BETERRABA: 100, SEMENTE_BETERRABA: 101, SEMENTE_ABOBORA: 102, SEMENTE_MELANCIA: 103, FATIA_MELANCIA: 104, BLOCO_ABOBORA: 105, VARA_PESCA: 106, BACALHAU_CRU: 107, SALMAO_CRU: 108, BAIACU: 109, PEIXE_TROPICAL: 110, BACALHAU_ASSADO: 111, SALMAO_ASSADO: 112, BOIA: 113, LINHA: 114, ERVA_MARINHA: 115, ALGA: 116, ALGA_SECA: 117, BLOCO_ALGA_SECA: 118, CORAL_VIVO: 123, CORAL_MORTO: 128, GORGONIA_VIVA: 133, GORGONIA_MORTA: 138, BLOCO_CORAL_VIVO: 143, BLOCO_CORAL_MORTO: 148, BOTE_CARVALHO: 153, BOTE_BETULA: 154, BOTE_CEREJEIRA: 155, LAJE_CARVALHO: 156, LAJE_CEREJEIRA: 157, LAJE_BETULA: 158, DEGRAU_CARVALHO: 159, DEGRAU_CEREJEIRA: 160, DEGRAU_BETULA: 161, CERCA_CARVALHO: 162, CERCA_CEREJEIRA: 163, CERCA_BETULA: 164, PORTAO_CARVALHO: 165, PORTAO_CEREJEIRA: 166, PORTAO_BETULA: 167, PORTA_CARVALHO: 168, PORTA_CEREJEIRA: 169, PORTA_BETULA: 170, ALCAPAO_CARVALHO: 171, ALCAPAO_CEREJEIRA: 172, ALCAPAO_BETULA: 173 };
 var ITEM_NAMES = {
   1: "Areia ocre",
   2: "Areia \xFAmida",
@@ -508,7 +595,7 @@ var ITEM_NAMES = {
   41: "Porta de Junco"
 };
 var CORAL_ITEM_BLOCKS = Object.fromEntries(Array.from({ length: 30 }, (_, i) => [123 + i, [T.CORAL, T.CORAL_FAN, T.CORAL_BLOCK][Math.floor(i / 10)] + i % 10]));
-var ORVALIS_ITEM_BLOCKS = { ...CORAL_ITEM_BLOCKS, [Item.GRASS]: T.GRASS, [Item.DIRT]: T.DIRT, [Item.STONE]: T.STONE, [Item.BEACH]: T.BEACH, [Item.LOG_OAK]: T.LOG_OAK, [Item.LEAVES_OAK]: T.LEAVES_OAK, [Item.LOG_CHERRY]: T.LOG_CHERRY, [Item.LEAVES_CHERRY]: T.LEAVES_CHERRY, [Item.LOG_BIRCH]: T.LOG_BIRCH, [Item.LEAVES_BIRCH]: T.LEAVES_BIRCH, [Item.TABUA_CARVALHO]: T.PLANKS_OAK, [Item.TABUA_CEREJEIRA]: T.PLANKS_CHERRY, [Item.TABUA_BETULA]: T.PLANKS_BIRCH, [Item.MESA_CARPINTARIA]: T.CARPENTRY, [Item.PEDRA_LISA]: T.STONE_SMOOTH, [Item.TIJOLO_PEDRA]: T.STONE_BRICK, [Item.LAJE_PEDRA]: T.STONE_SLAB, [Item.TERRA_ARADA_SECA]: T.FARMLAND_DRY, [Item.TERRA_ARADA_UMIDA]: T.FARMLAND_WET, [Item.CAMINHO_TERRA]: T.PATH, [Item.TERRA_INFERTIL]: T.DIRT_INFERTILE, [Item.BLOCO_ARGILA]: T.CLAY_BLOCK, [Item.BLOCO_TIJOLOS]: T.BRICK_BLOCK, [Item.FORNALHA]: T.FURNACE, [Item.TOCHA]: T.TORCH, [Item.BLOCO_CARVAO]: T.COAL_BLOCK, [Item.BLOCO_ABOBORA]: T.PUMPKIN, [Item.ERVA_MARINHA]: T.SEAGRASS, [Item.ALGA]: T.KELP, [Item.BLOCO_ALGA_SECA]: T.DRIED_KELP_BLOCK };
+var ORVALIS_ITEM_BLOCKS = { ...CORAL_ITEM_BLOCKS, [Item.GRASS]: T.GRASS, [Item.DIRT]: T.DIRT, [Item.STONE]: T.STONE, [Item.BEACH]: T.BEACH, [Item.LOG_OAK]: T.LOG_OAK, [Item.LEAVES_OAK]: T.LEAVES_OAK, [Item.LOG_CHERRY]: T.LOG_CHERRY, [Item.LEAVES_CHERRY]: T.LEAVES_CHERRY, [Item.LOG_BIRCH]: T.LOG_BIRCH, [Item.LEAVES_BIRCH]: T.LEAVES_BIRCH, [Item.TABUA_CARVALHO]: T.PLANKS_OAK, [Item.TABUA_CEREJEIRA]: T.PLANKS_CHERRY, [Item.TABUA_BETULA]: T.PLANKS_BIRCH, [Item.MESA_CARPINTARIA]: T.CARPENTRY, [Item.PEDRA_LISA]: T.STONE_SMOOTH, [Item.TIJOLO_PEDRA]: T.STONE_BRICK, [Item.LAJE_PEDRA]: T.STONE_SLAB, [Item.TERRA_ARADA_SECA]: T.FARMLAND_DRY, [Item.TERRA_ARADA_UMIDA]: T.FARMLAND_WET, [Item.CAMINHO_TERRA]: T.PATH, [Item.TERRA_INFERTIL]: T.DIRT_INFERTILE, [Item.BLOCO_ARGILA]: T.CLAY_BLOCK, [Item.BLOCO_TIJOLOS]: T.BRICK_BLOCK, [Item.FORNALHA]: T.FURNACE, [Item.TOCHA]: T.TORCH, [Item.BLOCO_CARVAO]: T.COAL_BLOCK, [Item.BLOCO_ABOBORA]: T.PUMPKIN, [Item.ERVA_MARINHA]: T.SEAGRASS, [Item.LAJE_CARVALHO]: T.SLAB_OAK, [Item.LAJE_CEREJEIRA]: T.SLAB_CHERRY, [Item.LAJE_BETULA]: T.SLAB_BIRCH, [Item.ALGA]: T.KELP, [Item.BLOCO_ALGA_SECA]: T.DRIED_KELP_BLOCK };
 var ORVALIS_BLOCK_ITEMS = { ...Object.fromEntries(Object.entries(ORVALIS_ITEM_BLOCKS).map(([item, block]) => [block, Number(item)])), ...Object.fromEntries(Array.from({ length: 8 }, (_, t) => [T.FURNACE + t, Item.FORNALHA])), ...Object.fromEntries(Array.from({ length: 5 }, (_, t) => [T.TORCH + t, Item.TOCHA])), [T.COAL_ORE]: Item.CARVAO, [T.MELON]: Item.FATIA_MELANCIA, [T.SEAGRASS_TALL]: Item.ERVA_MARINHA, [T.SEAGRASS_TALL_TOP]: Item.ERVA_MARINHA, [T.KELP_TOP]: Item.ALGA };
 for (const [item, block] of Object.entries(ORVALIS_ITEM_BLOCKS)) ITEM_NAMES[Number(item)] = BLOCK_NAMES[block];
 Object.assign(ITEM_NAMES, { 70: "Picareta de Madeira", 71: "Picareta de Pedra", 72: "Machado de Madeira", 73: "Machado de Pedra", 74: "P\xE1 de Madeira", 75: "P\xE1 de Pedra", 76: "Enxada de Madeira", 77: "Enxada de Pedra" });
@@ -520,10 +607,13 @@ ITEM_NAMES[Item.BOLA_ARGILA] = "Bola de Argila";
 ITEM_NAMES[Item.TIJOLO] = "Tijolo";
 ITEM_NAMES[Item.MURETA_PEDRA] = "Mureta de Pedra";
 Object.assign(ITEM_NAMES, { 153: "Bote de Carvalho", 154: "Bote de B\xE9tula", 155: "Bote de Cerejeira" });
+Object.assign(ITEM_NAMES, { 168: "Porta de Carvalho", 169: "Porta de Cerejeira", 170: "Porta de B\xE9tula", 171: "Al\xE7ap\xE3o de Carvalho", 172: "Al\xE7ap\xE3o de Cerejeira", 173: "Al\xE7ap\xE3o de B\xE9tula" });
+Object.assign(ITEM_NAMES, { 162: "Cerca de Carvalho", 163: "Cerca de Cerejeira", 164: "Cerca de B\xE9tula", 165: "Port\xE3o de Carvalho", 166: "Port\xE3o de Cerejeira", 167: "Port\xE3o de B\xE9tula" });
+Object.assign(ITEM_NAMES, { 159: "Degrau de Carvalho", 160: "Degrau de Cerejeira", 161: "Degrau de B\xE9tula" });
 ITEM_NAMES[Item.DEGRAU_PEDRA] = "Degrau de Pedra";
 ITEM_NAMES[Item.HASTE] = "Haste de Madeira";
 var maxStack = (item) => item === Item.CAPSULE || item === Item.LANTERN || item === Item.WORKBENCH || isBucket(item) || isTool(item) ? 1 : 64;
-var isItem = (n) => Number.isInteger(n) && n >= 1 && (n <= 118 || n >= 123 && n <= 155) && n !== 86 && n !== 113;
+var isItem = (n) => Number.isInteger(n) && n >= 1 && (n <= 118 || n >= 123 && n <= 173) && n !== 86 && n !== 113;
 var isBoatItem = (item) => item === Item.BOTE_CARVALHO || item === Item.BOTE_BETULA || item === Item.BOTE_CEREJEIRA;
 var isBucket = (item) => item === Item.BALDE || item === Item.BALDE_CHEIO;
 function blockOfItem(item) {
@@ -531,6 +621,11 @@ function blockOfItem(item) {
   if (ORVALIS_ITEM_BLOCKS[item]) return ORVALIS_ITEM_BLOCKS[item];
   if (item === Item.MURETA_PEDRA) return T.STONE_WALL;
   if (item === Item.DEGRAU_PEDRA) return T.STONE_STAIR;
+  if (item >= Item.PORTA_CARVALHO && item <= Item.PORTA_BETULA) return doorId(0, false, false, false, 1 + item - Item.PORTA_CARVALHO);
+  if (item >= Item.ALCAPAO_CARVALHO && item <= Item.ALCAPAO_BETULA) return trapdoorId(item - Item.ALCAPAO_CARVALHO, 0, false, false);
+  if (item >= Item.CERCA_CARVALHO && item <= Item.CERCA_BETULA) return fenceId(item - Item.CERCA_CARVALHO, 0);
+  if (item >= Item.PORTAO_CARVALHO && item <= Item.PORTAO_BETULA) return gateId(item - Item.PORTAO_CARVALHO, 0, false);
+  if (item >= Item.DEGRAU_CARVALHO && item <= Item.DEGRAU_BETULA) return woodStairId(item - Item.DEGRAU_CARVALHO, 0);
   if (item === Item.LANTERN) return T.LANTERN;
   if (item === Item.WORKBENCH) return T.WORKBENCH;
   if (item === Item.SLAB) return T.SLAB;
@@ -554,6 +649,12 @@ function itemOfBlock(block) {
   if (block >= T.SAND && block <= T.FROST) return block;
   if (block === T.FARMLAND_DRY || block === T.FARMLAND_WET || block === T.PATH) return Item.DIRT;
   if (ORVALIS_BLOCK_ITEMS[block]) return ORVALIS_BLOCK_ITEMS[block];
+  if (isDoor(block) && doorFamily(block) > 0) return Item.PORTA_CARVALHO + doorFamily(block) - 1;
+  if (isTrapdoor(block)) return Item.ALCAPAO_CARVALHO + woodOf(block);
+  if (isFence(block)) return Item.CERCA_CARVALHO + woodOf(block);
+  if (isGate(block)) return Item.PORTAO_CARVALHO + woodOf(block);
+  if (isWoodSlab(block)) return Item.LAJE_CARVALHO + woodOf(block);
+  if (isWoodStair(block)) return Item.DEGRAU_CARVALHO + woodOf(block);
   if (block === T.STONE_SLAB_TOP) return Item.LAJE_PEDRA;
   if (block >= T.STONE_STAIR && block <= T.STONE_STAIR_270) return Item.DEGRAU_PEDRA;
   if (block >= T.STONE_WALL && block <= T.STONE_WALL_LAST) return Item.MURETA_PEDRA;
@@ -780,8 +881,10 @@ var FAMILY = {
   stone: { bottom: T.STONE_SLAB, top: T.STONE_SLAB_TOP, whole: T.STONE_SMOOTH }
   // a Laje de Pedra funde na Pedra Lisa (ADR 0108)
 };
+var WOOD_PLANKS = [T.PLANKS_OAK, T.PLANKS_CHERRY, T.PLANKS_BIRCH];
+var woodFamily = (w) => ({ bottom: T.SLAB_OAK + 2 * w, top: T.SLAB_OAK + 2 * w + 1, whole: WOOD_PLANKS[w] });
 function resolveSlabPlacement(targetId, ny, hy, held = T.SLAB) {
-  const f = held === T.REED_SLAB || held === T.REED_SLAB_TOP ? FAMILY.reed : held === T.STONE_SLAB || held === T.STONE_SLAB_TOP ? FAMILY.stone : FAMILY.rock;
+  const f = isWoodSlab(held) ? woodFamily(woodOf(held)) : held === T.REED_SLAB || held === T.REED_SLAB_TOP ? FAMILY.reed : held === T.STONE_SLAB || held === T.STONE_SLAB_TOP ? FAMILY.stone : FAMILY.rock;
   if (targetId === f.bottom && ny === 1) return { merge: true, block: f.whole };
   if (targetId === f.top && ny === -1) return { merge: true, block: f.whole };
   const top = ny === -1 || ny === 0 && (hy ?? 0) >= 0.5;
@@ -879,7 +982,34 @@ var RECIPES = [
   { id: "carvao-do-bloco", name: "Carv\xE3o (do bloco)", group: "materiais", result: { item: Item.CARVAO, count: 9 }, ingredients: [{ item: Item.BLOCO_CARVAO, count: 1 }], station: "personal", world: "orvalis" },
   { id: "semente-abobora", name: "Sementes de Ab\xF3bora", group: "materiais", result: { item: Item.SEMENTE_ABOBORA, count: 4 }, ingredients: [{ item: Item.BLOCO_ABOBORA, count: 1 }], station: "personal", world: "orvalis" },
   { id: "semente-melancia", name: "Semente de Melancia", group: "materiais", result: { item: Item.SEMENTE_MELANCIA, count: 1 }, ingredients: [{ item: Item.FATIA_MELANCIA, count: 1 }], station: "personal", world: "orvalis" },
-  { id: "laje-pedra", name: "Laje de Pedra", group: "construcao", result: { item: Item.LAJE_PEDRA, count: 6 }, ingredients: [{ item: Item.PEDRA_LISA, count: 3 }], station: "workbench", world: "orvalis" }
+  { id: "laje-pedra", name: "Laje de Pedra", group: "construcao", result: { item: Item.LAJE_PEDRA, count: 6 }, ingredients: [{ item: Item.PEDRA_LISA, count: 3 }], station: "workbench", world: "orvalis" },
+  { id: "laje-carvalho", name: "Laje de Carvalho", group: "construcao", result: { item: Item.LAJE_CARVALHO, count: 6 }, ingredients: [{ item: Item.TABUA_CARVALHO, count: 3 }], station: "workbench", world: "orvalis" },
+  { id: "degrau-carvalho", name: "Degrau de Carvalho", group: "construcao", result: { item: Item.DEGRAU_CARVALHO, count: 4 }, ingredients: [{ item: Item.TABUA_CARVALHO, count: 6 }], station: "workbench", world: "orvalis" },
+  // Wiki: laje 3 tábuas → 6; degrau 6 → 4 (ADR 0139)
+  { id: "laje-cerejeira", name: "Laje de Cerejeira", group: "construcao", result: { item: Item.LAJE_CEREJEIRA, count: 6 }, ingredients: [{ item: Item.TABUA_CEREJEIRA, count: 3 }], station: "workbench", world: "orvalis" },
+  { id: "degrau-cerejeira", name: "Degrau de Cerejeira", group: "construcao", result: { item: Item.DEGRAU_CEREJEIRA, count: 4 }, ingredients: [{ item: Item.TABUA_CEREJEIRA, count: 6 }], station: "workbench", world: "orvalis" },
+  // Wiki: laje 3 tábuas → 6; degrau 6 → 4 (ADR 0139)
+  { id: "laje-betula", name: "Laje de B\xE9tula", group: "construcao", result: { item: Item.LAJE_BETULA, count: 6 }, ingredients: [{ item: Item.TABUA_BETULA, count: 3 }], station: "workbench", world: "orvalis" },
+  { id: "degrau-betula", name: "Degrau de B\xE9tula", group: "construcao", result: { item: Item.DEGRAU_BETULA, count: 4 }, ingredients: [{ item: Item.TABUA_BETULA, count: 6 }], station: "workbench", world: "orvalis" },
+  // Wiki: laje 3 tábuas → 6; degrau 6 → 4 (ADR 0139)
+  { id: "cerca-carvalho", name: "Cerca de Carvalho", group: "construcao", result: { item: Item.CERCA_CARVALHO, count: 3 }, ingredients: [{ item: Item.TABUA_CARVALHO, count: 4 }, { item: Item.HASTE, count: 2 }], station: "workbench", world: "orvalis" },
+  { id: "portao-carvalho", name: "Port\xE3o de Carvalho", group: "construcao", result: { item: Item.PORTAO_CARVALHO, count: 1 }, ingredients: [{ item: Item.TABUA_CARVALHO, count: 2 }, { item: Item.HASTE, count: 4 }], station: "workbench", world: "orvalis" },
+  // Wiki: cerca 4 tábuas + 2 hastes → 3; portão 2 + 4 → 1 (ADR 0140)
+  { id: "cerca-cerejeira", name: "Cerca de Cerejeira", group: "construcao", result: { item: Item.CERCA_CEREJEIRA, count: 3 }, ingredients: [{ item: Item.TABUA_CEREJEIRA, count: 4 }, { item: Item.HASTE, count: 2 }], station: "workbench", world: "orvalis" },
+  { id: "portao-cerejeira", name: "Port\xE3o de Cerejeira", group: "construcao", result: { item: Item.PORTAO_CEREJEIRA, count: 1 }, ingredients: [{ item: Item.TABUA_CEREJEIRA, count: 2 }, { item: Item.HASTE, count: 4 }], station: "workbench", world: "orvalis" },
+  // Wiki: cerca 4 tábuas + 2 hastes → 3; portão 2 + 4 → 1 (ADR 0140)
+  { id: "cerca-betula", name: "Cerca de B\xE9tula", group: "construcao", result: { item: Item.CERCA_BETULA, count: 3 }, ingredients: [{ item: Item.TABUA_BETULA, count: 4 }, { item: Item.HASTE, count: 2 }], station: "workbench", world: "orvalis" },
+  { id: "portao-betula", name: "Port\xE3o de B\xE9tula", group: "construcao", result: { item: Item.PORTAO_BETULA, count: 1 }, ingredients: [{ item: Item.TABUA_BETULA, count: 2 }, { item: Item.HASTE, count: 4 }], station: "workbench", world: "orvalis" },
+  // Wiki: cerca 4 tábuas + 2 hastes → 3; portão 2 + 4 → 1 (ADR 0140)
+  { id: "porta-carvalho", name: "Porta de Carvalho", group: "construcao", result: { item: Item.PORTA_CARVALHO, count: 3 }, ingredients: [{ item: Item.TABUA_CARVALHO, count: 6 }], station: "workbench", world: "orvalis" },
+  { id: "alcapao-carvalho", name: "Al\xE7ap\xE3o de Carvalho", group: "construcao", result: { item: Item.ALCAPAO_CARVALHO, count: 2 }, ingredients: [{ item: Item.TABUA_CARVALHO, count: 6 }], station: "workbench", world: "orvalis" },
+  // Wiki: porta 6 tábuas → 3; alçapão 6 → 2 (ADR 0141)
+  { id: "porta-cerejeira", name: "Porta de Cerejeira", group: "construcao", result: { item: Item.PORTA_CEREJEIRA, count: 3 }, ingredients: [{ item: Item.TABUA_CEREJEIRA, count: 6 }], station: "workbench", world: "orvalis" },
+  { id: "alcapao-cerejeira", name: "Al\xE7ap\xE3o de Cerejeira", group: "construcao", result: { item: Item.ALCAPAO_CEREJEIRA, count: 2 }, ingredients: [{ item: Item.TABUA_CEREJEIRA, count: 6 }], station: "workbench", world: "orvalis" },
+  // Wiki: porta 6 tábuas → 3; alçapão 6 → 2 (ADR 0141)
+  { id: "porta-betula", name: "Porta de B\xE9tula", group: "construcao", result: { item: Item.PORTA_BETULA, count: 3 }, ingredients: [{ item: Item.TABUA_BETULA, count: 6 }], station: "workbench", world: "orvalis" },
+  { id: "alcapao-betula", name: "Al\xE7ap\xE3o de B\xE9tula", group: "construcao", result: { item: Item.ALCAPAO_BETULA, count: 2 }, ingredients: [{ item: Item.TABUA_BETULA, count: 6 }], station: "workbench", world: "orvalis" }
+  // Wiki: porta 6 tábuas → 3; alçapão 6 → 2 (ADR 0141)
 ];
 var stationMet = (r, at) => r.station === "personal" || r.station === at;
 function matchBench(totals) {
@@ -2143,7 +2273,7 @@ function doorHingeFor(v, x, y, z, turn) {
   const [rx, rz] = doorRight(turn), left = v.get(x - rx, y, z - rz);
   return isDoor(left) && !isDoorUpper(left) && doorTurn(left) === turn && !isDoorHingeRight(left);
 }
-function placeDoor(s, hit, slot) {
+function placeDoor(s, hit, slot, family = 0) {
   const x = hit.x + hit.nx, y = hit.y + hit.ny, z = hit.z + hit.nz, turn = marcoTurnFacing(s.yaw);
   if (!matSupported(s, x, y, z)) return { ok: false, msg: "A porta precisa de piso firme" };
   if (!canPlaceAt(s.volume, s.body, x, y, z, s.items, [0, 1])) return { ok: false };
@@ -2151,8 +2281,8 @@ function placeDoor(s, hit, slot) {
   const plan = planDisplace(s, [[x, y, z], [x, y + 1, z]]);
   if (!plan) return { ok: false, msg: "H\xE1 um item no local e n\xE3o h\xE1 espa\xE7o ao lado para ele" };
   const hinge = doorHingeFor(s.volume, x, y, z, turn);
-  if (!s.volume.place(x, y, z, doorId(turn, hinge, false, false))) return { ok: false };
-  if (!s.volume.place(x, y + 1, z, doorId(turn, hinge, false, true))) {
+  if (!s.volume.place(x, y, z, doorId(turn, hinge, false, false, family))) return { ok: false };
+  if (!s.volume.place(x, y + 1, z, doorId(turn, hinge, false, true, family))) {
     s.volume.remove(x, y, z);
     return { ok: false };
   }
@@ -2165,11 +2295,34 @@ function breakDoor(s, x, y, z) {
   if (!isDoor(id) || !s.volume.breakable(x, y, z)) return { ok: false };
   const ly = isDoorUpper(id) ? y - 1 : y;
   for (const yy of [ly, ly + 1]) if (isDoor(s.volume.get(x, yy, z))) s.volume.remove(x, yy, z);
-  spillBlock(s, Item.PORTA_JUNCO, 1, x, ly, z);
+  const fam = doorFamily(id);
+  spillBlock(s, fam === 0 ? Item.PORTA_JUNCO : Item.PORTA_CARVALHO + fam - 1, 1, x, ly, z);
   return { ok: true };
+}
+function useGate(s, x, y, z, id) {
+  const b = s.body, turn = gateTurn(id), wood = woodOf(id);
+  if (isGateOpen(id)) {
+    const cb = blockBoxes(gateId(wood, turn, false))?.[0];
+    if (cb && b.x + BODY_HALF > x + cb[0] && b.x - BODY_HALF < x + cb[3] && b.z + BODY_HALF > z + cb[2] && b.z - BODY_HALF < z + cb[5] && b.y < y + 1.5 && b.y + BODY_HEIGHT > y) return { ok: false, msg: "Tem algu\xE9m no caminho" };
+    s.volume.set(x, y, z, gateId(wood, turn, false));
+    return { ok: true, open: false };
+  }
+  const [fx, fz] = ladderFacing(turn), side = (b.x - (x + 0.5)) * fx + (b.z - (z + 0.5)) * fz;
+  const t = side > 0 ? (turn + 2) % 4 : turn, [ox, oz] = ladderFacing(t);
+  if (isSolid(s.volume.get(x + ox, y, z + oz))) return { ok: false, msg: "O port\xE3o n\xE3o abre: tem algo no caminho" };
+  s.volume.set(x, y, z, gateId(wood, t, true));
+  return { ok: true, open: true };
+}
+function useTrapdoor(s, x, y, z, id) {
+  const next = trapdoorToggled(id), b = s.body;
+  for (const cb of blockBoxes(next) ?? []) if (b.x + BODY_HALF > x + cb[0] && b.x - BODY_HALF < x + cb[3] && b.z + BODY_HALF > z + cb[2] && b.z - BODY_HALF < z + cb[5] && b.y < y + cb[4] && b.y + BODY_HEIGHT > y + cb[1]) return { ok: false, msg: "Tem algu\xE9m no caminho" };
+  s.volume.set(x, y, z, next);
+  return { ok: true, open: isTrapdoorOpen(next) };
 }
 function useDoor(s, x, y, z) {
   const id = s.volume.get(x, y, z);
+  if (isGate(id)) return useGate(s, x, y, z, id);
+  if (isTrapdoor(id)) return useTrapdoor(s, x, y, z, id);
   if (!isDoor(id)) return { ok: false };
   const ly = isDoorUpper(id) ? y - 1 : y, lo = s.volume.get(x, ly, z);
   if (!isDoor(lo) || isDoorUpper(lo) || !isDoor(s.volume.get(x, ly + 1, z))) return { ok: false };
@@ -2593,7 +2746,7 @@ function placeFromSlotCore(s, hit, slot) {
   if (stack.item === Item.GLASS_REED) return plantCrop(s, hit, slot, "junco");
   let block = blockOfItem(stack.item);
   if (block === null) return { ok: false, msg: "Este item n\xE3o se coloca" };
-  if (block === T.DOOR) return placeDoor(s, hit, slot);
+  if (isDoor(block)) return placeDoor(s, hit, slot, doorFamily(block));
   if (block === T.BED) return placeBed(s, hit, slot);
   if (block === T.LADDER) {
     if (hit.ny !== 0 || hit.item) return { ok: false, msg: "A escada se prende \xE0 lateral de um bloco" };
@@ -2611,6 +2764,9 @@ function placeFromSlotCore(s, hit, slot) {
   else if (block === T.PAINEL) block = panelIdFacing(s.yaw);
   else if (block === T.REED_STAIR) block = stairId(marcoTurnFacing(s.yaw));
   else if (block === T.STONE_STAIR) block = stairId(marcoTurnFacing(s.yaw), true);
+  else if (isTrapdoor(block)) block = trapdoorId(woodOf(block), marcoTurnFacing(s.yaw), false, hit.ny < 0 || hit.ny === 0 && (hit.hy ?? 0) >= 0.5);
+  else if (isGate(block)) block = gateId(woodOf(block), marcoTurnFacing(s.yaw), false);
+  else if (isWoodStair(block)) block = woodStairId(woodOf(block), marcoTurnFacing(s.yaw));
   else if (block === T.REED_CHAIR) block = chairId(marcoTurnFacing(s.yaw));
   else if (block === T.FURNACE) block = furnaceId(carpentryTurnFacing(s.yaw), false);
   else if (block === T.CARPENTRY) block = carpentryId(carpentryTurnFacing(s.yaw));
@@ -2858,6 +3014,7 @@ function faunaSpecs(g) {
       }
     }
   }
+  for (const f of g.farmFauna ?? []) out.push({ id: f.id, kind: f.kind, x: f.x, y: f.y, z: f.z });
   return out;
 }
 var faunaYaw = (dx, dz) => Math.atan2(-dx, -dz);
@@ -3929,6 +4086,11 @@ var TitanGenerator = class {
   }
 };
 
+// src/titan/orvalis/costaData.ts
+var COSTA_HEIGHT_B64 = "IiIiIiIiIiIiIiIiIiMkJSYnKSoqKysrKyssLC0uMDEyMjM0NDQ0NDQ1NTU1NTU0NDQ0NDQ0NDMzNDQ0NTU1NDQ0NDQ0NDQ0MzIyMTAwMDAwMC8vLy8vLy8uLSwqKSkoKCcmJSQjIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIjJCUmJygqKyssLCwsLC0uLzAxMjM0NDU1NTY2NjY2NzY2NjU1NTU1NTU1NTU1NTU2NjY2NjU1NTY2NTU0MzMyMjExMTExMDAwMDAwMC8uLCsqKikpKCcmJSQjIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIyQlJicoKSorLC0tLS0uLy8wMTIzNDU2Njc3Nzc3Nzg4ODc3NjY2NjY2NjY2NjY2Nzc3Nzc3Nzc3Nzc3NzY1NDMzMjIyMjIxMTExMTExMC4tLCsqKikoKCcmJSQjIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiMkJSYnKCkqKywtLi4uLy8wMTIzNDU2Njc3ODg4ODk5OTk5ODg4Nzc3Nzc3Nzc3Nzc4ODg4ODg4ODg4ODg4NzY2NTQ0MzMzMjIyMjIyMTEwLy4tLCsqKikoJyYmJSQjIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIjJCUmJygpKissLS4uLzAwMTEyMzQ1NjY3ODg5OTk6Ojo6Ojo5OTk4ODg4OTk4ODg5OTk5OTk5OTk5OTo6Ojk5ODc2NjU1NDQzMzMzMjIyMTEwLy4tLCsqKSgoJyYmJSQjIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIyQlJicoKSoqKywtLi8wMTEyMzM0NTY2Nzg5OTo6Ojs7Ozs7Ozo6Ojk5OTo6Ojo6Ojo6Ojo6Ojo6Ojo7Ozs7Ojo5ODg3NzY2NTU0NDMzMzIyMTAvLi0sKysqKSkoJyYmJSQjIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiMkJSYmJygpKissLS4vMDEyMjM0NDU2Nzc4OTk6Ozs7Ozw8PDw8Ozs7Ojo6Ozs8PDw8PDw8PDs7Ozs7PDw8PDw7Ozo6OTk4Nzc2NTU1NDQ0MzMyMTAvLi0sLCsqKSkoJycmJSQjIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIyUmJicoKSorLC0uLzAxMjMzNDQ1Njc4ODk5Ojs7PDw8PT09PT08PDw7Ozw8PT0+Pj4+Pj09PTw8PD09PT09PTw8Ozs6Ojk4ODc2NjU1NTQ0MzMyMTAvLi0tLCsqKikoJycmJSQjIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiMkJSYnKCkqKywtLzAwMTIzNDQ1NTY3ODk5Ojo7PDw9PT09Pj4+Pj09PT09PT0+PkBAQEBAPj4+Pj0+Pj4+Pj4+PT08PDw7Ojo5ODc3NjY2NTU0NDMyMTAvLy4tLCwrKikoKCcmJSQiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIyUmJygpKSosLS4wMTEyMzQ1NjY2Nzg5Ojo7Ozw8PT0+Pj4+Pj4+Pj4+Pj4+PkBBQUFBQUFBQEA+Pj5AQEBAPj4+Pj49PTw8Ozo5ODg3NzY2NjY1NTQzMTEwLy4tLSwrKikoKCcmJSMiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiMkJScoKSoqLC0uMDEyMzM0NTY3Nzc4OTo7Ozw8PT0+Pj4+QEBAQEBAQEBAQEFBQUJCQkJCQkJBQUFBQUFBQUFBQUBAPj4+PT08Ozo5OTg4Nzc3Nzc2NTQzMjEwLy4tLSwrKikoJyYlJCMiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIyUmJykqKywtLi8xMjM0NDU2Nzg4ODk6Ozs8PT0+Pj4+QEFBQUFBQUFBQUFBQkJDQ0NEQ0NDQkJCQkJCQkJCQkJBQUFBQEA+Pj08PDs6Ojk5ODg4ODc2NTQzMjEwLy4tLCsrKikoJyYkIyIiIiIiIiIiIiIiIiIiIiIiIiIiIiMkJSYoKSssLS4vMDIzNDU1Njc4ODk5Ojs8PD0+Pj5AQEFBQUFCQkJCQkJCQkNDRERFRUVERERDQ0NDQ0NDQ0NDQ0JCQkFBQUBAPj49PTw7Ozo6OTk5ODc2NTQzMjEwLy4tLCsqKSgnJiUkIyIiIiIiIiIiIiIiIiIiIiIiIiIiIyQlJygqKy0uLzAxMjM0NTY3ODg5Ojo7PD09Pj5AQUFBQkJCQkNDQ0NDQ0NDRERFRUZGRkVFRUVERERERERERERERENDQkJCQUFBQD4+Pj09PDs7Ojo5ODc2NTQzMjIxLy4tLCsqKSgnJiUjIiIiIiIiIiIiIiIiIiIiIiIiIiIjJCYnKCosLS4vMDIzNDU2Nzg4OTo6Ozw9Pj5AQUFCQkNDQ0NERERERERERUVFRkZHR0dHRkZGRkZGRUVFRUVFRUVFRUREQ0NDQkJCQUFAPj4+PTw7Ozo5ODc2NTQzMzIxLy4tLCsqKSgmJSQjIiIiIiIiIiIiIiIiIiIiIiIiIyQlJicpKiwtLzAxMjM0NTY3ODk6Ojs8PT4+QUFCQ0NERERFRUVFRUZGRkZGR0dHR0dISEdHR0dHR0dHRkZGRkdHR0dHRkVFRERERENDQ0JBQUA+PT08Ozo5ODc2NTQ0MzIxLy4tLCsqKCcmJSQjIiIiIiIiIiIiIiIiIiIiIiIjJCUmKCkqLC0vMDEyMzQ1Njc4OTo7PD0+QEFCQ0NERUVGRkZGR0dHSEhISEhISEhISEhISEhISUlJSUlISEhISElJSUlIR0dGRkVFRUVERENCQUE+Pj08Ozo5ODc2NTU0MzIwLy4tLCopKCcmJSQjIiIiIiIiIiIiIiIiIiIiIiMkJicoKSssLi8wMTIzNDY3ODk6Ozw9PkBBQkNERUZGR0dISEhJSkpKSkpKSkpJSUlJSUlJSUlJSkpKSkpJSUlKSkpLSkpKSUhHR0dHR0ZFRENCQkE+Pj08Ojk4Nzc2NTU0MjEwLy4sKyooJyYlJCMjIiIiIiIiIiIiIiIiIiIiIyUmKCkqKywuLzAxMjM1Njc4OTo7PT4+QUJDREVGR0hJSUlKS0xMTExMTExLS0pKSkpKSklJSkpLS0tLS0tLS0tMTExMTEtKSklJSUlJSUdGRURCQUA+PTw7Ojk4Nzc2NTQzMjAvLi0sKikoJyYlJCMjIiIiIiIiIiIiIiIiIiIkJScoKSssLS4vMDEyNDU2ODk6Ozw9PkFCREVGR0hJSktLTE1NTk9PT05OTU1MTEtLS0pKSkpLS0xMTE1NTU1NTU1NTk1NTEtLSkpLTExLSkhGRUNCQUA+PTw7Ojk4NzY2NDMyMTAvLiwrKSgnJiUlJCMiIiIiIiIiIiIiIiIiIyQmJygqKywtLi8wMTI0NTc4Ojs8PT5AQkNFRkhJSktMTU1OT1BRUlJRUFBPT05NTUxMS0tLS0xMTU1OTk5OT09PT09PT09OTUxMTExNTU1MSkhGRENCQUA+Pj08Ojk4NzY1NDMxMC8uLSsqKSgnJiUlJCMiIiIiIiIiIiIiIiIjJSYnKSosLS4uLzAyMzQ2Nzk6Ozw9PkFDRUdISktNTk5PT1BRU1RVVFRTUlFQUE9OTk1NTExMTU1OTk9PUFBQUFBQUFBQUE9OTk1OTk9PT05MSkdGRENCQUE+Pj08Ojk4NjU0MzIxMC8uLCspKCgnJiUkIyIiIiIiIiIiIiIiIiQlJygpKywtLi8wMTIzNTY4OTs8PT5AQkRGSEpMTk9QUFFSU1RWV1dXVlVUU1NSUVBPT05OTk1OTk9PUFFRUVJSUVFRUVFRUVBQUFBQUVFQT05LSUdGRENDQkFAPj07Ojk3NjU0MzIxMC4tLCsqKSgnJiUkIyIiIiIiIiIiIiIjJCYnKSorLC0uLzAyMzQ2Nzg6Ozw9PkFDRUdJTE5QUVJTU1RWWFlaWllYV1dWVVRTUlJRUFBPT09QUFFSUlNTU1NTU1NSUlJSUlJTU1NTUlJQT01LSUdGRURDQkE+Pjw7OTg3NjU0MzIxLy4tLCsqKSgnJSQjIiIiIiIiIiIiIiMlJigpKistLi8wMTI0NTY4OTo8PT5AQkRGSEtOUFJTVFVWV1lbXF1dXFtaWVlYV1ZVVFNTUlJSUVJSU1NUVFRUVFRUVFNTU1RUVVVVVVVUU1FQTk1LSUhGRUVDQkE+PTw6OTg3NjU0MzIxLy4tLCsqKScmJSQjIiIiIiIiIiIiIyUnKCorLC0uLzEyMzQ2Nzk6Ozw9PkFDRUhKTVBSVFVWV1laXF5fYF9fXl1cXFxbWlhXVlZVVVVUVFRVVVVWVVVVVVVVVFRUVVZXV1hXV1ZUU1FPTk1LSkhHRkVDQkA+PDs6OTg3NjU0MzIwLy4tLCspKCcmJSMiIiIiIiIiIiIkJScoKissLS4wMTI0NTc4OTs8PT5AQkRHSk1QUlRWV1haW11fYWJjYmJhYF9fX15dXFtaWVlYWFhXV1dXV1dXV1dWVlZVVVZWV1hZWVlYV1VUUlFQT01MSklHRkRDQT49PDs6OTg3NjU0MzEwLy4tKyopKCclJCMiIiIiIiIiIiQlJygqKywtLjAxMzQ2Nzk6Ozw+PkFDRkhMT1JUVlhZW1xeYGJkZWZmZWRjYmJiYWBfXl1dXFxbWlpZWVlZWFhYWFdXV1dXWFhZWlpaWllYVlVTUlFRUE5NS0lIRkRCQT49PDs6OTg3NjU0MjEwLy0sKyopJyYlIyIiIiIiIiIjJCUnKSorLC0vMDIzNTY4OTo8PT5AQkRHSk5RU1VXWVtdX2FjZmhpamppZ2ZlZWVkY2FgYF9eXVxcW1taWlpZWVhYWFhYWVpaW1tbW1tbWllYVlVUU1NSUE9NTEpIRUNCQD49PDs6OTg3NjQzMjEvLiwrKikoJyUkIyIiIiIiIiMkJicpKissLi8wMjM1Nzg6Ozw+PkFDRUhMT1JVV1lbXV9hY2Zpa21ubm1ramloZ2VkY2JhYGBfXl1cXFtbWlpZWVhYWVpbXF1dXVxcXFxcWllXVlVVVFNSUVBOTEpHRUNBQD49PDs6OTg2NTQyMTAuLSwrKiknJiUkIyIiIiIiIyQmJykqKy0uLzEyNDU3OTo7PT5AQkNGSU1RU1ZYWlxeYGNmaWxvcXFwb21samloZ2VkY2NiYWBfXl1dXFxbWlpZWVlaW1xdXl9fXl5dXV1cWllYV1ZWVVNSUVBOTElGREJBPj49PDs5ODc2NDMyMC8tLCsqKSgnJiUjIiIiIiIjJSYnKSosLS4wMTM0Njc5Ojw9PkFCREdKTlJUV1lbXmBiZWhsb3JzcnJwb25sa2poZ2ZlZGNiYWBfXl1dXFtbWlpaWlpcXV5fYGBgYF9fX15cW1lYWFdWVVRTUlBOSkdFQ0JBPj08Ozo5ODY1NDIxMC4tLCsqKSgnJiQjIiIiIiMlJigpKywtLzAyMzU2ODk6PD0+QUNFSEtPUlVYWl1fYWRna25ydHR0c3Jxb25tbGppZ2ZlY2JhYF9eXl1cXFtaWlpbW1xdX2BhYWFhYWFhX15dW1pZWFdWVVRSUU9LSEZEQkE+Pj08Ozo4NzY1MzIwLy4tLCsqKSgmJSQjIiIiJCUnKCkrLC4vMDIzNTY4OTo8PT5BQ0ZJTFBTVllbXmBjZmltcXR1dXV1dHJxcG5tbGppZ2ZkY2JgX15eXVxcW1tbW1tcXV5fYGFhYWJiYmJhYF5dXFpZWFdVVFNRT0xJRkRDQkA+Pj08Ojk4NzU0MzEwLy4tLCsqKCcmJSQjIiIkJicpKiwtLjAxMjM1Njg5Ojs9PkFERklMUFNWWVxfYmRna25ydHV2dnZ1dHJxcG9tbGpoZmVjYmBfXl5dXFxbW1tcXF1dXl9gYWFiYmJjY2NiYF9dXFpZV1ZUUlFOTElHRUNCQT4+PTw7Ojg3NjU0MzEwLi0sKyopKCclJCMiIiUnKCorLC4vMDEyNDU2Nzk6Oz0+QURGSUxQU1ZZXWBiZWhsb3R1dnZ2dnV0c3Jxb25sa2lnZWRiYF9eXl1dXFxbW1xcXV1eX2BhYWJiYmNjY2NiYV9dXFpYVlRSUE5MSUdFQ0JBPj49PDs6OTg3NjU0MjEvLi0sKyooJyYlJCMiJigpKywtLjAxMjM0NTY3ODo7PD5BREZJTE9SVVlcYGNmaWxwdHV2dnd2dnV0cnFwbm1raWdlZGJhX19eXV1cXFtbXFxdXV5fX2BgYWFiY2NjY2NjYV9dWlhVU1FPTktJR0VEQkE+Pj08Ozo6OTg3NjUzMjAvLi0rKikoJyYlJCMnKSosLS4vMDEyMzQ1Njc4Ojs8PkFDRkhLTlFUV1tfYmZpbHBzdXZ2dnZ2dXNycG9ubGpoZ2VkYmFgX15eXVxbW1tbW1xdXV5fX2BgYWJiY2NkZGNjYF1aWFVTUU9OS0lHRkRCQT4+PTw7Ozo5ODg3NjQzMTAvLSwrKSgnJiUkIygpKywuLzAwMTIzNDU2Nzk6Ozw9QEJFR0lMT1JWWl5iZWhrb3N0dXZ2dnV0c3Fwbm1raWdmZGNiYWBgX15dXFtaWlpbW1xdXl5eX19gYWJiY2NkY2NhXlpXVVNRT05LSUdGREJBPj49PDw7Ojo5ODc2NTQyMS8uLSsqKSgnJiUkKSosLS4vMDExMjM0NTY4OTo7PD0+QUNFSEpNUVRYXGBkZ2pucnN0dXV1dHNycW9ubGpoZmVjY2JiYWBfXl1cW1pZWVpbXFxdXV1eXl9gYWFiY2NjYmFeWldVU1FQTktJR0ZEQ0E+Pj08PDs7Ojk4ODc1NDMxMC8tLCspKCcmJSQpKiwtLi8wMTEyMzQ1Nzg5Ojs7PT5AQkRGSUxPUlZbX2NmaW1wcnN0dHRzcnFwbm1raWdlZGNiYmJhYF9eXVxbWVlZWVpbW1xcXF1dXl9fYGFiY2JiYF1aV1VTUVBOTElHRkRDQUA+PT08PDs6OTk4NzY1MzIxLy4tKyopKCcmJSkrLC0vLzAxMjM0NTY3ODk6Ojs8PT5BQ0ZIS05RVVldYWVobG9wcnNzc3JxcG9ubGppZ2VjYmJiYWFgX15cW1pZWVhZWVpaWltbXFxdXV5fYGFiYmFgXVpXVFNRUE5MSUhGRUNCQD4+PT08Ozs6OTg3NjU0MjEwLy0sKyooJyYlKissLi8wMDEyMzQ1Njc4OTo7Ozw9PkFDRUhLTlFUV1tfY2dqbm9wcXJxcXBvbm1ramhnZWNiYWFhYF9fXVxbWllYWFhYWVlZWVpaW1tcXV5fYGBhYF9dWVZUUlFPTUxKSEZFREJBQD4+Pj08Ozs6OTg3NTQzMjAvLi0sKikoJyYqKy0uLzAwMTIzNDU2Nzg5Ojs8PD0+QUNFSEtNUFNWWl5iZmlsbW9vcHBvb25tbGtpaGdlY2JhYGBgX15cW1pZWFhYWFhYV1dXWFlZWltcXV1eX19fXlxZVlNRUE9NTEpJR0VEQ0JBQEA+Pj08PDs6ODc2NTMyMTAvLiwrKikoJyosLS4vMDEyMzQ1Njc4OTo6Ozw9Pj5BQ0VIS05QU1ZZXWFkaGpsbW1ubm1tbGtqaWhnZmVjYWBgX19eXVtaWVhYWFdXV1dWVlZWV1hZWlpbXF1eXl1cW1hVUlFPTk1MSklIRkVEQ0JBQUA+Pj08PDo5ODc1NDMyMC8uLSsqKSgnKywtLi8wMTIzNDU2Nzg5Ojs7PD0+QEJERkhLTlBSVVhcX2NmaWpqa2xsa2tqaWhnZ2ZlZGJgX19eXV1bWllYV1dXV1dXVlVVVVVWV1hYWVpaW1xcW1taWFRSUE9OTUtKSUhHRkVEQ0JBQUA+Pj08Ozo5NzY1MzIxMC4tLCopKScrLC0vMDAxMjM0NTY3ODk6Ozw8PT5BQkRGSEtOUFJVWFteYWRnaGhpampqaWhnZmVlZGNiYV9eXV1cW1pZV1dXV1dXVlZVVVRTVFVWV1dYWFhZWVpaWVhWU1FQTk1MS0pJSUhHRkVDQ0JBQUA+Pj08Ozo4NzU0MzEwLy0sKyopKCssLS8wMTEyMzQ1Njc4OTo7PD0+PkFDRUZIS05QUlVXWl1gY2VmZmdoaGhnZmVkZGNjYmFfXl1cW1pZWFdWVlZWVlZWVVRTU1JTVFVWVlZWVldXV1dWVVRSUU9OTUxLSklJSEhGRURDQ0JBQUA+Pj08Ozk4NjUzMjEvLi0rKyopKywtLzAxMTIzNDU2Nzg5Ojs8PT5AQkNFR0lLTlBSVVdaXF9iZGRlZWZmZmVkY2NiYmFgX15cW1pZWFdWVlVVVVVVVVRUU1JSUVJTVFRVVVRUVFRUVFRTUlFQT05NTEtKSUlISEdGRUREQ0JBQUA+Pj08Ojk3NTQzMTAuLSwsKyoqLC0uMDEyMjM0Njc4ODk6Ozw9PkFCREVHSUtOUFJUV1lbXmBiY2NkZGRkZGNiYmFhYF5dXFtaWVhXVlVUVFRUVFNTU1JRUVFRUVJSU1NTU1NSUlJSUVFQT05OTUxLS0pJSUhISEdGRUREQ0JBQUA+Pj07Ojg2NTMyMC8uLSwsKyorLS4vMTIzNDU2Nzg4OTo7PD4+QUNERkdJS01PUVRWWFpcX2FhYWJiY2NiYWFhYF9eXVxbWllYVlVUU1NSUlJSUlJRUVBQUFBQUVFRUlJRUVFRUFBPT05OTU1MTEtKSklJSEhIR0dHRkRDQ0JCQUA+Pjw7OTc2NDIxMC8uLS0sKissLi8wMjM0NTY3ODk6Ojw9PkBCQ0RGSElLTU9RU1VXWVtdX2BgYGFhYWBgX19fXl1cW1pZWFZVVFNSUlFRUVFRUFBQT09PT09PUFBQUFBQUE9PTk5NTUxMTEtLSkpJSUlISEhISEhHRkREQ0JCQUA+PTw6ODY1MzIxMC8uLi0qKywuLzEyNDU2Nzg4OTo7PD0+QUJDRUZISkxNT1BTVVZYWlxeXl5fX19fX15eXV1cW1paWVhWVVRTUlFQUFBQUE9PT09PT05OTk5PT09PT09PTk5NTUxLS0tKSkpKSUlJSUhISEhISEhHRkREQ0JCQUA+PTs5NzY0MzIxMDAvLiorLS4vMTM0NTY3ODk6Ozw9PkBBQkNFRkhKTE1OUFJUVlhZW1xdXV1dXl5dXVxcXFtaWllYVlVUU1JRUE9PTk5OTk5OTk5OTk1NTk5PT09OTk5NTUxMS0pKSklJSUlJSUlJSUlJSUlJSEhHRUREQ0NCQT49PDo4NzY0MzMyMTAvKywtLjAyMzU2Nzg5Ojs8PT4+QUFCQ0VGSEpLTU5QUlNVV1laW1tbW1tbW1taWlpZWVlYV1ZVU1JRUE9OTU1NTExMTE1NTU1NTExNTU5OTU1NTExMS0tKSUlJSEhISEhJSUlJSUlJSUlJSEdGRUREQ0NCQT48Ozk4NzY1NDMyMTAsLS4vMTI0NTc4OTo7PD0+QEFBQkNERUdISktMTk9RU1VWWFpaWlpaWVdXV1dWVlZWVlVUU1JRUE9OTUxLS0tKSkpLS0tMTEtLS0tMTExMS0tLSkpJSUlISEhHR0dHSElJSUlISEhJSUlIR0dGRUVEQ0JBPj08Ojk4NzY1NDMyMS0uLzAyMzU2ODk6Ozw9PkBBQUJCQ0RFR0lKS0xNT1FTVFZXWFlZWVlYVlNTU1JSUlJSUVFQT05NTEtLSklJSUlJSUlJSkpKSkpKSkpKSkpKSUlISEhHR0dHR0dHR0dISElISEhISElJSEhHR0ZGRUVEQ0JAPj07Ojk4NzY1NDMyLi8wMTM0Njc5Ojs8PT5AQUJCQ0NERUZHSUpLTE1PUFJUVVdYWFhYWVhWU09PTk5OTk5OTUxMS0tKSklISEhHR0dISEhISEhISEhJSUhISEhIR0dHR0ZGRkZGRkZHR0dHSEhHR0hISEhISEdHR0ZGRURDQkE+PTw7Ojk3NjU1MzIuMDEyNDU3ODk7PD0+QEFCQ0NDREVGR0hJSktMTU5QUlRVVldXWFhYWFZST0tLS0tLS0pKSklJSUhISEdHR0dHR0dHR0dHR0dHR0dHR0dHR0ZGRkZGRkZGRkZGRkZGR0dHR0dHR0hISEhIR0dHRkZFRENCQUA+PTw7OTg3NjU0My8wMjM1Njc5Ojs9Pj5BQkJDRERFRkdISUpKS0xNTlBSU1VWVldXWFhYVlJPS0hISEhISEhIR0dHR0dHR0ZGRkZGRkZGRkZGR0dHRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGR0dHSEhISEhHR0ZGRkVEQ0JBQT4+PTs6OTg3NjQzLzEyNDU3ODk6PD0+QEFCQ0RERUZHSElJSkpLTE1OUFJTVFVVVldXWFhWUk9LSEdHR0dGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZHR0dISEhISEhHRkZFRURDQkJBQD49PDs5ODc2NTMwMTI0NTc4Ojs8PT5AQUJDREVGR0hJSkpKS0tMTU9QUVNTVFVVVldYV1ZST0tJR0ZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkdHR0hISEhISEdHRkVFRENDQkFAPj08Ozo5NzY1NDAxMzQ2Nzk6Ozw9PkFCQ0NERUZISUpKSktLTE1OT1BRUlNTVFVWV1dXVVJPS0lHRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGR0dHSEhISUhIR0dGRkVEQ0NCQUE+Pj07Ojk4NzU0MDIzNDY3OTo7PD4+QUJDREVGR0hJSkpLS0xNTU5OT1BRUlJTVFZWV1dVUk9LSUdGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZHR0dISEhJSUhHR0ZGRURDQ0JCQUA+PTw7OTg3NjQwMjM0Njg5Ozw9PkBBQ0RFRUZHSEpKS0tMTE1OTk5PUFFRUlNUVVZXVlRSTktIR0ZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkdHR0hISElISEdHRkZFRERDQkJBQD49PDs6OTc2NTEyMzU2ODo7PD0+QUJDREVGR0hJSkpLS0xNTU5OTk9QUVFSU1RVVlZWVFFOS0hHRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGR0dHSEhISEhIR0dGRkVERENDQkFBPj08Ozo5ODY1MTIzNTY4Ojs9Pj5BQkRFRkdISUpKSktMTU1OTk5OT1BQUVJTVFVWVlVTUU5LSEdGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGR0dHSEhISEdHRkZGRUREQ0NCQkE+Pjw7Ojk4NzYxMjQ1Nzg6PD0+QEFDREVGR0hJSkpLS0xNTU5OTk9PUFBRUlNVVVZWVVNQTUpIR0ZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZHR0dHR0dHR0dGRkVFRERDQ0JCQT4+PDs6OTg3NjEyNDU3OTo8PT5AQUNERUdISUpKSktLTE1NTk5OT09PUFFSVFVWVlZVU1BNSkhGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZHR0dHR0dHRkZGRUVERENDQkJBPj49Ozo5ODc2MTI0NTc5Ojw9PkFCQ0RGR0hJSkpKS0tMTE1NTk9PT09QUVNUVVZWVlVTUE1KSEZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZFRUREQ0NCQUE+Pj08Ozk4NzYxMzQ2Nzk7PD0+QUJDREZHSElJSkpLS0xMTU1OTk9PUFFSU1RWVlZWVVNQTUpIRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZFRUVGRkZGRkZFRERDQkJBQT4+PTw7Ojk3NjIzNDY4OTs8PT5BQkNERkdISElJSktLTExNTU5PT09QUVJTVVZWVlZVUk9MSkhGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkVFRUVGRkZGRkZFRENCQkFAPj49PDs6OTc2MjM1Njg5Ozw9PkFCQ0RFRkdISUlKS0tMTExNTk9PUFFSU1RVVlZWVVRST0xKSEZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZFRUZGRkZGRkVEQ0JBQUA+Pj08Ozo4NzUyNDU2ODk6PD0+QUJDREVGR0hJSUpLS0xMTU1OT1BRUlJTVFVVVlVVU1FPTEpIRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGR0dHRkZGRkZGRkZGRURDQkFBQD4+PTw6OTg2NTM0NTY4OTo7PT5BQkNERUZHSUlKSktMTE1NTk9QUVJSU1NUVFVVVVRTUU5MSkhGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkdHSEhHR0ZGRkZGRkZFRENCQUFAPj48Ozo4NzU0MzQ1Njc5Ojs9PkFCQ0RFRkhJSkpLTExNTU5OT1FSUlNTU1NTVFRUU1NRTkxKSEZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGR0hISEhHR0dHR0dGRkVEQ0JBQD4+PTw7OTg2NTMzNDU2Nzg6Oz0+QUJDREVHSElKS0tMTU1NTk9QUVJSU1JSUlNTU1NTUlFPTEpIRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZHSEhJSUhHR0dHR0dGRkRDQkFAPj49PDo5NzY0MzIzNTY3ODk7PT5BQkNERkdISUpLTExNTU1OT1BRUlJSUlJSUlJSUlJSUU5MSkhGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkdISElJSEhIR0dHR0dGRUNCQUA+Pj07Ojg2NTQyMjM0NTc4OTs9PkFCQ0VGSElKSktMTE1NTU5OUFFRUVFRUVFSUlJSUlJRTkxKSEZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGR0dISUlJSEhIR0dHR0ZFQ0JBQD4+PDs5ODY1MzIxMzQ1Njg5Ozw+QUJDRUZISUpKS0xMTE1NTU5PUFFRUVFRUVFSUlJSUlFOTEpIRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZHR0hISUlISEdHR0dHR0VEQkFAPj48Ozk3NjQzMTEyMzU2ODk7PD5BQkNFR0hJSkpLS0xMTExNTk9QUFBQUFBRUVFSUlJSUU5MSkhGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGR0dHSEhISEhIR0dHR0dGRURCQUE+Pjw6OTc1MzIxMDIzNDY3OTs8PkBCQ0VGSElKSkpLS0tMTExNTk9QUFBQUFBQUVFRUlFQTkxKSEZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZHR0dISEhISEdHR0dHR0ZFREJBQT49PDo4NjUzMjAwMTM0Njc5Ozw+QEJDREZHSElKSktLS0tMTE1OTk9PT09PT1BQUFBRUVBOTElIRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkdHR0hISEhIR0dGRkZGRURDQkFBPj08Ojg2NDMxMDAxMzQ2Nzk7PD5AQUJERUZISUlKSktLS0xMTU1OTk5OTk5OT09PUFBQT01LSUhGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGR0dHSElJSEhHR0ZGRkZFRENCQUA+PTs5NzU0MjEvMDEzNDY3OTo8PT5BQkNERkdISUpLS0tLTExMTU1NTU1NTU1OTk5PT09OTUtJR0ZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGR0hISUlISEdGRkZGRURDQ0JBQD48Ozk3NTMyMS8wMjM0Njc5Ojw9PkFCQ0RFRkhJSktLTExMTExMTExMTExMTE1NTk5PT05MS0lHRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZHSEhJSUhHR0ZGRkVFRENCQUE+PTw6ODY1MzEwLzEyMzQ2Nzg6Oz0+QEFCQ0VGR0lKS0xMTExMTExMTExMS0tLTExNTk9PTkxLSUdGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkdHSEhISEdGRkZGRURDQkJBQD49Ozk4NjQyMTAuMTIzNDU3ODo7PD0+QUJDREVHSUpLS0tLS0tLS0xMTEtLS0tLTE1OT09OTUtJR0ZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGR0dISEhHR0ZGRkVERENCQUA+PTw6OTc1MzIwLy4xMjM0NTY4OTo8PT4+QUJDREZISUpLS0tLS0tLS0tLS0pKSktLTE1PT05NS0lHRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZHR0dISEdHRkZFRERDQkJBQD48Ozo4NjQyMS8uLTAxMjM0Njc5Ojs8PT5AQUJDRUdISUpKS0tLS0pKS0pKSkpKSktMTU9PTkxLSUdGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkdHR0dHR0dGRUREQ0JCQUA+PTw6OTc1MzEwLi0sMDEyMzQ1Nzg5Ojs8PT5AQUNERkdJSUpKSkpKSkpKSkpKSkpKS0xNTk9OTEtJR0ZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGR0dHR0dHR0ZFRENCQkFBQD49Ozo4NjQyMC8tLCsvMDEyMzQ2Nzg5Ojs8Pj5BQkRFRkdJSUpKSkpKSkpKSkpKSkpLS0xNTk1MSklHRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZHR0dHR0dHRkVEQ0JCQUA+PTw6OTc1MzEvLiwrKi4vMDIzNDU2ODk6Ozw9PkFCQ0RFRkdISUpKSkpKSkpKSkpKSktLTE1NTEtKSUdGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkdHR0dHR0dGRENCQkFAPj08Ozk4NjQyMC4tKyopLS4wMTIzNDY3ODk6Ozw+QEFDREVFRkdISUlJSUlJSkpKSkpKS0tLTExLSklIR0ZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGR0dHR0dHRkVEQ0JBQT4+PDs6ODc1MzEvLSwqKSgsLi8wMTI0NTY3ODk6PD0+QUJDRERFRkdISElJSUlKSkpKSkpLS0tLS0pJSUhHRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZHR0dHR0dGRENCQkFAPj07Ojk3NjQyMC4tKyooJystLi8xMjM0NTY3ODk7PD5AQUJDQ0RFRkdHSEhJSUlKSkpKSkpKSkpKSklIR0dGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkdHR0dHRkVEQ0JBQD49Ozo5NzY0MzEvLiwrKScmKywtLzAxMjMzNDY3ODo7PT5AQUJCQ0RFRUZHR0hJSUlJSkpKSkpKSkpJSUhHR0ZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkdHR0ZFRENCQUE+PTw6OTc2NTMyMC8tLCooJyYqKywuLzAxMjM0NTY3OTo7PT4+QUFCQ0NERUZGR0dISUlJSUlJSUlJSUlISEdGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGR0dGRURDQkFBPj08Ojk3NjUzMjEvLiwrKSgmJSkqKy0uLzAxMjM0NTY4OTo7PD0+QEFCQkNERUVGRkZHR0hISEhISEhISEhIR0ZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZHRkZFRENCQT49PDo5NzY1MzIxMC4tLCopJyYkKSorLC0uLzAxMjM0NTc4OTo7PD0+PkBBQkNERERFRUVGRkdHR0hISEhISEdHRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRURDQkFAPjw7OTc2NTMyMTAvLSwrKignJSQoKSorLS4vMDAxMjM0NTY3OTo7PD09PkBBQkJDQ0NERERFRUZGRkdHSEhIR0dGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRUVEQ0JBQD49Ozo4NjU0MjEwLy4sKyopKCYlIygpKissLS4vMDAxMjM0NTY3OTo6Ozw9Pj5BQUJCQkJDQ0RERUVFRUZHR0dHR0ZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkVFRUVFRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRUVFRENCQUA+PTw6OTc1NDIxMC8uLSsqKSgnJiQjKCkqKywtLi4vMDAxMjM0NTY3ODk6Ozw8PT4+QEFBQUJCQ0NDRERERUZGR0dGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRUVFRUVGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZFRURDQkE+Pj08Ojk3NjQzMTAvLi0sKikoJyYlJCMnKCkqKywtLi4vMDEyMjM0NTY3ODk6Ojs8PT0+Pj5AQUFBQkJDQ0RERUVGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZFRERERUZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkVEQ0JBPj49Ozo5ODY0MzEwLy4tLCspKCgnJSQjIicoKSoqKywtLi4vMDEyMzM0NTY3ODk5Ojs7PDw9Pj4+QEBBQUJCQ0NEREVFRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkVERERFRkZGRkZGRkZGRkZGRkVFRUVFRUVFRUVFRURDQT4+PDs6OTg2NTMxMC8uLSwrKSgnJiYkIyIiJicoKSorLCwtLi8vMDEyMzM0NTY3ODg5Ojo6Ozw8PT0+Pj5AQUFCQkNEREVFRUVGRkZGRkZGRkZGRkZGRkZGRkZGRkZFRENDQ0RGRkdGRkZGRkZGRkVFRUVFRERERERERERDQz4+Pjw7Ojk4NjUzMjAvLi0sKyooJyYlJCMiIiIlJigpKSorLC0tLi8wMDEyMzM0NTY3Nzg4OTk6Ojs8PDw8PT4+QEFCQkNERERERUVFRUVGRkZGRkZGRkZGRkZGRkZGRkVEQ0NDREVGRkZGRkZGRkZFRUREREREQ0NDQ0JCPj4+Pj48Ozo5ODY1MzIxLy4tLCsqKCcmJSQjIiIiIiUmJygpKissLC0tLi8wMDEyMzM0NTY2Nzc4ODk5Ojo7Ozs7PD0+QEBBQkJCQ0NERERERUVFRUZGRkZGRkVFRUZGRkZGRUNCQkJDREVFRUVFRUVFRUREQ0NDQkJCQkE+Pj4+Pj49PTs5ODc2NTQyMS8uLSwrKiknJiUkIyIiIiIiJCUmKCkqKissLC0tLi8vMDEyMzM0NDU2Njc3Nzg4OTk5Ojo7PD09Pj5AQUFBQkJDQ0NDRERERUVFRUVFRERERUVFRkZFQ0JCQkNEREREREREREREQ0NCQkFBQUA+Pj09PDw7Ozo6OTg3NjUzMjEwLi0sKyopKCYlJCMiIiIiIiIjJSYnKCkqKyssLCwtLi4vMDEyMjMzNDQ1NTY2Njc3ODg5OTo6Ozw8PT0+PkBBQUJCQkNDQ0RERERERERDQ0NDRERFRURCQUFBQkJDQ0NDQ0NDQ0JCQUFAQD4+PTw8Ozo6OTk4ODc3NjU0MzIxMC8tLCsrKiknJiQjIiIiIiIiIiMkJSYnKCkqKisrKywtLi8vMDExMjIzMzQ0NTU1NjY3Nzc4ODk6Ojs7PD09Pj5AQUFBQkJCQ0NDQ0NDQ0JCQkJDQ0REQ0JBQUFBQkJCQkJCQkJBQUFAPj49PTw7Ojo5ODg4Nzc2NjU0MzIxMTAvLSwrKiopKCYlIyIiIiIiIiIiIiIkJSYnKCkpKiorKywtLi8vMDAxMTIyMzM0NDQ1NTY2Njc3ODg5OTo6Ozw9Pj4+QEFBQUJCQkJCQkJCQUFBQUFCQkJCQUBAQEBBQUFAQEBAQEA+Pj49PDs7Ojk4ODc3NjY1NTQ0MzIyMTAvLi0sKyopKSgnJiQjIiIiIiIiIiIiIiIjJSYnKCgpKSoqKywtLi4vLzAwMTEyMjMzNDQ1NTU1NjY2Nzc4ODk5Ojs8PT4+PkBAQUFBQUFBQUBAQEBAQEFBQUFAQEBAQEA+Pj4+Pj4+Pj08PDs6Ojk4Nzc2NjU0NDMzMjIxMDAvLi0tLCsqKSgoJyYlIyIiIiIiIiIiIiIiIiIjJSYnJygoKSoqKywtLS4uLy8wMDExMjMzNDQ0NDU1NTU2NjY3Nzg5Ojs8PD09Pj4+Pj4+Pj4+Pj09Pj4+Pj5AQEBAQD4+Pj09PTw8PDw8Ozo6OTg4NzY2NTQ0MzMyMTEwMC8vLi0tLCsrKikoJyYmJSMiIiIiIiIiIiIiIiIiIiMkJSYmJygoKSkqKywsLS4uLi8vMDAxMjIzMzQ0NDQ0NDU1NTY2Nzg4OTo7PDw8PT09PT09PDw8PDw8PD09PT4+Pj4+Pj09PDw7Ozs7Ojo5ODg3NjY1NTQzMzIyMTAvLy8uLi0sLCsqKikoJyYmJSQjIiIiIiIiIiIiIiIiIiIiIiMkJSUmJycoKSkqKissLS0uLi4vLzAxMTIyMzMzNDQ0NDQ0NTU2Njc4OTo6Ozs7Ozs7Ozs7Ozs7Ozs7PDw8PDw9PT09PDs7Ojo6OTk5ODc3NjU0NDMzMjIxMTAvLi4tLSwsKysqKSkoJycmJSQjIyIiIiIiIiIiIiIiIiIiIiIiIiMkJCUmJicoKCkpKissLC0tLS4vLzAwMTEyMjMzMzMzMzM0NDU1Njc4ODk5OTo6Ojo6Ojo6Ojo6Ojo6Ozs7Ozs7Ozs7Ojo5OTg4ODc3NjU0MzMyMjExMDAvLi4tLCwrKyoqKSgoJyYlJSQjIyIiIiIiIiIiIiIiIiIiIiIiIiIiIiMjJCUlJicnKCgpKisrLCwtLS4uLy8wMDEyMjIyMjIyMjMzNDQ1NTY3Nzg4ODg5OTk5OTk5OTk5OTk5OTk6Ojo6Ojk5ODg3Nzc2NjU1NDMyMTEwLy8vLi4tLCsrKiopKSgnJiYlJCMjIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIjJCQlJiYnJygpKiorKywsLS0uLi8vMDExMjIyMjIyMjIzMzQ0NTY2Njc3Nzc4ODg4ODg4ODg4ODg4ODg4ODg4ODc3NzY2NTU1NDMzMjEwLy4uLS0tLCsrKikpKCcnJiUkIyMiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIjIyQlJSYmJygpKSoqKyssLC0tLi8vMDExMTExMTExMTIyMzM0NDU1NTY2Njc3Nzc3NjY2Njc3NzY2NjY2NjY2NjU1NTQ0MzMzMjEwMC8uLSwsKysrKikpKCcmJiUkIyIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIyQkJSUmJycoKSkpKiorLCwtLi4vMDAxMTAwMDAxMTIyMzMzNDQ0NTU1NTY2NjU1NTU1NTU1NTU0NTU0NDQ0NDQzMzIyMTExMC8uLSwsKyoqKiopKCcnJiUkIyIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiMkJCUlJicnKCgpKSorKywtLS4vMDAwMDAvMDAwMTEyMjMzMzM0NDQ0NDQ0NDQ0NDQ0NDQzMzMzMzMyMjIyMjIxMTAwLy8uLi0sKyoqKSkpKSgnJiUkJCIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiMjJCQlJSYmJygoKSoqKywsLS4vLy8vLy8vLzAwMTExMjIyMjMzMzMzMzMzMzIyMjIyMjExMTExMTEwMDAwMC8vLi4uLS0sKyoqKSkoKCgoJyYlJCMiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIyQkJSUmJygoKSoqKywsLS4uLi4uLi4vLy8wMDExMTExMTIyMjIyMjExMTExMDAwMC8vLy8vLy8uLi4uLi0tLCwsKyoqKSkoKCcnJycmJSQjIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiMjJCUmJygoKSkqKyssLS0tLS0tLS4uLi8vMDAwMDAwMDExMTEwMDAvLy8vLi4uLS0tLS0tLS0tLCwsLCsrKioqKSgoJycnJycmJiUkIyIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIjJCUmJicoKCkqKissLCwsLCwsLC0tLS4uLy8vLy8vLzAwLy8vLi4tLS0tLCwsLCwsKysrKysrKysqKiopKSgoJycmJiYmJiUlJCMiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIjJCQlJiYnKCkpKisrKysrKysrKywsLS0uLi4uLi4uLi4uLi0tLCsrKysrKioqKioqKSkpKSkpKSkpKCgnJyYmJSUlJCQkJCMjIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIyQlJSYnJygpKioqKioqKioqKisrLCwtLS0tLS0tLS0tLCsrKioqKikpKSkpKCgoKCgoKCgoKCgnJiYlJSQkJCMjIyMjIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIg==";
+var COSTA_MASK_B64 = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQEBAQEAAAABAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQICAgICAgIDAwMDAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAQEBAQEBAQEBAgICAgICAgICAgICAgMDAwMDAwIDAwMDAwMDAQEBAQEBAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQEBAQEBAQEBAgICAgICAgICAgICAgICAgICAwMDAwMDAwMDAwMDAwMDAwIBAQEBAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAQECAgICAgICAgICAgICAgICAgICAgIDAwMDAwMDAwMDAwMDAwMDAwIDAwMCAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQEBAQMCAgICAwMDAgICAgICAgICAgICAgICAgMDAwMDAwMDAwMDAwMDAwMDAgMDAwMDAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQMDAwMDAwMDAwMDAgICAgICAgICAgICAgICAgMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAgEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQIDAwMDAwMDAwMDAwMCAgICAgICAgICAgICAgICAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEDAwMDAwMDAwMDAwMDAwICAgICAgICAgICAgICAgIDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAQEBAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQMDAwMDAwMDAwMDAwMCAgICAgICAgICAgICAgICAgIDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEDAwMDAwMDAwMDAwMDAwICAgICAgICAgICAgICAgICAgMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwIBAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAwMDAwMDAwMDAwQEBAQEBAICAgICAgICAgICAgICAgIDAwMDAwMDAwMDAwICAwMDAwMDAwMDAwMDAgICAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEDAwMDAwMDAwMEBAQEBAQEBAQEBAQCAgICAgICAgICAwMDAwMDAwMDAwICAgICAwMDAwMDAwMDAwMDAwMDAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAwMDAwMDAwMEBAQEBAQEBAQEBAQEBAQEBAICAgICAgMDAwMDAwMDAwICAgICAgIDAwMDAwMDAwMDAwMDAwMDAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQMDAwMDAwMDBAQEBAQEBAQEBAQEBAQEBAQEBAQEAgIDAwMDAwMDAwICAgICAgICAgIDAwMDAwMDAgIDAwMDAwMDAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAwMDAwMDAwQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAMDAwMDAwMCAgICAgICAgICAgICAgMDAwMCAgMDAwMDAwMDAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEDAwMDAwMEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAMDAwMDAgICAgICAgICBAQEBAQCAgMDAgICAwMDAwMDAwMDAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAwMDAwMDBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAMDAwMCAgICAgICAgQEBAQEBAQEBAQDAgMDAwMDAwMDAwMDAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEDAwMDAwMEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAMDAwICAgICAgICBAQEBAQEBAQEBAQDAwMDAwMDAwMDAwMBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQMDAwMDBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAwMCAgICAgICAgQEBAQEBAQEBAQEBAQDAwMDAwMDAwMDAwEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAwMDAwMEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQDAwICAgICAgICBAQEBAQEBAQEBAQEBAQDAwMDAwMDAwMDAgEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEDAwMDAwQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAMDAgICAgICAgIEBAQEBAQEBAQEBAQEBAQDAwMDAwMDAwMCAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQMDAwMDBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAwMDAgICAgICAgQEBAQEBAQEBAQEBAQEBAQDAwMDAwMDAwMBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQMDAwMEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAwMCAgICAgICAgQEBAQEBAQEBAQEBAQEBAMDAwMDAwMDAwEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAgIDAwQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQDAwMCAgICAgICBAQEBAQEBAQEBAQEBAQEBAMDAwMDAwMCAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAgICAwQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAMDAwICAgICAgMDAwMEBAQEBAQEBAQEBAQEAwMDAwMDAgIBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQECAgICBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAwMDAwICAgICAwMDAwMDBAQEBAQEBAQEBAMDAwMDAwMCAgEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQICAgICBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQDAwMDAwICAwMDAgIDAwMDAwQEBAQEBAQEAwMDAwMDAwICAgEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAgICAgIEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAwMDAwMDAwMDAwICAgIDAwMDAwQEBAQEBAQDAwMDAwMCAgICAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQECAgICAgQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQDAwMDAwMDAwMDAwICAgMDAwMDAwMEBAQEBAMDAwMDAgICAgICAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQICAgICAgQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAwMDAwMDAwMDAwMDAgICAwMDAwMDAwMEBAMDAwMDAwMCAgICAgICAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAgICAgICBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAwMDAwMDAwMDAwMDAwMDAgIDAwMDAwMDAwMDAwMDAwMDAwICAgICAgIBAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQECAgICAgIEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAgICAgICAgIBAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQICAgICAgIEBAQEBAQEBAQEBAQEBAQEBAQEBAMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAgICAgICAgIBAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQECAgICAgICAgQEBAQEBAQEBAQEBAQEBAQEBAQDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMCAgICAgICAgIBAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQICAgICAgICBAQEBAQEBAQEBAQEBAQEBAQDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMCAwICAgICAgICAgICAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAgICAgICAgICBAQEBAQEBAQEBAQEBAQEAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwICAgICAgICAgICAgICAwMDAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQECAgICAgICAgICBAQEBAQEBAQEBAQEBAMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMCAgICAgICAgICAgIDAwMDAwMDAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAgICAgICAgICAgMEBAQEBAQEBAQEAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAgICAgICAgICAgIDAwMDAwMDAwMDAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQECAgICAgICAgICAwMDAwMDBAQDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMCAgICAgICAgICAwMDAwMDAwMDAwMDAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQICAgICAgICAgIDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAgICAgICAgICAgIDAwMDAwMDAwMDAwMDAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAgICAgICAgICAgMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwICAgICAgICAgICAgMDAwMDAwMDAwMDAwMDAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQEBAQICAgICAgICAgICAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwICAgICAgICAgICAgICAwMDAwMDAwMDAwMDAwMBAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQEBAgICAgICAgICAgIDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAgICAgMDAwMDAwMDAwMDAwMDAwMCAgICAgICAgICAgICAgIDAwMDAwMDAwMDAwMDAwMBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAQICAgICAgICAgICAgMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMCAgICAgMDAwMDAwMDAwMDAwMCAgICAgICAgICAgICAgICAgMDAwMDAwMDAwMDAwMDAwIBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQEBAgICAgICAgICAgICAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAgICAgICAgMDAwMDAwMDAwMCAgICAgICAgICAgICAgICAgIDAwMDAwMDAwMDAwMDAwMDAwEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAQICAgICAgICAgICAgIDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMCAgICAgICAgIDAwMDAwMCAgICAgICAgICAgICAgICAgICAgMDAwMDAwMDAwMDAwMDAwMDAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQECAgICAgICAgICAgICAgMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDAwMDAwMDAwMDAwMDAwMDAwMBAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQEBAgICAgICAgICAgICAgICAwMDAwMDAwMDAwMDAwMDAwMDAwMCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgMDAwMDAwMDAwMDAwMDAwMDAgEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQICAgICAgICAgICAgICAgICAwMDAwMDAwMDAwMDAwICAgICAgICAgICAgICAgICAgICBQUFBQUCAgICAgICAgICAgICAgICAgICAgMDAwMDAwMDAwMDAwMDAwMCAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQEBAgICAgICAgICAgICAgICAgIDAwMDAwMDAwMDAwMDAgICAgICAgICAgICAgICAgICAgIFBQUFBQICAgICAgICAgICAgICAgICAgICAwMDAwMDAwMDAwMDAwMDAgICAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQICAgICAgICAgICAgICAgICAgMDAwMDAwMDAwMDAwMCAgICAgICAgICAgICAgICAgICAgUFBQUFAgICAgICAgICAgICAgICAgICAgIDAwMDAwMDAwMDAwMDAwMCAgIBAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAgICAgICAgICAgICAgICAgICAwMDAwMDAwMDAwMDAwICAgICAgICAgICAgICAgICAgICBQUFBQUCAgICAgICAgICAgICAgICAgICAgMDAwMDAwMDAwMDAwMDAgICAgEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQICAgICAgICAgICAgICAgICAgMDAwMDAwMDAwMDAwMDAgICBgYGBgYGAgYGBgYGBgICAgIFBQUFBQICAgICAgICAgICAgICAgICAgICAwMDAwMDAwMDAwMDAwMCAgICAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAgICAgICAgICAgICAgICAgICAwMDAwMDAwMDAwMDAwMCAgIGBgYGBgYCBgYGBgYGAgICAgUFBQUFAgICAgICAgICAgICAgICAgICAgIDAwMDAwMDAwMDAwMDAgICAgIBAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQICAgICAgICAgICAgICAgICAgIDAwMDAwMDAwMDAwMDAwICAgYGBgYGBgIGBgYGBgYCAgICBQUFBQUCAggICAgICAgCAggICAgICAgCAgMDAwMDAwMDAgICAgICAgICAgEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAgICAgICAgICAgICAgICAgICAgMDAwMDAwMDAwMDAwMDAgICBgYGBgYGAgYGBgYGBgICAgIFBQUFBQICCAgICAgICAICCAgICAgICAICAwICAgICAgICAgICAgICAgICAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQECAgICAgICAgICAgICAgICAgICAwMDAwMDAwMDAwMDAwMCAgIGBgYGBgYCBgYGBgYGAgICAgUFBQUFAgIICAgICAgIAgIICAgICAgIAgICAgICAgICAgICAgICAgICAgICAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQICAgICAgICAgICAgICAgICAgIDAwMDAwMDAwMDAwMDAwICAgYGBgYGBgIGBgYGBgYCAgICBQUFBQUCAggICAgICAgCAggICAgICAgCAgICAgICAgMDAwICAgICAgICAgIBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAgICAgICAgICAgICAgICAgICAgMDAwMDAwMDAwMDAwMDAgICBgYGBgYGAgYGBgYGBgICAgIFBQUFBQICCAgICAgICAICCAgICAgICAICAgICAgIDAwMDAwMCAgMCAgICAgEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQECAgICAgICAgICAgICAgICAgICAwMDAwMDAwMDAwMDAwMCAgIGBgYGBgYCBgYGBgYGAgICAgUFBQUFAgIICAgICAgIAgIICAgICAgIAgICAgICAwMDAwMDAwMDAwMCAgICAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQICAgICAgICAgICAgICAgICAgIDAwMDAwMDAwMDAwMDAwICAgYGBgYGBgIGBgYGBgYCAgICBQUFBQUCAggICAgICAgCAggICAgICAgCAgICAgIDAwMDAwMDAwMDAwMDAgIBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAgICAgICAgICAgICAgICAgICAgIDAwMDAwMDAwMDAwMDAgICBgYGBgYGAgYGBgYGBgICAgIFBQUFBQICAgICAgICAgICAgICAgICAgICAwMCAwMDAwMDAwMDAwMDAwMDAgEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQECAgICAgICAgICAgICAgICAgICAgIDAwMDAwMDAwMDAwMCAgICAgICAgICAgICAgICAgICAgUFBQUFAgICAgICAgICAgICAgICAgICAgIDAwMDAwMDAwMDAwMDAwMDAwMDAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAgICAgICAgICAgICAgICAgICAgICAgMDAwMDAwMDAwMDAwICAgICAgICAgICAgICAgICAgICBQUFBQUCAgICAgICAgICAgICAgICAgICAgMDAwMDAwMDAwMDAwMDAwMDAwMBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEDAwMCAgICAgICAgICAgICAgICAgICAwMDAwMDAwMDAwMDAgUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUCAwMDAwMDAwMDAwMDAwMDAwMDAwEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQMDAwICAgICAgICAgICAgICAgICAgICAwMDAwMDAwMDAwMCBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQIDAwMDAwMDAwMDAwMDAwMDAwMDAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAwMDAgICAgICAgICAgICAgICAgICAgIDAwMDAwMDAwMDAwIFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFAgMDAwMDAwMDAwMDAwMDAwMDAwMBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAwICAgICAgICAgICAgICAgICAgICAgIDAwMDAwMDAwMDAgICAgICAgICAgICAgICAgICAgIFBQUFBQICBgYGBgYGAgICAgICAgICAgICAwMDAwMDAwMDAwMDAwMDAwMDAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQECAgICAgICAgICAgICAgICAgICAgICAgIDAwMDAwMDAwMCAgICAgICAgICAgICAgICAgICAgUFBQUFAgIGBgYGBgYCAgICAgICAgICAgIDAwMDAwMDAwMDAwMDAwMDAwMBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQECAwMDAwICAgICAgICAgICAgICAgICAgMDAwMDAwMDAwICAgICAgICAgICAgICAgICAgICBQUFBQUCAgYGBgYGBgICAgcHBwcHBwcCAgMDAwMDAwMDAwMDAwMDAwMDAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQMDAwMDAwICAgICAgICAgICAgICAgICAwMDAwMDAwMDAgICAgICAgICAgICAgICAgICAgIFBQUFBQICBgYGBgYGAgICBwcHBwcHBwICAwMDAwMDAwMDAwMDAwMDAwMBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAwMDAwMDAwICAgICAgICAgICAgICAgIDAwMDAwMDAwMCAgIICAgICAgICAgCAggICAgIAgUFBQUFAgIGBgYGBgYCAgIHBwcHBwcHAgIDAwMDAwMDAwMDAwMDAwIDAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAwMDAwMDAwICAgICAgICAgICAgICAgMDAwMDAwMDAwICAggICAgICAgICAICCAgICAgCBQUFBQUCAgYGBgYGBgICAgcHBwcHBwcCAgMDAwMDAwMDAwMDAwMCAgIBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEDAwMDAwMDAgICAgICAgICAgICAgIDAwMDAwMDAwMDAgICCAgICAgICAgIAgIICAgICAIFBQUFBQICAgICAgICAgICBwcHBwcHBwICAwMDAwMDAwMDAwMDAwICAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEDAwMDAwMDAgICAgICAgICAgICAgMDAwMDAwMDAwMCAgIICAgICAgICAgCAggICAgIAgUFBQUFAgIHBwcHBwcHAgIHBwcHBwcHAgIDAwMDAwMDAwMDAwMDAgEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEDAwMDAwMDAgICAgICAgICAgICAwMDAwMDAwMDAwICAggICAgICAgICAICCAgICAgCBQUFBQUCAgcHBwcHBwcCAgcHBwcHBwcCAgMDAwMDAwMDAwMDAwMCAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQIDAwMDAwMCAgICAgICAgICAgIDAwMDAwMDAwMDAgICCAgICAgICAgIAgIICAgICAIFBQUFBQICBwcHBwcHBwICBwcHBwcHBwICAwMDAwMDAwMDAwMDAwEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQMDAwMDAwMCAgICAgICAgICAwMDAwMDAwMDAwMCAgIICAgICAgICAgCAggICAgIAgUFBQUFAgIHBwcHBwcHAgIHBwcHBwcHAgIDAwMDAwMDAwMDAwMDAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQIDAwMDAwMCAgICAgICAgMDAwMDAwMDAwMDAwICAggICAgICAgICAICCAgICAgCBQUFBQUCAgcHBwcHBwcCAgcHBwcHBwcCAgMDAwMDAwMDAwMDAwEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAgICCAgICAgICAgIAgIICAgICAIFBQUFBQICBwcHBwcHBwICBwcHBwcHBwICAwMDAwMDAwMDAwMDAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQEDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMCAgICAgICAgICAgICAgICAgICAgUFBQUFAgIHBwcHBwcHAgIHBwcHBwcHAgIDAwMDAwMDAwMDAwEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQEBAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwICAgICAgICAgICAgICAgICAgICBQUFBQUCAgcHBwcHBwcCAgcHBwcHBwcCAgMDAwMDAwMDAwMBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAQMDAwMDAwMDAwMDAwMDAwMDAwMDAgICAgICAgICAgICAgICAgICAgIFBQUFBQICAgICAgICAgICAgICAgICAgICAgIDAwMDAwMDAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAQECAwMDAwMDAwMDAwMDAwMDAwMCAgICAgICAgICAgICAgICAgICAgUFBQUFAgICAgICAgICAgICAgICAgICAgICAgICAwMDAwEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQEBAQEBAQMDAgICAgMDAwMDAwMDAwICAgICAgICAgICAgICAgICAgICBQUFBQUCAgICAgICAgICAgICAgICAgICAgICAgIDAwMBAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQEBAQEBAQEBAgICAwMDAwMDAwMDAwMDAwICAgICAgIDAwMDAwMDAwMDBQUFAwMDAwMDAgICAgICAgICAgICAgICAgICAgIBAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQEBAQEBAQECAwMDAwMDAwMDAwMDAwICAgICAgMDAwMDAwMDAwMFBQUDAwMDAwMDAgICAgICAgICAgICAgICAgEBAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAQEBAQECAwMDAwMDAwMDAwMDAgICAgICAwMDAwICAwMDAwUFBQMDAwMDAwMDAgICAgICAgICAgICAgEBAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQEBAQEBAQMDAwMDAwMDAwMDAgICAgIDAwMCAgIDAwMDBQUFAwMDAwMDAwMDAgICAgICAgEBAQEBAQEBAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAQEBAQEBAwMDAwMDAwMDAgICAgICAgICAgIDAwMFBQUDAwMDAwMDAwMDAwICAQEBAQEBAQEBAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQEBAQEBAQIDAwMDAwMDAwMCAgICAgICAwMDAwUFBQMDAwMDAwMDAwMDAQEBAQEBAQEBAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAQEBAQEBAQMDAwMDAwMDAwMDAwMDAwMDBQUFAwMDAwMDAwMCAQEBAQEBAQEBAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAQEBAQEBAQEBAgMDAgICAgMDAwMDAwMFBQUBAQEBAQEBAQEBAQEBAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQUFBQEBAQEBAQEBAQEBAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBBQUFAQEBAQEBAQEBAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEFBQUBAQEBAQEBAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQUFBQEBAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==";
+var COSTA_PLAN = { "muro": { "y": [71, 74], "celulas": [[-15, -1], [-14, -1], [-13, -1], [-12, -1], [-11, -1], [-10, -1], [-9, -1], [-8, -1], [-7, -1], [-6, -1], [-5, -1], [-4, -1], [-3, -1], [-2, -1], [-1, -1], [0, -1], [1, -1], [2, -1], [3, -1], [4, -1], [10, -1], [11, -1], [12, -1], [13, -1], [14, -1], [15, -1], [16, -1], [17, -1], [18, -1], [19, -1], [20, -1], [21, -1], [22, -1], [23, -1], [24, -1], [25, -1], [26, -1], [27, -1], [28, -1], [29, -1], [-15, 0], [29, 0], [-15, 1], [29, 1], [-15, 2], [29, 2], [-15, 3], [29, 3], [-15, 4], [29, 4], [-15, 5], [29, 5], [-15, 6], [29, 6], [-15, 7], [29, 7], [-15, 8], [29, 8], [-15, 9], [29, 9], [-15, 10], [29, 10], [-15, 11], [29, 11], [-15, 12], [29, 12], [-15, 13], [29, 13], [-15, 14], [29, 14], [-15, 15], [29, 15], [-15, 16], [29, 16], [-15, 17], [29, 17], [-15, 18], [29, 18], [-15, 19], [29, 19], [-15, 20], [29, 20], [-15, 21], [29, 21], [-15, 22], [29, 22], [-15, 23], [29, 23], [-15, 24], [29, 24], [-15, 25], [29, 25], [-15, 26], [29, 26], [-15, 27], [29, 27], [-15, 28], [29, 28], [-15, 29], [29, 29], [-15, 30], [29, 30], [-15, 31], [29, 31], [-15, 32], [29, 32], [-15, 33], [29, 33], [-15, 34], [29, 34], [-15, 35], [-14, 35], [-13, 35], [-12, 35], [-11, 35], [-10, 35], [-9, 35], [-8, 35], [-7, 35], [-6, 35], [-5, 35], [-4, 35], [-3, 35], [-2, 35], [-1, 35], [0, 35], [1, 35], [2, 35], [3, 35], [4, 35], [10, 35], [11, 35], [12, 35], [13, 35], [14, 35], [15, 35], [16, 35], [17, 35], [18, 35], [19, 35], [20, 35], [21, 35], [22, 35], [23, 35], [24, 35], [25, 35], [26, 35], [27, 35], [28, 35], [29, 35]] }, "portoes": [{ "nome": "Port\xE3o norte", "x": [5, 9], "z": -1 }, { "nome": "Port\xE3o da praia", "x": [5, 9], "z": 35 }], "cercas": { "yBase": 71, "celulas": [[12, 25], [13, 25], [14, 25], [16, 25], [17, 25], [18, 25], [12, 26], [18, 26], [12, 27], [18, 27], [12, 28], [18, 28], [12, 29], [18, 29], [12, 30], [18, 30], [12, 31], [18, 31], [12, 32], [13, 32], [14, 32], [15, 32], [16, 32], [17, 32], [18, 32], [21, 20], [22, 20], [23, 20], [25, 20], [26, 20], [27, 20], [21, 21], [27, 21], [21, 22], [27, 22], [21, 23], [27, 23], [21, 24], [27, 24], [21, 25], [27, 25], [21, 26], [27, 26], [21, 27], [27, 27], [21, 28], [27, 28], [21, 29], [27, 29], [21, 30], [27, 30], [21, 31], [27, 31], [21, 32], [22, 32], [23, 32], [24, 32], [25, 32], [26, 32], [27, 32]] }, "cercados": [{ "nome": "Cercado A", "caixa": [12, 25, 18, 32], "porteira": [15, 25] }, { "nome": "Cercado B", "caixa": [21, 20, 27, 32], "porteira": [24, 20] }], "bases": [{ "nome": "Casa 1", "caixa": [-12, 22, -4, 30] }, { "nome": "Casa 2", "caixa": [-1, 22, 3, 30] }, { "nome": "Casa 3", "caixa": [12, 5, 18, 11] }, { "nome": "Celeiro", "caixa": [21, 5, 27, 11] }], "arvores": [[35, 13], [39, 22], [-22, -43], [-24, 2], [-20, 37], [6, -42], [-36, -29], [6, -9], [32, -4], [1, -41], [4, 37], [-17, 1], [13, -14], [31, 29], [-2, -8], [-11, -4], [24, -18], [-30, -44], [-24, 16], [30, 5], [46, 11], [14, -22], [12, -7], [16, 39], [41, -1], [23, -25], [-28, 5], [-2, 42], [-3, -22], [-13, -8], [5, -22], [36, -2], [34, 3], [24, -35], [-24, 31], [3, -48], [-2, -14], [17, -37], [12, -42], [-42, 26], [37, -10], [42, -10], [33, 22], [-16, 23], [40, 28], [-18, -7], [-4, -43], [28, -26], [-36, -34], [36, 31], [-5, -34], [-11, 40], [-15, -13], [40, 11], [18, -32], [-30, -39], [-36, 29], [29, -32], [-27, -11], [-34, -42], [-18, 14], [0, -36], [9, 42], [9, -25], [-48, 16], [-19, 27], [24, -30], [19, -14], [-26, -2], [-23, -6], [17, -42], [-23, 9], [9, -47], [32, -9], [31, 15], [4, -16], [-28, 34], [-32, 31], [-3, -49], [-6, -5], [-9, -11], [-4, 36], [-45, 20], [44, 15], [-18, 33], [-25, 26], [-21, 22], [-3, -29], [-15, 38], [17, -18], [43, 20], [-9, -18], [12, -37], [-20, -11], [17, -9], [12, 37], [3, 43], [36, 8], [38, 17], [14, -46], [39, 3], [10, -20], [34, 35], [-34, -25], [39, -6], [2, -6], [-28, -6], [-19, 6], [7, -4], [44, -6], [-28, 10], [1, -20], [8, -13], [48, 17], [-26, -41], [30, 0], [35, 26], [-7, 42], [-16, 10]], "soloY": 70 };
+
 // src/titan/orvalis/generator.ts
 var ORVALIS_GENERATOR_VERSION = 6;
 var REEF = { threshold: 0.3, scale: 16, famCell: 9, minDepth: 3, maxDepth: 10, h0: 0.35, h1: 0.75, plant: 0.35, fan: 0.6 };
@@ -4206,7 +4368,109 @@ var OrvalisGenerator = class {
     });
   }
 };
-var orvalisGeneratorFor = (seed, version) => Number.isInteger(version) && version >= 1 && version <= ORVALIS_GENERATOR_VERSION ? new OrvalisGenerator(seed, version) : null;
+var COSTA_GENERATOR_VERSION = 100;
+var COSTA_N = 128;
+var COSTA_MIN = -64;
+var b64 = (s) => {
+  const al = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/", out = [];
+  let acc = 0, bits = 0;
+  for (const ch of s) {
+    const v = al.indexOf(ch);
+    if (v < 0) continue;
+    acc = acc << 6 | v;
+    bits += 6;
+    if (bits >= 8) {
+      bits -= 8;
+      out.push(acc >> bits & 255);
+      acc &= (1 << bits) - 1;
+    }
+  }
+  return Uint8Array.from(out);
+};
+var COSTA_H = b64(COSTA_HEIGHT_B64);
+var COSTA_M = b64(COSTA_MASK_B64);
+var costaIdx = (x, z) => (z - COSTA_MIN) * COSTA_N + (x - COSTA_MIN);
+var costaIn = (x, z) => x >= COSTA_MIN && x < COSTA_MIN + COSTA_N && z >= COSTA_MIN && z < COSTA_MIN + COSTA_N;
+var cellKey = (x, z) => (x + 256) * 1024 + (z + 256);
+var COSTA_WALL = new Set(COSTA_PLAN.muro.celulas.map(([x, z]) => cellKey(x, z)));
+var COSTA_FENCE = new Set(COSTA_PLAN.cercas.celulas.map(([x, z]) => cellKey(x, z)));
+var COSTA_GATES = new Map(COSTA_PLAN.cercados.map((c) => [cellKey(c.porteira[0], c.porteira[1]), c.porteira]));
+var COSTA_GATE_X = (x, z) => COSTA_FENCE.has(cellKey(x - 1, z)) || COSTA_FENCE.has(cellKey(x + 1, z));
+var COSTA_PENS = [{ pen: 0, kind: "galinha", n: 3 }, { pen: 0, kind: "porco", n: 1 }, { pen: 1, kind: "vaca", n: 2 }, { pen: 1, kind: "ovelha", n: 2 }];
+var CostaGenerator = class extends OrvalisGenerator {
+  costaTrees = null;
+  constructor(seed) {
+    super(seed, COSTA_GENERATOR_VERSION);
+  }
+  /** Chegada no portão da praia (vão do muro em Z = 35, X 5–9), de frente para a aldeia (norte). */
+  findArrival() {
+    const g = COSTA_PLAN.portoes[1], x = (g.x[0] + g.x[1] + 1) / 2, z = g.z + 0.5, top = COSTA_H[costaIdx(Math.floor(x), g.z)];
+    return { x, y: top + 1, z, yaw: 0, clearing: { x0: g.x[0], z0: g.z - 1, size: 3 } };
+  }
+  computeColumn(x, z) {
+    if (!costaIn(x, z)) return { top: 44, surface: T.BEACH, sub: T.BEACH };
+    const i = costaIdx(x, z), top = COSTA_H[i], m = COSTA_M[i];
+    if (top <= LAKE_LAST_Y || m === 0 || m === 1) return { top, surface: T.BEACH, sub: T.BEACH };
+    switch (m) {
+      case 4:
+        return { top, surface: T.STONE, sub: T.STONE };
+      case 5:
+        return { top, surface: T.PATH, sub: T.DIRT };
+      case 6:
+        return { top, surface: T.FARMLAND_DRY, sub: T.DIRT };
+      // talhão arado, seco: a água é do jogador
+      case 8:
+        return { top, surface: T.PLANKS_OAK, sub: T.DIRT };
+      // base edificável: só piso
+      default:
+        return { top, surface: T.GRASS, sub: T.DIRT };
+    }
+  }
+  /** As árvores do mapa (só carvalho), indexadas pelas colunas que a copa ou o tronco pode tocar. */
+  treesNear(x, z) {
+    if (!this.costaTrees) {
+      const m = /* @__PURE__ */ new Map();
+      COSTA_PLAN.arvores.forEach(([tx, tz], n) => {
+        const t = { x: tx, z: tz, top: this.column(tx, tz).top, h: 4 + Math.floor(hash2(this.seed, n, 31) * 3), sp: "oak", seed: Math.floor(hash2(this.seed, n, 37) * 4294967296) };
+        for (let dz = -3; dz <= 3; dz++) for (let dx = -3; dx <= 3; dx++) {
+          const k = cellKey(tx + dx, tz + dz);
+          (m.get(k) ?? m.set(k, []).get(k)).push(t);
+        }
+      });
+      this.costaTrees = m;
+    }
+    return this.costaTrees.get(cellKey(x, z)) ?? NO_TREES;
+  }
+  /** Muro de pedra lisa (4 blocos), cercas e porteiras de carvalho por cima do terreno; o resto é o da base. */
+  blockAt(x, y, z) {
+    const k = cellKey(x, z);
+    if (y >= COSTA_PLAN.muro.y[0] && y <= COSTA_PLAN.muro.y[1] && COSTA_WALL.has(k)) return T.STONE_SMOOTH;
+    if (y === COSTA_PLAN.cercas.yBase) {
+      if (COSTA_FENCE.has(k)) {
+        const link = (cx, cz, axisX) => {
+          const kk = cellKey(cx, cz);
+          return COSTA_FENCE.has(kk) || COSTA_GATES.has(kk) && COSTA_GATE_X(cx, cz) === axisX;
+        };
+        return fenceId(0, (link(x, z - 1, false) ? WALL_N : 0) | (link(x + 1, z, true) ? WALL_E : 0) | (link(x, z + 1, false) ? WALL_S : 0) | (link(x - 1, z, true) ? WALL_W : 0));
+      }
+      if (COSTA_GATES.has(k)) return gateId(0, COSTA_GATE_X(x, z) ? 0 : 1, false);
+    }
+    return super.blockAt(x, y, z);
+  }
+  /** Animais da criação: dentro de cada cercado (a caixa do JSON sem a cerca), no pasto. */
+  get farmFauna() {
+    const out = [];
+    for (const { pen, kind, n } of COSTA_PENS) {
+      const [x0, z0, x1, z1] = COSTA_PLAN.cercados[pen].caixa, w = x1 - x0 - 1, d = z1 - z0 - 1;
+      for (let i = 0; i < n; i++) {
+        const x = x0 + 1 + Math.floor(hash2(this.seed, pen * 97 + i, 41 + kind.length) * w), z = z0 + 1 + Math.floor(hash2(this.seed, pen * 97 + i, 43 + kind.length) * d);
+        out.push({ id: `fc${pen}_${kind}_${i}`, kind, x, y: this.column(x, z).top + 1, z });
+      }
+    }
+    return out;
+  }
+};
+var orvalisGeneratorFor = (seed, version) => version === COSTA_GENERATOR_VERSION ? new CostaGenerator(seed) : Number.isInteger(version) && version >= 1 && version <= ORVALIS_GENERATOR_VERSION ? new OrvalisGenerator(seed, version) : null;
 
 // src/titan/save.ts
 var TITAN_SAVE_VERSION = 8;
@@ -4552,7 +4816,12 @@ var TitanVolume = class _TitanVolume {
   }
   /** Caixas sólidas da célula (degrau e cadeira, ADR 0101) para o corpo, ou null (a parede invisível em volta da região é cubo inteiro). */
   bodyBoxes(x, y, z) {
-    return this.gen.inRegion(x, z) ? blockBoxes(this.get(x, y, z)) : null;
+    if (!this.gen.inRegion(x, z)) return null;
+    const id = this.get(x, y, z);
+    if (isGateOpen(id)) return null;
+    const own = blockBoxes(id), tall = tallBoxes(this.get(x, y - 1, z));
+    if (own) return tall ? [...own, ...tall] : own;
+    return tall && !isSolid(id) ? tall : null;
   }
   /** Faixa `[baixo, topo]` ocupada na célula para o corpo (a parede invisível em volta da região conta como cubo inteiro). */
   bodySpan(x, y, z) {
@@ -4573,6 +4842,7 @@ var TitanVolume = class _TitanVolume {
   set(x, y, z, id) {
     if (!this.editable(x, y, z)) return false;
     if (isWall(id)) id = wallId(wallMaskFor((a, b, c) => this.get(a, b, c), x, y, z));
+    if (isFence(id)) id = fenceId(woodOf(id), fenceMaskFor((a, b, c) => this.get(a, b, c), x, y, z));
     const cx = chunkOf(x), cz = chunkOf(z);
     const key2 = chunkKey(cx, cz);
     const idx = columnIndex(localOf(x), y, localOf(z));
@@ -4602,6 +4872,7 @@ var TitanVolume = class _TitanVolume {
     for (const [dx, dz] of [[0, -1], [1, 0], [0, 1], [-1, 0]]) {
       const nx = x + dx, nz = z + dz, n = this.get(nx, y, nz);
       if (isWall(n) && n !== wallId(wallMaskFor((a, b, c) => this.get(a, b, c), nx, y, nz))) this.set(nx, y, nz, n);
+      else if (isFence(n) && n !== fenceId(woodOf(n), fenceMaskFor((a, b, c) => this.get(a, b, c), nx, y, nz))) this.set(nx, y, nz, n);
     }
   }
   /**
@@ -4720,7 +4991,7 @@ var TitanVolume = class _TitanVolume {
   }
   // ---- Luz de lanterna ----
   /** Modelos 3D colocados (mesa, Marco de Margem, Painel de Junco): o renderer desenha uma instância por célula; `modelVersion` muda a cada peça posta, retirada ou carregada. */
-  models = { workbench: /* @__PURE__ */ new Map(), marco: /* @__PURE__ */ new Map(), painel: /* @__PURE__ */ new Map(), escada: /* @__PURE__ */ new Map(), bau: /* @__PURE__ */ new Map(), cama: /* @__PURE__ */ new Map(), braseiro: /* @__PURE__ */ new Map(), braseiroAceso: /* @__PURE__ */ new Map(), degrau: /* @__PURE__ */ new Map(), degrauPedra: /* @__PURE__ */ new Map(), cadeira: /* @__PURE__ */ new Map(), porta: /* @__PURE__ */ new Map(), tocha: /* @__PURE__ */ new Map(), tochaParede: /* @__PURE__ */ new Map(), ervaMarinha: /* @__PURE__ */ new Map(), ervaAlta: /* @__PURE__ */ new Map(), ervaAltaTopo: /* @__PURE__ */ new Map(), alga: /* @__PURE__ */ new Map(), algaTopo: /* @__PURE__ */ new Map(), ...Object.fromEntries(CORAL_KINDS.map((k) => [k, /* @__PURE__ */ new Map()])), ...Object.fromEntries(MURETA_KINDS.map((k) => [k, /* @__PURE__ */ new Map()])) };
+  models = { workbench: /* @__PURE__ */ new Map(), marco: /* @__PURE__ */ new Map(), painel: /* @__PURE__ */ new Map(), escada: /* @__PURE__ */ new Map(), bau: /* @__PURE__ */ new Map(), cama: /* @__PURE__ */ new Map(), braseiro: /* @__PURE__ */ new Map(), braseiroAceso: /* @__PURE__ */ new Map(), degrau: /* @__PURE__ */ new Map(), degrauPedra: /* @__PURE__ */ new Map(), cadeira: /* @__PURE__ */ new Map(), porta: /* @__PURE__ */ new Map(), tocha: /* @__PURE__ */ new Map(), tochaParede: /* @__PURE__ */ new Map(), ervaMarinha: /* @__PURE__ */ new Map(), ervaAlta: /* @__PURE__ */ new Map(), ervaAltaTopo: /* @__PURE__ */ new Map(), alga: /* @__PURE__ */ new Map(), algaTopo: /* @__PURE__ */ new Map(), ...Object.fromEntries(CORAL_KINDS.map((k) => [k, /* @__PURE__ */ new Map()])), ...Object.fromEntries(WOOD_STAIR_KINDS.map((k) => [k, /* @__PURE__ */ new Map()])), ...Object.fromEntries(FENCE_KINDS.map((k) => [k, /* @__PURE__ */ new Map()])), ...Object.fromEntries(WOOD_DOOR_KINDS.map((k) => [k, /* @__PURE__ */ new Map()])), ...Object.fromEntries(TRAPDOOR_KINDS.map((k) => [k, /* @__PURE__ */ new Map()])), ...Object.fromEntries(GATE_KINDS.map((k) => [k, /* @__PURE__ */ new Map()])), ...Object.fromEntries(MURETA_KINDS.map((k) => [k, /* @__PURE__ */ new Map()])) };
   modelVersion = 0;
   /** Cada peça: `[x, y, z, giro]` (giro 0–3 em quartos de volta ao redor de Y; o painel usa 0 = ao longo de X e 1 = ao longo de Z). */
   /** Registra um modelo que vem do **gerador** (a flora marinha, ADR 0135), descoberto quando a seção é malhada: os modelos editados entram por `set` e pelo carregamento; os da base, só aqui. Idempotente. */
@@ -5142,14 +5413,14 @@ function headerOf(s) {
 }
 
 // src/net/titan/protocol.ts
-var TITAN_PROTOCOL_VERSION = 5;
+var TITAN_PROTOCOL_VERSION = 6;
 var TITAN_MAX_PLAYERS = 10;
 var TITAN_NAME_MIN = 2;
 var TITAN_NAME_MAX = 16;
 var TITAN_ROOMS = [
   { id: 101, name: "Tit\xE3 1", seed: 20261122, world: "titan" },
-  { id: 102, name: "Orvalis 1", seed: 20261127, world: "orvalis" }
-  // Orvalis em sala (ADR 0138): o mesmo motor, o gerador e as regras do Orvalis
+  { id: 102, name: "Orvalis 1", seed: 128064, world: "orvalis", terrain: "costa" }
+  // a Aldeia da Costa (ADR 0142); antes, seed 20261127 com relevo por ruído // Orvalis em sala (ADR 0138): o mesmo motor, o gerador e as regras do Orvalis
 ];
 var titanRoomById = (id) => TITAN_ROOMS.find((r) => r.id === id);
 var num2 = (v, lim = 1e6) => typeof v === "number" && Number.isFinite(v) && Math.abs(v) <= lim;
@@ -5268,13 +5539,14 @@ function playerView(world, own) {
 }
 var TitanRoom = class {
   /** `kind` = o mundo da sala (ADR 0138): o Titã ou o Orvalis em voxel, cada um com o gerador, os itens e as regras dele. A fauna de fazenda é da sala (entrega B); a pesca e os botes ainda não (entrega C). */
-  constructor(id, name, seed, rand = Math.random, kind = "titan") {
+  constructor(id, name, seed, rand = Math.random, kind = "titan", terrain) {
     this.id = id;
     this.name = name;
     this.seed = seed;
     this.rand = rand;
     this.kind = kind;
-    this.world = fresh(kind === "orvalis" ? new OrvalisGenerator(seed) : new TitanGenerator(seed));
+    this.terrain = terrain;
+    this.world = fresh(kind === "orvalis" ? terrain === "costa" ? new CostaGenerator(seed) : new OrvalisGenerator(seed) : new TitanGenerator(seed));
     this.hook();
   }
   id;
@@ -5282,6 +5554,7 @@ var TitanRoom = class {
   seed;
   rand;
   kind;
+  terrain;
   world;
   players = /* @__PURE__ */ new Map();
   saved = /* @__PURE__ */ new Map();
@@ -5491,7 +5764,7 @@ var TitanRoom = class {
   /** Porta abre/fecha; cama marca o ponto de retorno e, à noite, a noite só passa quando **todos** da sala estão na cama (o relógio é de todos). */
   useCell(p, x, y, z) {
     const id = this.world.volume.get(x, y, z);
-    if (isDoor(id)) return useDoor(p.view, x, y, z);
+    if (isOpenable(id)) return useDoor(p.view, x, y, z);
     if (!isBed(id)) return { ok: false };
     const r = useBed(p.view, x, y, z, false);
     if (!canSleep(this.world.time, isRaining(this.world))) return r;
@@ -5707,6 +5980,7 @@ var TitanRoom = class {
   restore(snap) {
     if (!snap || snap.v !== TITAN_SNAPSHOT_VERSION || !snap.header || snap.header.seed !== this.seed || this.players.size) return false;
     if ((snap.header.world ?? "titan") !== this.kind) return false;
+    if (this.kind === "orvalis" && snap.header.generatorVersion === COSTA_GENERATOR_VERSION !== (this.terrain === "costa")) return false;
     const gen = this.kind === "orvalis" ? orvalisGeneratorFor(snap.header.seed, snap.header.generatorVersion) : generatorFor(snap.header.seed, snap.header.generatorVersion);
     if (!gen) return false;
     this.world = resume(gen, { header: snap.header, chunks: snap.chunks });

@@ -48,7 +48,7 @@ function startServer(port = Number(process.env.PORT) || 3000, options = {}) {
   const loaded = {};
   // Salas fixas (ADR 0104 e 0138 do jogo): motor voxel, uma por mundo (101 Titã, 102 Orvalis); regras de rede, relógio e disco daqui.
   for (const def of net.TITAN_ROOMS) {
-    const room = new net.TitanRoom(def.id, def.name, def.seed, undefined, def.world); // o mundo da sala (Titã ou Orvalis) escolhe o gerador (ADR 0138 do jogo)
+    const room = new net.TitanRoom(def.id, def.name, def.seed, undefined, def.world, def.terrain); // o mundo da sala (Titã ou Orvalis) escolhe o gerador (ADR 0138 do jogo); `terrain: 'costa'` = o mapa feito à mão da Aldeia da Costa na sala 102 (ADR 0142)
     const snap = store.load(def.id);
     loaded[def.id] = !!snap && room.restore(snap);
     rooms.set(def.id, { room, sockets: new Map() });
