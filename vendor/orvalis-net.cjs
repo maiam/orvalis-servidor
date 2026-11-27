@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.188.0 (9614642) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.189.0 (7d7f3d6) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -126,7 +126,9 @@ var tiles_default = {
     "orvalis/fornalha-topo",
     "orvalis/fornalha-lateral",
     "orvalis/fornalha-frente-apagada",
-    "orvalis/fornalha-frente-acesa"
+    "orvalis/fornalha-frente-acesa",
+    "orvalis/minerio-carvao",
+    "orvalis/bloco-carvao"
   ]
 };
 
@@ -141,8 +143,8 @@ var REGION_V6 = { min: -64, max: 64 };
 var regionFor = (generatorVersion) => generatorVersion >= 6 ? REGION_V6 : REGION_LEGACY;
 var REGION_MIN = REGION_LEGACY.min;
 var REGION_MAX = REGION_LEGACY.max;
-var T = { AIR: 0, SAND: 1, DAMP_SAND: 2, DARK_ROCK: 3, FROST: 4, LAKE: 5, BEDROCK: 6, LANTERN: 7, VEIN_ROCK: 8, VEIN_FROST: 9, WORKBENCH: 10, EMBER: 11, SLAB: 12, WORKBENCH_90: 13, WORKBENCH_180: 14, WORKBENCH_270: 15, SLAB_TOP: 16, SLAB_DOUBLE: 17, MARCO: 18, MARCO_90: 19, MARCO_180: 20, MARCO_270: 21, PAINEL: 22, PAINEL_Z: 23, VEIN_COPPER: 24, BRAZIER: 25, BRAZIER_LIT: 26, CARAPACE: 27, EMBER_VEIN: 28, EMBER_BLOCK: 29, MAT: 30, LADDER: 31, LADDER_90: 32, LADDER_180: 33, LADDER_270: 34, CHEST: 35, CHEST_90: 36, CHEST_180: 37, CHEST_270: 38, BED: 39, BED_90: 40, BED_180: 41, BED_270: 42, BED_HEAD: 43, BED_HEAD_90: 44, BED_HEAD_180: 45, BED_HEAD_270: 46, REED_BLOCK: 47, REED_SLAB: 48, REED_SLAB_TOP: 49, REED_STAIR: 50, REED_STAIR_90: 51, REED_STAIR_180: 52, REED_STAIR_270: 53, REED_CHAIR: 54, REED_CHAIR_90: 55, REED_CHAIR_180: 56, REED_CHAIR_270: 57, DOOR: 58, DOOR_LAST: 89, GRASS: 90, DIRT: 91, STONE: 92, BEACH: 93, LOG_OAK: 94, LEAVES_OAK: 95, LOG_CHERRY: 96, LEAVES_CHERRY: 97, LOG_BIRCH: 98, LEAVES_BIRCH: 99, PLANKS_OAK: 100, PLANKS_CHERRY: 101, PLANKS_BIRCH: 102, CARPENTRY: 103, CARPENTRY_90: 104, CARPENTRY_180: 105, CARPENTRY_270: 106, STONE_SMOOTH: 107, STONE_BRICK: 108, STONE_SLAB: 109, STONE_SLAB_TOP: 110, STONE_STAIR: 111, STONE_STAIR_90: 112, STONE_STAIR_180: 113, STONE_STAIR_270: 114, STONE_WALL: 115, STONE_WALL_LAST: 130, FARMLAND_DRY: 131, FARMLAND_WET: 132, PATH: 133, DIRT_INFERTILE: 134, CLAY_BLOCK: 135, BRICK_BLOCK: 136, FURNACE: 137, FURNACE_90: 138, FURNACE_180: 139, FURNACE_270: 140, FURNACE_LIT: 141, FURNACE_LIT_90: 142, FURNACE_LIT_180: 143, FURNACE_LIT_270: 144, TORCH: 145, TORCH_WALL: 146, TORCH_WALL_90: 147, TORCH_WALL_180: 148, TORCH_WALL_270: 149 };
-var T_MAX = T.TORCH_WALL_270;
+var T = { AIR: 0, SAND: 1, DAMP_SAND: 2, DARK_ROCK: 3, FROST: 4, LAKE: 5, BEDROCK: 6, LANTERN: 7, VEIN_ROCK: 8, VEIN_FROST: 9, WORKBENCH: 10, EMBER: 11, SLAB: 12, WORKBENCH_90: 13, WORKBENCH_180: 14, WORKBENCH_270: 15, SLAB_TOP: 16, SLAB_DOUBLE: 17, MARCO: 18, MARCO_90: 19, MARCO_180: 20, MARCO_270: 21, PAINEL: 22, PAINEL_Z: 23, VEIN_COPPER: 24, BRAZIER: 25, BRAZIER_LIT: 26, CARAPACE: 27, EMBER_VEIN: 28, EMBER_BLOCK: 29, MAT: 30, LADDER: 31, LADDER_90: 32, LADDER_180: 33, LADDER_270: 34, CHEST: 35, CHEST_90: 36, CHEST_180: 37, CHEST_270: 38, BED: 39, BED_90: 40, BED_180: 41, BED_270: 42, BED_HEAD: 43, BED_HEAD_90: 44, BED_HEAD_180: 45, BED_HEAD_270: 46, REED_BLOCK: 47, REED_SLAB: 48, REED_SLAB_TOP: 49, REED_STAIR: 50, REED_STAIR_90: 51, REED_STAIR_180: 52, REED_STAIR_270: 53, REED_CHAIR: 54, REED_CHAIR_90: 55, REED_CHAIR_180: 56, REED_CHAIR_270: 57, DOOR: 58, DOOR_LAST: 89, GRASS: 90, DIRT: 91, STONE: 92, BEACH: 93, LOG_OAK: 94, LEAVES_OAK: 95, LOG_CHERRY: 96, LEAVES_CHERRY: 97, LOG_BIRCH: 98, LEAVES_BIRCH: 99, PLANKS_OAK: 100, PLANKS_CHERRY: 101, PLANKS_BIRCH: 102, CARPENTRY: 103, CARPENTRY_90: 104, CARPENTRY_180: 105, CARPENTRY_270: 106, STONE_SMOOTH: 107, STONE_BRICK: 108, STONE_SLAB: 109, STONE_SLAB_TOP: 110, STONE_STAIR: 111, STONE_STAIR_90: 112, STONE_STAIR_180: 113, STONE_STAIR_270: 114, STONE_WALL: 115, STONE_WALL_LAST: 130, FARMLAND_DRY: 131, FARMLAND_WET: 132, PATH: 133, DIRT_INFERTILE: 134, CLAY_BLOCK: 135, BRICK_BLOCK: 136, FURNACE: 137, FURNACE_90: 138, FURNACE_180: 139, FURNACE_270: 140, FURNACE_LIT: 141, FURNACE_LIT_90: 142, FURNACE_LIT_180: 143, FURNACE_LIT_270: 144, TORCH: 145, TORCH_WALL: 146, TORCH_WALL_90: 147, TORCH_WALL_180: 148, TORCH_WALL_270: 149, COAL_ORE: 150, COAL_BLOCK: 151 };
+var T_MAX = T.COAL_BLOCK;
 var BLOCK_NAMES = { 1: "Areia ocre", 2: "Areia \xFAmida", 3: "Rocha escura", 4: "Gelo fosco", 5: "Lago escuro", 6: "Rocha-m\xE3e", 7: "Lanterna da margem", 8: "Rocha com veio", 9: "Gelo com veio", 10: "Mesa de Trabalho", 11: "Brasa de \xE2mbar", 12: "Laje de rocha", 13: "Mesa de Trabalho", 14: "Mesa de Trabalho", 15: "Mesa de Trabalho", 16: "Laje de rocha", 17: "Laje dupla de rocha", 18: "Marco de Margem", 19: "Marco de Margem", 20: "Marco de Margem", 21: "Marco de Margem", 22: "Painel de Junco", 23: "Painel de Junco", 24: "Veio de Cobre de Duna", 25: "Braseiro de Rocha", 26: "Braseiro de Rocha (aceso)", 27: "Revestimento de Carapa\xE7a", 28: "Veio de \xC2mbar", 29: "Bloco de \xC2mbar Compactado", 30: "Esteira de Junco", 31: "Escada de Junco", 32: "Escada de Junco", 33: "Escada de Junco", 34: "Escada de Junco", 35: "Ba\xFA de Rocha e Junco", 36: "Ba\xFA de Rocha e Junco", 37: "Ba\xFA de Rocha e Junco", 38: "Ba\xFA de Rocha e Junco", 39: "Cama de Junco", 40: "Cama de Junco", 41: "Cama de Junco", 42: "Cama de Junco", 43: "Cama de Junco", 44: "Cama de Junco", 45: "Cama de Junco", 46: "Cama de Junco", 47: "Bloco de Junco", 48: "Laje de Junco", 49: "Laje de Junco", 50: "Degrau de Junco", 51: "Degrau de Junco", 52: "Degrau de Junco", 53: "Degrau de Junco", 54: "Cadeira de Junco", 55: "Cadeira de Junco", 56: "Cadeira de Junco", 57: "Cadeira de Junco" };
 for (let id = T.DOOR; id <= T.DOOR_LAST; id++) BLOCK_NAMES[id] = "Porta de Junco";
 for (let t = 0; t < 4; t++) {
@@ -150,6 +152,8 @@ for (let t = 0; t < 4; t++) {
   BLOCK_NAMES[T.FURNACE_LIT + t] = "Fornalha acesa";
 }
 for (let id = T.TORCH; id <= T.TORCH_WALL_270; id++) BLOCK_NAMES[id] = "Tocha";
+BLOCK_NAMES[T.COAL_ORE] = "Min\xE9rio de Carv\xE3o";
+BLOCK_NAMES[T.COAL_BLOCK] = "Bloco de Carv\xE3o";
 Object.assign(BLOCK_NAMES, { 90: "Terra com Grama", 91: "Terra", 92: "Pedra", 93: "Areia da Praia", 94: "Tora de Carvalho", 95: "Folhas de Carvalho", 96: "Tora de Cerejeira", 97: "Folhas de Cerejeira", 98: "Tora de B\xE9tula", 99: "Folhas de B\xE9tula" });
 Object.assign(BLOCK_NAMES, { 100: "T\xE1buas de Carvalho", 101: "T\xE1buas de Cerejeira", 102: "T\xE1buas de B\xE9tula", 103: "Mesa de Carpintaria", 104: "Mesa de Carpintaria", 105: "Mesa de Carpintaria", 106: "Mesa de Carpintaria" });
 var isCarpentry = (id) => id >= T.CARPENTRY && id <= T.CARPENTRY_270;
@@ -369,6 +373,8 @@ BLOCK_TILES[T.PATH] = ot("caminho-topo", "caminho-lateral", "terra");
 BLOCK_TILES[T.DIRT_INFERTILE] = ot("terra-infertil");
 BLOCK_TILES[T.CLAY_BLOCK] = ot("bloco-argila");
 BLOCK_TILES[T.BRICK_BLOCK] = ot("bloco-tijolos");
+BLOCK_TILES[T.COAL_ORE] = ot("minerio-carvao");
+BLOCK_TILES[T.COAL_BLOCK] = ot("bloco-carvao");
 for (let t = 0; t < 8; t++) BLOCK_TILES[T.FURNACE + t] = ot("fornalha-topo", "fornalha-lateral", "fornalha-topo");
 for (let t = 0; t < 4; t++) BLOCK_TILES[T.CARPENTRY + t] = [tileIndex("orvalis/mesa-topo"), tileIndex("orvalis/mesa-lateral"), tileIndex("orvalis/tabua-carvalho")];
 BLOCK_TILES[T.REED_BLOCK] = faces3("21-bloco-de-junco");
@@ -401,7 +407,7 @@ function hoeResult(v, block, x, y, z) {
 var shovelResult = (block) => block === T.GRASS || block === T.DIRT ? T.PATH : null;
 
 // src/titan/items.ts
-var Item = { SAND: 1, DAMP_SAND: 2, DARK_ROCK: 3, FROST: 4, ROCK_SHARD: 5, FROST_SHARD: 6, CAPSULE: 7, LANTERN: 8, WORKBENCH: 9, ICE_LENS: 10, EMBER: 11, GLASS_REED: 12, SLAB: 13, MARCO: 14, PAINEL: 15, NOZ: 16, COPPER_SHARD: 17, COPPER_INGOT: 18, DRY_REED: 19, STONE_PICK: 20, BRAZIER: 21, STONE_DAGGER: 22, COPPER_PICK: 23, COPPER_DAGGER: 24, PLATE: 25, CARAPACE: 26, RAW_MEAT: 27, COOKED_MEAT: 28, EMBER_BLOCK: 29, NOZ_TORRADA: 30, ESTEIRA: 31, ESCADA: 32, BAU: 33, CAMA: 34, BALDE: 35, BALDE_CHEIO: 36, BLOCO_JUNCO: 37, LAJE_JUNCO: 38, DEGRAU_JUNCO: 39, CADEIRA_JUNCO: 40, PORTA_JUNCO: 41, GRASS: 42, DIRT: 43, STONE: 44, BEACH: 45, LOG_OAK: 46, LEAVES_OAK: 47, LOG_CHERRY: 48, LEAVES_CHERRY: 49, LOG_BIRCH: 50, LEAVES_BIRCH: 51, TABUA_CARVALHO: 52, TABUA_CEREJEIRA: 53, TABUA_BETULA: 54, HASTE: 55, MESA_CARPINTARIA: 56, PEDRA_LISA: 57, TIJOLO_PEDRA: 58, LAJE_PEDRA: 59, DEGRAU_PEDRA: 60, MURETA_PEDRA: 61, TERRA_ARADA_SECA: 62, TERRA_ARADA_UMIDA: 63, CAMINHO_TERRA: 64, TERRA_INFERTIL: 65, BLOCO_ARGILA: 66, BLOCO_TIJOLOS: 67, BOLA_ARGILA: 68, TIJOLO: 69, PICARETA_MADEIRA: 70, PICARETA_PEDRA: 71, MACHADO_MADEIRA: 72, MACHADO_PEDRA: 73, PA_MADEIRA: 74, PA_PEDRA: 75, ENXADA_MADEIRA: 76, ENXADA_PEDRA: 77, SEMENTE_TRIGO: 78, TRIGO: 79, CENOURA: 80, BATATA: 81, TOMATE: 82, FORNALHA: 83, CARVAO_VEGETAL: 84, TOCHA: 85 };
+var Item = { SAND: 1, DAMP_SAND: 2, DARK_ROCK: 3, FROST: 4, ROCK_SHARD: 5, FROST_SHARD: 6, CAPSULE: 7, LANTERN: 8, WORKBENCH: 9, ICE_LENS: 10, EMBER: 11, GLASS_REED: 12, SLAB: 13, MARCO: 14, PAINEL: 15, NOZ: 16, COPPER_SHARD: 17, COPPER_INGOT: 18, DRY_REED: 19, STONE_PICK: 20, BRAZIER: 21, STONE_DAGGER: 22, COPPER_PICK: 23, COPPER_DAGGER: 24, PLATE: 25, CARAPACE: 26, RAW_MEAT: 27, COOKED_MEAT: 28, EMBER_BLOCK: 29, NOZ_TORRADA: 30, ESTEIRA: 31, ESCADA: 32, BAU: 33, CAMA: 34, BALDE: 35, BALDE_CHEIO: 36, BLOCO_JUNCO: 37, LAJE_JUNCO: 38, DEGRAU_JUNCO: 39, CADEIRA_JUNCO: 40, PORTA_JUNCO: 41, GRASS: 42, DIRT: 43, STONE: 44, BEACH: 45, LOG_OAK: 46, LEAVES_OAK: 47, LOG_CHERRY: 48, LEAVES_CHERRY: 49, LOG_BIRCH: 50, LEAVES_BIRCH: 51, TABUA_CARVALHO: 52, TABUA_CEREJEIRA: 53, TABUA_BETULA: 54, HASTE: 55, MESA_CARPINTARIA: 56, PEDRA_LISA: 57, TIJOLO_PEDRA: 58, LAJE_PEDRA: 59, DEGRAU_PEDRA: 60, MURETA_PEDRA: 61, TERRA_ARADA_SECA: 62, TERRA_ARADA_UMIDA: 63, CAMINHO_TERRA: 64, TERRA_INFERTIL: 65, BLOCO_ARGILA: 66, BLOCO_TIJOLOS: 67, BOLA_ARGILA: 68, TIJOLO: 69, PICARETA_MADEIRA: 70, PICARETA_PEDRA: 71, MACHADO_MADEIRA: 72, MACHADO_PEDRA: 73, PA_MADEIRA: 74, PA_PEDRA: 75, ENXADA_MADEIRA: 76, ENXADA_PEDRA: 77, SEMENTE_TRIGO: 78, TRIGO: 79, CENOURA: 80, BATATA: 81, TOMATE: 82, FORNALHA: 83, CARVAO_VEGETAL: 84, TOCHA: 85, CARVAO: 87, BLOCO_CARVAO: 88 };
 var ITEM_NAMES = {
   1: "Areia ocre",
   2: "Areia \xFAmida",
@@ -445,19 +451,20 @@ var ITEM_NAMES = {
   40: "Cadeira de Junco",
   41: "Porta de Junco"
 };
-var ORVALIS_ITEM_BLOCKS = { [Item.GRASS]: T.GRASS, [Item.DIRT]: T.DIRT, [Item.STONE]: T.STONE, [Item.BEACH]: T.BEACH, [Item.LOG_OAK]: T.LOG_OAK, [Item.LEAVES_OAK]: T.LEAVES_OAK, [Item.LOG_CHERRY]: T.LOG_CHERRY, [Item.LEAVES_CHERRY]: T.LEAVES_CHERRY, [Item.LOG_BIRCH]: T.LOG_BIRCH, [Item.LEAVES_BIRCH]: T.LEAVES_BIRCH, [Item.TABUA_CARVALHO]: T.PLANKS_OAK, [Item.TABUA_CEREJEIRA]: T.PLANKS_CHERRY, [Item.TABUA_BETULA]: T.PLANKS_BIRCH, [Item.MESA_CARPINTARIA]: T.CARPENTRY, [Item.PEDRA_LISA]: T.STONE_SMOOTH, [Item.TIJOLO_PEDRA]: T.STONE_BRICK, [Item.LAJE_PEDRA]: T.STONE_SLAB, [Item.TERRA_ARADA_SECA]: T.FARMLAND_DRY, [Item.TERRA_ARADA_UMIDA]: T.FARMLAND_WET, [Item.CAMINHO_TERRA]: T.PATH, [Item.TERRA_INFERTIL]: T.DIRT_INFERTILE, [Item.BLOCO_ARGILA]: T.CLAY_BLOCK, [Item.BLOCO_TIJOLOS]: T.BRICK_BLOCK, [Item.FORNALHA]: T.FURNACE, [Item.TOCHA]: T.TORCH };
-var ORVALIS_BLOCK_ITEMS = { ...Object.fromEntries(Object.entries(ORVALIS_ITEM_BLOCKS).map(([item, block]) => [block, Number(item)])), ...Object.fromEntries(Array.from({ length: 8 }, (_, t) => [T.FURNACE + t, Item.FORNALHA])), ...Object.fromEntries(Array.from({ length: 5 }, (_, t) => [T.TORCH + t, Item.TOCHA])) };
+var ORVALIS_ITEM_BLOCKS = { [Item.GRASS]: T.GRASS, [Item.DIRT]: T.DIRT, [Item.STONE]: T.STONE, [Item.BEACH]: T.BEACH, [Item.LOG_OAK]: T.LOG_OAK, [Item.LEAVES_OAK]: T.LEAVES_OAK, [Item.LOG_CHERRY]: T.LOG_CHERRY, [Item.LEAVES_CHERRY]: T.LEAVES_CHERRY, [Item.LOG_BIRCH]: T.LOG_BIRCH, [Item.LEAVES_BIRCH]: T.LEAVES_BIRCH, [Item.TABUA_CARVALHO]: T.PLANKS_OAK, [Item.TABUA_CEREJEIRA]: T.PLANKS_CHERRY, [Item.TABUA_BETULA]: T.PLANKS_BIRCH, [Item.MESA_CARPINTARIA]: T.CARPENTRY, [Item.PEDRA_LISA]: T.STONE_SMOOTH, [Item.TIJOLO_PEDRA]: T.STONE_BRICK, [Item.LAJE_PEDRA]: T.STONE_SLAB, [Item.TERRA_ARADA_SECA]: T.FARMLAND_DRY, [Item.TERRA_ARADA_UMIDA]: T.FARMLAND_WET, [Item.CAMINHO_TERRA]: T.PATH, [Item.TERRA_INFERTIL]: T.DIRT_INFERTILE, [Item.BLOCO_ARGILA]: T.CLAY_BLOCK, [Item.BLOCO_TIJOLOS]: T.BRICK_BLOCK, [Item.FORNALHA]: T.FURNACE, [Item.TOCHA]: T.TORCH, [Item.BLOCO_CARVAO]: T.COAL_BLOCK };
+var ORVALIS_BLOCK_ITEMS = { ...Object.fromEntries(Object.entries(ORVALIS_ITEM_BLOCKS).map(([item, block]) => [block, Number(item)])), ...Object.fromEntries(Array.from({ length: 8 }, (_, t) => [T.FURNACE + t, Item.FORNALHA])), ...Object.fromEntries(Array.from({ length: 5 }, (_, t) => [T.TORCH + t, Item.TOCHA])), [T.COAL_ORE]: Item.CARVAO };
 for (const [item, block] of Object.entries(ORVALIS_ITEM_BLOCKS)) ITEM_NAMES[Number(item)] = BLOCK_NAMES[block];
 Object.assign(ITEM_NAMES, { 70: "Picareta de Madeira", 71: "Picareta de Pedra", 72: "Machado de Madeira", 73: "Machado de Pedra", 74: "P\xE1 de Madeira", 75: "P\xE1 de Pedra", 76: "Enxada de Madeira", 77: "Enxada de Pedra" });
 Object.assign(ITEM_NAMES, { 78: "Semente de Trigo", 79: "Trigo", 80: "Cenoura", 81: "Batata", 82: "Tomate" });
 ITEM_NAMES[Item.CARVAO_VEGETAL] = "Carv\xE3o Vegetal";
+ITEM_NAMES[Item.CARVAO] = "Carv\xE3o";
 ITEM_NAMES[Item.BOLA_ARGILA] = "Bola de Argila";
 ITEM_NAMES[Item.TIJOLO] = "Tijolo";
 ITEM_NAMES[Item.MURETA_PEDRA] = "Mureta de Pedra";
 ITEM_NAMES[Item.DEGRAU_PEDRA] = "Degrau de Pedra";
 ITEM_NAMES[Item.HASTE] = "Haste de Madeira";
 var maxStack = (item) => item === Item.CAPSULE || item === Item.LANTERN || item === Item.WORKBENCH || isBucket(item) || isTool(item) ? 1 : 64;
-var isItem = (n) => Number.isInteger(n) && n >= 1 && n <= 85;
+var isItem = (n) => Number.isInteger(n) && n >= 1 && n <= 88 && n !== 86;
 var isBucket = (item) => item === Item.BALDE || item === Item.BALDE_CHEIO;
 function blockOfItem(item) {
   if (item >= Item.SAND && item <= Item.FROST) return item;
@@ -649,6 +656,10 @@ var RECIPES = [
   { id: "carvao-betula", name: "Carv\xE3o Vegetal (tora de b\xE9tula)", group: "materiais", result: { item: Item.CARVAO_VEGETAL, count: 1 }, ingredients: [{ item: Item.LOG_BIRCH, count: 1 }], station: "furnace", world: "orvalis" },
   { id: "tocha", name: "Tocha", group: "utilidades", result: { item: Item.TOCHA, count: 4 }, ingredients: [{ item: Item.CARVAO_VEGETAL, count: 1 }, { item: Item.HASTE, count: 1 }], station: "personal", world: "orvalis" },
   // Wiki: carvão (vegetal) + graveto → 4 (ADR 0121)
+  { id: "tocha-carvao", name: "Tocha (carv\xE3o)", group: "utilidades", result: { item: Item.TOCHA, count: 4 }, ingredients: [{ item: Item.CARVAO, count: 1 }, { item: Item.HASTE, count: 1 }], station: "personal", world: "orvalis" },
+  // Wiki: carvão ou carvão vegetal (ADR 0122)
+  { id: "bloco-carvao", name: "Bloco de Carv\xE3o", group: "construcao", result: { item: Item.BLOCO_CARVAO, count: 1 }, ingredients: [{ item: Item.CARVAO, count: 9 }], station: "workbench", world: "orvalis" },
+  { id: "carvao-do-bloco", name: "Carv\xE3o (do bloco)", group: "materiais", result: { item: Item.CARVAO, count: 9 }, ingredients: [{ item: Item.BLOCO_CARVAO, count: 1 }], station: "personal", world: "orvalis" },
   { id: "laje-pedra", name: "Laje de Pedra", group: "construcao", result: { item: Item.LAJE_PEDRA, count: 6 }, ingredients: [{ item: Item.PEDRA_LISA, count: 3 }], station: "workbench", world: "orvalis" }
 ];
 var stationMet = (r, at) => r.station === "personal" || r.station === at;
@@ -667,6 +678,8 @@ var FUEL_TIME_S = {
   // Titã (braseiro)
   // Orvalis (Fornalha, ADR 0120): segundos de queima da Minecraft Wiki — carvão vegetal 80, tora/tábuas/Mesa de Carpintaria 15, haste 5 (os itens dos dois mundos nunca se misturam, ADR 0114)
   [Item.CARVAO_VEGETAL]: 80,
+  [Item.CARVAO]: 80,
+  [Item.BLOCO_CARVAO]: 800,
   [Item.LOG_OAK]: 15,
   [Item.LOG_CHERRY]: 15,
   [Item.LOG_BIRCH]: 15,
@@ -761,8 +774,8 @@ function furnaceFromData(d, rules = BRAZIER_RULES) {
   f.input = i && accepts("input", i.item, rules.station) ? i : null;
   f.fuel = fu && accepts("fuel", fu.item) ? fu : null;
   f.output = unpack(o.o);
-  f.burnTotal = num(o.t, 0, 600);
-  f.burnLeft = Math.min(num(o.b, 0, 600), f.burnTotal);
+  f.burnTotal = num(o.t, 0, 800);
+  f.burnLeft = Math.min(num(o.b, 0, 800), f.burnTotal);
   f.cook = num(o.c, 0, COOK_TIME_S);
   return f;
 }
@@ -2048,7 +2061,8 @@ function breakOrCollectBlock(s, hit) {
   if (direct && !s.inventory.canAdd(item, count)) return FULL;
   if (!s.volume.remove(x, y, z)) return { ok: false };
   if (direct) s.inventory.add(item, count);
-  else spillBlock(s, item, count, x, y, z);
+  else if (block === T.COAL_ORE && !isPick(s.inventory.get(s.selected)?.item)) {
+  } else spillBlock(s, item, count, x, y, z);
   if (block === T.GRASS) {
     const seed = wildSeedAt(x, y, z);
     if (seed !== null) spillBlock(s, seed, 1, x, y, z);
