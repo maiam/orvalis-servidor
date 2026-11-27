@@ -174,7 +174,7 @@ test('a sala 102 abre pelo WebSocket com o mundo do Orvalis e a seed da sala', a
   const a = client(url); await a.open;
   a.send({ t: 'hello', v: net.TITAN_PROTOCOL_VERSION, name: 'Ana', room: 102 });
   const w = await a.wait((m) => m.t === 'welcome');
-  assert.equal(w.header.world, 'orvalis'); assert.equal(w.header.seed, 20261127);
+  assert.equal(w.header.world, 'orvalis'); assert.equal(w.header.seed, net.TITAN_ROOMS.find((r) => r.id === 102).seed); assert.equal(w.header.generatorVersion, 100); // a sala 102 é a Aldeia da Costa (ADR 0142 do jogo)
   assert.equal(s.rooms.get(102).room.size, 1); assert.equal(s.rooms.get(101).room.size, 0);
   a.ws.close(); await s.close();
 });
