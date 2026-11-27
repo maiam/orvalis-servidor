@@ -3,26 +3,19 @@
 Servidor do **Orvalis** (multiplayer co-op; depois contas e nuvem). O jogo fica em `maiam/mundoblocos-2d`
 (`orvalis.pensamentos.online`); este é só o backend (ADRs 0015 e 0016 do jogo).
 
-**Etapa atual: salas fixas (protocolo 8).** Salas por número (`ROOMS` do jogo; hoje só a Sala 1), até 10 jogadores ao
-mesmo tempo, entrada só com nome, sem combate entre jogadores. Cada sala é um mundo compartilhado **salvo em disco**:
-o que se faz nela, os baús e a bolsa de cada jogador (pelo nome) ficam guardados para a próxima entrada; os itens no
-chão são da sala (quem pega primeiro leva). O servidor é autoritativo: as regras são as do jogo, vindas de `vendor/orvalis-net.cjs`
-(a classe `Room` do jogo, empacotada — **nunca edite à mão**; atualize com `npm run sync-net`).
+**Salas do Titã (ADR 0104 e 0115 do jogo).** As salas fixas são as `TITAN_ROOMS` do jogo (hoje **Titã 1**, número 101): salas **cooperativas de sobrevivência** do mundo Titã (`?mundo=titan`), até 10 jogadores ao mesmo tempo, entrada só com nome, sem combate entre jogadores. Cada sala é um mundo compartilhado **salvo em disco**: o que se faz nela, os baús, braseiros e a bolsa de cada jogador (pelo nome) ficam guardados para a próxima entrada; os itens no chão são da sala (quem pega primeiro leva). O servidor é autoritativo: as regras são as do jogo, vindas de `vendor/orvalis-net.cjs` (a `TitanRoom` do jogo, empacotada — **nunca edite à mão**; atualize com `npm run sync-net`). Protocolo: `TITAN_PROTOCOL_VERSION` (`src/net/titan/protocol.ts` no jogo); relógio de 10×/s com passo limitado a 0,25 s; gravação em `sala-101.json`.
 
-**Salas do Titã (v0.29.0, ADR 0104 do jogo):** `TITAN_ROOMS` (hoje **Titã 1**, número 101) são salas **cooperativas de sobrevivência** do mundo Titã
-(`?mundo=titan`): outro motor (voxel) e outro protocolo (`TITAN_PROTOCOL_VERSION`, `src/net/titan/protocol.ts` no jogo), com a `TitanRoom` do mesmo
-pacote. Mesmo `/ws`: o **primeiro `hello`** decide o protocolo da conexão (sala ≥ 100 = Titã); mesmos limites, origens, tick de 10×/s (o do Titã
-limita o passo a 0,25 s) e gravação em disco (`sala-101.json`). `/salas` e `/saude` listam também a sala do Titã.
+> **As salas 1 e 2 do Orvalis 2.5D (Sala 1 e Santuário) saíram** com o jogo 2.5D (v0.183.0 do jogo, ADR 0115): o servidor não as abre mais. Os arquivos `sala-1.json` e `sala-2.json` antigos ficam no disco, sem uso.
 
 | Rota | O que faz |
 |---|---|
 | `GET /` | Página de teste: entrar numa sala pelo número e ver quem está nela |
 | `GET /salas` | JSON `[{ numero, nome, jogadores, maximo }]` (o menu do jogo mostra) |
 | `GET /saude` | JSON `{ ok, protocolo, pacote, salas, jogadores, segundosNoAr, dados }` (`dados`: pasta, última gravação, se cada sala veio do disco) |
-| `WS /ws` | Protocolo do jogo (`src/net/protocol.ts` no jogo) |
+| `WS /ws` | Protocolo do Titã (`src/net/titan/protocol.ts` no jogo) |
 
 Limites: 16 kB por mensagem; 40 mensagens/s por conexão (acima são ignoradas; acima de 200/s a conexão cai).
-Origens permitidas: o jogo, o Santuário, este servidor e `localhost:5173` (troque com `ALLOWED_ORIGINS`,
+Origens permitidas: o jogo, este servidor e `localhost:5173` (troque com `ALLOWED_ORIGINS`,
 lista separada por vírgula). **Dados**: um arquivo `sala-<n>.json` por sala em `DATA_DIR` (padrão `~/orvalis-dados`, fora
 da pasta do código, que o deploy troca), gravado a cada 15 s quando algo mudou e ao desligar; carregado ao ligar. **Cópia de segurança:** antes da primeira regravação feita por um pacote novo do jogo, o arquivo que estava lá vira `sala-<n>.json.antes-<versão>-<commit>.bak` (uma por pacote, nunca sobrescrita) — a rede de segurança das migrações (formato e grade fina, ADR 0032 do jogo). Arquivo gravado numa grade **mais fina** que a do pacote não é aberto (a sala começa limpa) e o arquivo continua intacto até alguém mexer na sala.
 
@@ -31,7 +24,7 @@ da pasta do código, que o deploy troca), gravado a cada 15 s quando algo mudou 
 npm ci
 npm start      # http://localhost:3000 (ou a porta de PORT)
 npm test
-npm run sync-net -- ../mundoblocos-2d   # atualiza o pacote do jogo (rode depois de mudar src/net ou src/world lá)
+npm run sync-net -- ../mundoblocos-2d   # atualiza o pacote do jogo (rode depois de mudar `src/net/titan` ou as regras do Titã lá)
 ```
 
 ## Hospedagem (Hostinger, app web Node.js)
@@ -50,5 +43,5 @@ Subdomínio: `orvalis-servidor.pensamentos.online` (provisório até o domínio 
 código), abrir outra aba, digitar o código e entrar — as duas abas mostram os dois nomes.
 
 ## Regras
-- Sem dependência do maiamapps. Regras do jogo não são copiadas: virão do código `src/world/` do jogo (próximas etapas).
+- Sem dependência do maiamapps. Regras do jogo não são copiadas: vêm do código `src/titan/` do jogo, empacotado em `vendor/`.
 - Publicação: PR para `main` → Verificação (GitHub Actions) verde → mesclar (método *merge*).

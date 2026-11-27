@@ -1,12 +1,12 @@
-// Servidor do Orvalis (ADRs 0016 e 0020 do jogo): salas fixas (`ROOMS`), cada uma um mundo compartilhado e salvo em
-// disco, abertas a quem quiser entrar a qualquer hora. A sala em si (regras, jogadores, mundo, bolsas) é o `Room` do
-// jogo, empacotado em vendor/orvalis-net.cjs — aqui só há rede, relógio e disco:
-// WebSocket → mensagem lida com `parseClientMessage` → `Room` → mensagens entregues a quem deve receber.
+// Servidor do Orvalis (ADRs 0016, 0020, 0104 e 0115 do jogo): salas fixas do Titã (`TITAN_ROOMS`), cada uma um mundo compartilhado e
+// salvo em disco, abertas a quem quiser entrar a qualquer hora. A sala em si (regras, jogadores, mundo, bolsas) é a `TitanRoom` do
+// jogo, empacotada em vendor/orvalis-net.cjs — aqui só há rede, relógio e disco:
+// WebSocket → mensagem lida com `parseTitanClientMessage` → `TitanRoom` → mensagens entregues a quem deve receber.
+// (As salas 1 e 2 do Orvalis 2.5D saíram com o jogo 2.5D, v0.183.0 do jogo; os arquivos `sala-1.json` e `sala-2.json` antigos ficam no disco, sem uso.)
 // GET /        → página de teste (entra numa sala e mostra o que chega)
 // GET /saude   → JSON com estado
 // GET /salas   → lista das salas com quantos estão em cada uma (o menu do jogo mostra)
-// WS  /ws      → protocolo do jogo (src/net/protocol.ts); salas do Titã (número >= 100, `TITAN_ROOMS`) falam o protocolo
-//                próprio do Titã (src/net/titan/protocol.ts) com a `TitanRoom` — a sala é decidida pelo primeiro `hello`
+// WS  /ws      → protocolo do Titã (src/net/titan/protocol.ts) com a `TitanRoom`; a sala é decidida pelo primeiro `hello`
 // Porta: process.env.PORT (a Hostinger define) ou 3000. CommonJS de propósito: o carregador de apps Node.js da
 // hospedagem chama o arquivo de entrada com require().
 const { createServer } = require('node:http');
@@ -33,7 +33,6 @@ const MSG_KICK = 200;
  */
 const DEFAULT_ORIGINS = [
   'https://orvalis.pensamentos.online',
-  'https://santuario.orvalis.pensamentos.online',
   'https://orvalis-servidor.pensamentos.online',
   'http://localhost:5173',
   'http://127.0.0.1:5173',
@@ -47,20 +46,12 @@ function startServer(port = Number(process.env.PORT) || 3000, options = {}) {
   /** Salas fixas, abertas desde o início e nunca fechadas: número → { room, sockets: Map<id, ws> }. */
   const rooms = new Map();
   const loaded = {};
-  for (const def of net.ROOMS) {
-    const room = new net.Room(def.id, def.name, def.seed);
-    const snap = store.load(def.id);
-    loaded[def.id] = !!snap && room.restore(snap);
-    // Limite de 2 níveis de blocos: salas antigas perdem o 3º nível ao carregar (a sala regrava limpa).
-    if (room.droppedOnRestore) console.warn(`sala ${def.id}: ${room.droppedOnRestore} blocos do 3º nível descartados ao carregar`);
-    rooms.set(def.id, { room, sockets: new Map() });
-  }
-  // Salas do Titã (ADR 0104 do jogo): outro motor (voxel) e outro protocolo; mesmas regras de rede, relógio e disco.
+  // Salas do Titã (ADR 0104 do jogo): motor voxel; regras de rede, relógio e disco daqui.
   for (const def of net.TITAN_ROOMS) {
     const room = new net.TitanRoom(def.id, def.name, def.seed);
     const snap = store.load(def.id);
     loaded[def.id] = !!snap && room.restore(snap);
-    rooms.set(def.id, { room, sockets: new Map(), titan: true });
+    rooms.set(def.id, { room, sockets: new Map() });
   }
   let lastSave = null;
   const saveAll = (force = false) => {
@@ -85,7 +76,7 @@ function startServer(port = Number(process.env.PORT) || 3000, options = {}) {
       let jogadores = 0;
       for (const r of rooms.values()) jogadores += r.room.size;
       json({
-        ok: true, protocolo: net.PROTOCOL_VERSION, pacote: PACKAGE, salas: rooms.size, jogadores,
+        ok: true, protocolo: net.TITAN_PROTOCOL_VERSION, pacote: PACKAGE, salas: rooms.size, jogadores,
         segundosNoAr: Math.round((Date.now() - started) / 1000),
         dados: {
           pasta: store.dir, ultimaGravacao: lastSave,
@@ -95,7 +86,7 @@ function startServer(port = Number(process.env.PORT) || 3000, options = {}) {
       return;
     }
     if (url.pathname === '/salas') {
-      json([...rooms.values()].map(({ room }) => ({ numero: room.id, nome: room.name, jogadores: room.size, maximo: net.MAX_PLAYERS })));
+      json([...rooms.values()].map(({ room }) => ({ numero: room.id, nome: room.name, jogadores: room.size, maximo: net.TITAN_MAX_PLAYERS })));
       return;
     }
     if (url.pathname === '/' || url.pathname === '/teste.html') {
@@ -129,7 +120,6 @@ function startServer(port = Number(process.env.PORT) || 3000, options = {}) {
     ws.on('pong', () => { ws.isAlive = true; });
     let entry = null;
     let id = null;
-    let parse = null; // analisador da conexão: o do Titã ou o do mundo principal, decidido pelo primeiro `hello`
     let windowStart = Date.now();
     let count = 0;
 
@@ -139,12 +129,7 @@ function startServer(port = Number(process.env.PORT) || 3000, options = {}) {
       if (++count > MSG_KICK) { ws.close(1008, 'mensagens demais'); return; }
       if (count > MSG_PER_SEC) return;
       const text = String(data);
-      if (parse === null) {
-        let first = null;
-        try { first = JSON.parse(text); } catch { /* texto que não é JSON: o analisador do jogo responde `bad` */ }
-        parse = first && first.t === 'hello' && net.titanRoomById(first.room) ? net.parseTitanClientMessage : net.parseClientMessage;
-      }
-      const m = parse(text);
+      const m = net.parseTitanClientMessage(text);
       if (!m) { sendTo(ws, { t: 'error', code: 'bad', message: 'Mensagem inválida.' }); return; }
       if (id === null) {
         if (m.t !== 'hello') return;
@@ -175,7 +160,7 @@ function startServer(port = Number(process.env.PORT) || 3000, options = {}) {
     const now = Date.now();
     const dt = Math.min(5, (now - last) / 1000); // servidor pausado/atrasado: não pula dias de uma vez
     last = now;
-    for (const entry of rooms.values()) route(entry, null, entry.room.tick(entry.titan ? Math.min(dt, 0.25) : dt)); // o Titã não dá saltos de tempo (bichos e braseiros): servidor atrasado perde o tempo parado
+    for (const entry of rooms.values()) route(entry, null, entry.room.tick(Math.min(dt, 0.25))); // o Titã não dá saltos de tempo (bichos e braseiros): servidor atrasado perde o tempo parado
   }, TICK_MS);
   // Disco: grava as salas que mudaram de tempos em tempos e ao desligar.
   const saver = setInterval(() => saveAll(), SAVE_EVERY_MS);
