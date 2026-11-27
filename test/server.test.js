@@ -77,14 +77,16 @@ test('cópia de segurança: a primeira regravação de cada pacote guarda o arqu
 const TITAN_Y = 150;
 const titanHello = (name, v = net.TITAN_PROTOCOL_VERSION) => ({ t: 'hello', v, name, room: 101 });
 
-test('/salas e /saude listam as salas do Titã (e só elas)', async () => {
+test('/salas e /saude listam as salas fixas do jogo (Titã e Orvalis, e só elas)', async () => {
   const { s, port } = await boot();
   const salas = await (await fetch(`http://127.0.0.1:${port}/salas`)).json();
   assert.deepEqual(salas.map((x) => x.numero), net.TITAN_ROOMS.map((r) => r.id));
   const tita = salas.find((x) => x.numero === 101);
   assert.equal(tita.nome, 'Titã 1'); assert.equal(tita.jogadores, 0); assert.equal(tita.maximo, net.TITAN_MAX_PLAYERS);
+  assert.equal(salas.find((x) => x.numero === 102).nome, 'Orvalis 1');
   const saude = await (await fetch(`http://127.0.0.1:${port}/saude`)).json();
-  assert.ok(101 in saude.dados.salas);
+  assert.ok(101 in saude.dados.salas); assert.ok(102 in saude.dados.salas);
+  assert.equal(s.rooms.get(102).room.world.volume.gen.world, 'orvalis'); assert.equal(s.rooms.get(101).room.world.volume.gen.world, 'titan'); // cada sala com o gerador do seu mundo
   await s.close();
 });
 
@@ -166,3 +168,13 @@ test('Titã: mensagem do protocolo do 2.5D (removido) é recusada e a sala 1 ant
   await s.close();
 });
 
+
+test('a sala 102 abre pelo WebSocket com o mundo do Orvalis e a seed da sala', async () => {
+  const { s, url } = await boot();
+  const a = client(url); await a.open;
+  a.send({ t: 'hello', v: net.TITAN_PROTOCOL_VERSION, name: 'Ana', room: 102 });
+  const w = await a.wait((m) => m.t === 'welcome');
+  assert.equal(w.header.world, 'orvalis'); assert.equal(w.header.seed, 20261127);
+  assert.equal(s.rooms.get(102).room.size, 1); assert.equal(s.rooms.get(101).room.size, 0);
+  a.ws.close(); await s.close();
+});

@@ -1,4 +1,4 @@
-// Servidor do Orvalis (ADRs 0016, 0020, 0104 e 0115 do jogo): salas fixas do Titã (`TITAN_ROOMS`), cada uma um mundo compartilhado e
+// Servidor do Orvalis (ADRs 0016, 0020, 0104, 0115 e 0138 do jogo): salas fixas do Titã e do Orvalis (`TITAN_ROOMS`), cada uma um mundo compartilhado e
 // salvo em disco, abertas a quem quiser entrar a qualquer hora. A sala em si (regras, jogadores, mundo, bolsas) é a `TitanRoom` do
 // jogo, empacotada em vendor/orvalis-net.cjs — aqui só há rede, relógio e disco:
 // WebSocket → mensagem lida com `parseTitanClientMessage` → `TitanRoom` → mensagens entregues a quem deve receber.
@@ -46,9 +46,9 @@ function startServer(port = Number(process.env.PORT) || 3000, options = {}) {
   /** Salas fixas, abertas desde o início e nunca fechadas: número → { room, sockets: Map<id, ws> }. */
   const rooms = new Map();
   const loaded = {};
-  // Salas do Titã (ADR 0104 do jogo): motor voxel; regras de rede, relógio e disco daqui.
+  // Salas fixas (ADR 0104 e 0138 do jogo): motor voxel, uma por mundo (101 Titã, 102 Orvalis); regras de rede, relógio e disco daqui.
   for (const def of net.TITAN_ROOMS) {
-    const room = new net.TitanRoom(def.id, def.name, def.seed);
+    const room = new net.TitanRoom(def.id, def.name, def.seed, undefined, def.world); // o mundo da sala (Titã ou Orvalis) escolhe o gerador (ADR 0138 do jogo)
     const snap = store.load(def.id);
     loaded[def.id] = !!snap && room.restore(snap);
     rooms.set(def.id, { room, sockets: new Map() });
