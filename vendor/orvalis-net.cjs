@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.192.0 (e73a474) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.207.0 (f89af83) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -10,9 +10,9 @@ var __export = (target, all) => {
 };
 var __copyProps = (to, from, except, desc) => {
   if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+    for (let key2 of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key2) && key2 !== except)
+        __defProp(to, key2, { get: () => from[key2], enumerable: !(desc = __getOwnPropDesc(from, key2)) || desc.enumerable });
   }
   return to;
 };
@@ -128,7 +128,22 @@ var tiles_default = {
     "orvalis/fornalha-frente-apagada",
     "orvalis/fornalha-frente-acesa",
     "orvalis/minerio-carvao",
-    "orvalis/bloco-carvao"
+    "orvalis/bloco-carvao",
+    "orvalis/abobora-topo",
+    "orvalis/abobora-lateral",
+    "orvalis/melancia-topo",
+    "orvalis/melancia-lateral",
+    "orvalis/alga-seca",
+    "orvalis/coral-bloco-tubo-vivo",
+    "orvalis/coral-bloco-cerebro-vivo",
+    "orvalis/coral-bloco-bolha-vivo",
+    "orvalis/coral-bloco-fogo-vivo",
+    "orvalis/coral-bloco-chifre-vivo",
+    "orvalis/coral-bloco-tubo-morto",
+    "orvalis/coral-bloco-cerebro-morto",
+    "orvalis/coral-bloco-bolha-morto",
+    "orvalis/coral-bloco-fogo-morto",
+    "orvalis/coral-bloco-chifre-morto"
   ]
 };
 
@@ -138,13 +153,14 @@ var Y_MAX = 319;
 var SECTION = 16;
 var SECTIONS = (Y_MAX - Y_MIN + 1) / SECTION;
 var LAKE_LAST_Y = 63;
+var LAKE_SURFACE_Y = 64;
 var REGION_LEGACY = { min: -32, max: 32 };
 var REGION_V6 = { min: -64, max: 64 };
 var regionFor = (generatorVersion) => generatorVersion >= 6 ? REGION_V6 : REGION_LEGACY;
 var REGION_MIN = REGION_LEGACY.min;
 var REGION_MAX = REGION_LEGACY.max;
-var T = { AIR: 0, SAND: 1, DAMP_SAND: 2, DARK_ROCK: 3, FROST: 4, LAKE: 5, BEDROCK: 6, LANTERN: 7, VEIN_ROCK: 8, VEIN_FROST: 9, WORKBENCH: 10, EMBER: 11, SLAB: 12, WORKBENCH_90: 13, WORKBENCH_180: 14, WORKBENCH_270: 15, SLAB_TOP: 16, SLAB_DOUBLE: 17, MARCO: 18, MARCO_90: 19, MARCO_180: 20, MARCO_270: 21, PAINEL: 22, PAINEL_Z: 23, VEIN_COPPER: 24, BRAZIER: 25, BRAZIER_LIT: 26, CARAPACE: 27, EMBER_VEIN: 28, EMBER_BLOCK: 29, MAT: 30, LADDER: 31, LADDER_90: 32, LADDER_180: 33, LADDER_270: 34, CHEST: 35, CHEST_90: 36, CHEST_180: 37, CHEST_270: 38, BED: 39, BED_90: 40, BED_180: 41, BED_270: 42, BED_HEAD: 43, BED_HEAD_90: 44, BED_HEAD_180: 45, BED_HEAD_270: 46, REED_BLOCK: 47, REED_SLAB: 48, REED_SLAB_TOP: 49, REED_STAIR: 50, REED_STAIR_90: 51, REED_STAIR_180: 52, REED_STAIR_270: 53, REED_CHAIR: 54, REED_CHAIR_90: 55, REED_CHAIR_180: 56, REED_CHAIR_270: 57, DOOR: 58, DOOR_LAST: 89, GRASS: 90, DIRT: 91, STONE: 92, BEACH: 93, LOG_OAK: 94, LEAVES_OAK: 95, LOG_CHERRY: 96, LEAVES_CHERRY: 97, LOG_BIRCH: 98, LEAVES_BIRCH: 99, PLANKS_OAK: 100, PLANKS_CHERRY: 101, PLANKS_BIRCH: 102, CARPENTRY: 103, CARPENTRY_90: 104, CARPENTRY_180: 105, CARPENTRY_270: 106, STONE_SMOOTH: 107, STONE_BRICK: 108, STONE_SLAB: 109, STONE_SLAB_TOP: 110, STONE_STAIR: 111, STONE_STAIR_90: 112, STONE_STAIR_180: 113, STONE_STAIR_270: 114, STONE_WALL: 115, STONE_WALL_LAST: 130, FARMLAND_DRY: 131, FARMLAND_WET: 132, PATH: 133, DIRT_INFERTILE: 134, CLAY_BLOCK: 135, BRICK_BLOCK: 136, FURNACE: 137, FURNACE_90: 138, FURNACE_180: 139, FURNACE_270: 140, FURNACE_LIT: 141, FURNACE_LIT_90: 142, FURNACE_LIT_180: 143, FURNACE_LIT_270: 144, TORCH: 145, TORCH_WALL: 146, TORCH_WALL_90: 147, TORCH_WALL_180: 148, TORCH_WALL_270: 149, COAL_ORE: 150, COAL_BLOCK: 151 };
-var T_MAX = T.COAL_BLOCK;
+var T = { AIR: 0, SAND: 1, DAMP_SAND: 2, DARK_ROCK: 3, FROST: 4, LAKE: 5, BEDROCK: 6, LANTERN: 7, VEIN_ROCK: 8, VEIN_FROST: 9, WORKBENCH: 10, EMBER: 11, SLAB: 12, WORKBENCH_90: 13, WORKBENCH_180: 14, WORKBENCH_270: 15, SLAB_TOP: 16, SLAB_DOUBLE: 17, MARCO: 18, MARCO_90: 19, MARCO_180: 20, MARCO_270: 21, PAINEL: 22, PAINEL_Z: 23, VEIN_COPPER: 24, BRAZIER: 25, BRAZIER_LIT: 26, CARAPACE: 27, EMBER_VEIN: 28, EMBER_BLOCK: 29, MAT: 30, LADDER: 31, LADDER_90: 32, LADDER_180: 33, LADDER_270: 34, CHEST: 35, CHEST_90: 36, CHEST_180: 37, CHEST_270: 38, BED: 39, BED_90: 40, BED_180: 41, BED_270: 42, BED_HEAD: 43, BED_HEAD_90: 44, BED_HEAD_180: 45, BED_HEAD_270: 46, REED_BLOCK: 47, REED_SLAB: 48, REED_SLAB_TOP: 49, REED_STAIR: 50, REED_STAIR_90: 51, REED_STAIR_180: 52, REED_STAIR_270: 53, REED_CHAIR: 54, REED_CHAIR_90: 55, REED_CHAIR_180: 56, REED_CHAIR_270: 57, DOOR: 58, DOOR_LAST: 89, GRASS: 90, DIRT: 91, STONE: 92, BEACH: 93, LOG_OAK: 94, LEAVES_OAK: 95, LOG_CHERRY: 96, LEAVES_CHERRY: 97, LOG_BIRCH: 98, LEAVES_BIRCH: 99, PLANKS_OAK: 100, PLANKS_CHERRY: 101, PLANKS_BIRCH: 102, CARPENTRY: 103, CARPENTRY_90: 104, CARPENTRY_180: 105, CARPENTRY_270: 106, STONE_SMOOTH: 107, STONE_BRICK: 108, STONE_SLAB: 109, STONE_SLAB_TOP: 110, STONE_STAIR: 111, STONE_STAIR_90: 112, STONE_STAIR_180: 113, STONE_STAIR_270: 114, STONE_WALL: 115, STONE_WALL_LAST: 130, FARMLAND_DRY: 131, FARMLAND_WET: 132, PATH: 133, DIRT_INFERTILE: 134, CLAY_BLOCK: 135, BRICK_BLOCK: 136, FURNACE: 137, FURNACE_90: 138, FURNACE_180: 139, FURNACE_270: 140, FURNACE_LIT: 141, FURNACE_LIT_90: 142, FURNACE_LIT_180: 143, FURNACE_LIT_270: 144, TORCH: 145, TORCH_WALL: 146, TORCH_WALL_90: 147, TORCH_WALL_180: 148, TORCH_WALL_270: 149, COAL_ORE: 150, COAL_BLOCK: 151, MELON: 152, PUMPKIN: 153, SEAGRASS: 154, SEAGRASS_TALL: 155, SEAGRASS_TALL_TOP: 156, KELP: 157, KELP_TOP: 158, DRIED_KELP_BLOCK: 159, CORAL: 160, CORAL_FAN: 170, CORAL_BLOCK: 180 };
+var T_MAX = T.CORAL_BLOCK + 9;
 var BLOCK_NAMES = { 1: "Areia ocre", 2: "Areia \xFAmida", 3: "Rocha escura", 4: "Gelo fosco", 5: "Lago escuro", 6: "Rocha-m\xE3e", 7: "Lanterna da margem", 8: "Rocha com veio", 9: "Gelo com veio", 10: "Mesa de Trabalho", 11: "Brasa de \xE2mbar", 12: "Laje de rocha", 13: "Mesa de Trabalho", 14: "Mesa de Trabalho", 15: "Mesa de Trabalho", 16: "Laje de rocha", 17: "Laje dupla de rocha", 18: "Marco de Margem", 19: "Marco de Margem", 20: "Marco de Margem", 21: "Marco de Margem", 22: "Painel de Junco", 23: "Painel de Junco", 24: "Veio de Cobre de Duna", 25: "Braseiro de Rocha", 26: "Braseiro de Rocha (aceso)", 27: "Revestimento de Carapa\xE7a", 28: "Veio de \xC2mbar", 29: "Bloco de \xC2mbar Compactado", 30: "Esteira de Junco", 31: "Escada de Junco", 32: "Escada de Junco", 33: "Escada de Junco", 34: "Escada de Junco", 35: "Ba\xFA de Rocha e Junco", 36: "Ba\xFA de Rocha e Junco", 37: "Ba\xFA de Rocha e Junco", 38: "Ba\xFA de Rocha e Junco", 39: "Cama de Junco", 40: "Cama de Junco", 41: "Cama de Junco", 42: "Cama de Junco", 43: "Cama de Junco", 44: "Cama de Junco", 45: "Cama de Junco", 46: "Cama de Junco", 47: "Bloco de Junco", 48: "Laje de Junco", 49: "Laje de Junco", 50: "Degrau de Junco", 51: "Degrau de Junco", 52: "Degrau de Junco", 53: "Degrau de Junco", 54: "Cadeira de Junco", 55: "Cadeira de Junco", 56: "Cadeira de Junco", 57: "Cadeira de Junco" };
 for (let id = T.DOOR; id <= T.DOOR_LAST; id++) BLOCK_NAMES[id] = "Porta de Junco";
 for (let t = 0; t < 4; t++) {
@@ -154,6 +170,21 @@ for (let t = 0; t < 4; t++) {
 for (let id = T.TORCH; id <= T.TORCH_WALL_270; id++) BLOCK_NAMES[id] = "Tocha";
 BLOCK_NAMES[T.COAL_ORE] = "Min\xE9rio de Carv\xE3o";
 BLOCK_NAMES[T.COAL_BLOCK] = "Bloco de Carv\xE3o";
+BLOCK_NAMES[T.SEAGRASS] = "Erva Marinha";
+BLOCK_NAMES[T.SEAGRASS_TALL] = "Erva Marinha Alta";
+BLOCK_NAMES[T.SEAGRASS_TALL_TOP] = "Erva Marinha Alta";
+BLOCK_NAMES[T.KELP] = "Alga";
+BLOCK_NAMES[T.KELP_TOP] = "Alga";
+BLOCK_NAMES[T.DRIED_KELP_BLOCK] = "Bloco de Alga Seca";
+var CORAL_NOMES = ["Tubo", "C\xE9rebro", "Bolha", "Fogo", "Chifre"];
+for (let i = 0; i < 10; i++) {
+  const nome = CORAL_NOMES[i % 5], morto = i >= 5 ? " Morto" : "";
+  BLOCK_NAMES[T.CORAL + i] = `Coral de ${nome}${morto}`;
+  BLOCK_NAMES[T.CORAL_FAN + i] = `Gorg\xF4nia de ${nome}${morto}`;
+  BLOCK_NAMES[T.CORAL_BLOCK + i] = `Bloco de Coral de ${nome}${morto}`;
+}
+BLOCK_NAMES[T.MELON] = "Melancia";
+BLOCK_NAMES[T.PUMPKIN] = "Ab\xF3bora";
 Object.assign(BLOCK_NAMES, { 90: "Terra com Grama", 91: "Terra", 92: "Pedra", 93: "Areia da Praia", 94: "Tora de Carvalho", 95: "Folhas de Carvalho", 96: "Tora de Cerejeira", 97: "Folhas de Cerejeira", 98: "Tora de B\xE9tula", 99: "Folhas de B\xE9tula" });
 Object.assign(BLOCK_NAMES, { 100: "T\xE1buas de Carvalho", 101: "T\xE1buas de Cerejeira", 102: "T\xE1buas de B\xE9tula", 103: "Mesa de Carpintaria", 104: "Mesa de Carpintaria", 105: "Mesa de Carpintaria", 106: "Mesa de Carpintaria" });
 var isCarpentry = (id) => id >= T.CARPENTRY && id <= T.CARPENTRY_270;
@@ -172,8 +203,18 @@ Object.assign(BLOCK_NAMES, { 107: "Pedra Lisa", 108: "Tijolo de Pedra", 109: "La
 for (let m = 0; m < 16; m++) BLOCK_NAMES[115 + m] = "Mureta de Pedra";
 Object.assign(BLOCK_NAMES, { 131: "Terra Arada Seca", 132: "Terra Arada \xDAmida", 133: "Caminho de Terra", 134: "Terra Inf\xE9rtil", 135: "Bloco de Argila", 136: "Bloco de Tijolos" });
 var isLeaves = (id) => id === T.LEAVES_OAK || id === T.LEAVES_CHERRY || id === T.LEAVES_BIRCH;
-var isSolid = (id) => id !== T.AIR && id !== T.LAKE && id !== T.LANTERN && !isMarco(id) && id !== T.MAT && !isLadder(id) && !isTorch(id);
-var isTarget = (id) => isSolid(id) || id === T.LANTERN || isMarco(id) || id === T.MAT || isLadder(id) || isTorch(id);
+var isWaterPlant = (id) => id >= T.SEAGRASS && id <= T.KELP_TOP || isCoralPlant(id) || isCoralFan(id);
+var CORAL_FAMILIES = ["tubo", "cerebro", "bolha", "fogo", "chifre"];
+var isCoralPlant = (id) => id >= T.CORAL && id < T.CORAL + 10;
+var isCoralFan = (id) => id >= T.CORAL_FAN && id < T.CORAL_FAN + 10;
+var isCoralBlock = (id) => id >= T.CORAL_BLOCK && id < T.CORAL_BLOCK + 10;
+var isCoral = (id) => isCoralPlant(id) || isCoralFan(id) || isCoralBlock(id);
+var coralBase = (id) => isCoralPlant(id) ? T.CORAL : isCoralFan(id) ? T.CORAL_FAN : T.CORAL_BLOCK;
+var isCoralLive = (id) => isCoral(id) && id - coralBase(id) < 5;
+var deadCoral = (id) => isCoralLive(id) ? id + 5 : id;
+var isLiquidCell = (id) => id === T.LAKE || isWaterPlant(id);
+var isSolid = (id) => id !== T.AIR && id !== T.LAKE && !isWaterPlant(id) && id !== T.LANTERN && !isMarco(id) && id !== T.MAT && !isLadder(id) && !isTorch(id);
+var isTarget = (id) => isSolid(id) || isWaterPlant(id) || id === T.LANTERN || isMarco(id) || id === T.MAT || isLadder(id) || isTorch(id);
 var blocksLight = (id) => isFull(id) && !isLeaves(id);
 var isOccupied = isTarget;
 var blockHeight = (id) => blockSpan(id)[1];
@@ -276,7 +317,7 @@ var marcoTurnFacing = (yaw) => (Math.round(yaw / (Math.PI / 2)) % 4 + 4) % 4;
 var isPanel = (id) => id === T.PAINEL || id === T.PAINEL_Z;
 var PANEL_HEIGHT = 0.944;
 var panelIdFacing = (yaw) => Math.abs(Math.cos(yaw)) >= Math.abs(Math.sin(yaw)) ? T.PAINEL : T.PAINEL_Z;
-var isCollectBlock = (id) => id === T.LANTERN || isMarco(id) || isPanel(id) || id === T.MAT || isLadder(id);
+var isCollectBlock = (id) => id === T.LANTERN || isWaterPlant(id) || isMarco(id) || isPanel(id) || id === T.MAT || isLadder(id);
 var isMat = (id) => id === T.MAT;
 var isLadder = (id) => id >= T.LADDER && id <= T.LADDER_270;
 var ladderTurn = (id) => isLadder(id) ? id - T.LADDER : 0;
@@ -301,6 +342,7 @@ function bedPartnerOffset(id) {
   return isBedFoot(id) ? [fx, fz] : [fx === 0 ? 0 : -fx, fz === 0 ? 0 : -fz];
 }
 var MURETA_KINDS = ["mureta0", "mureta1", "mureta2", "mureta3", "mureta4", "mureta5", "mureta6", "mureta7", "mureta8", "mureta9", "mureta10", "mureta11", "mureta12", "mureta13", "mureta14", "mureta15"];
+var CORAL_KINDS = ["coral0", "coral1", "coral2", "coral3", "coral4", "coral5", "coral6", "coral7", "coral8", "coral9", "coral10", "coral11", "coral12", "coral13", "coral14", "coral15", "coral16", "coral17", "coral18", "coral19"];
 function modelOf(id) {
   if (isWorkbench(id)) return { kind: "workbench", turn: workbenchTurn(id) };
   if (isMarco(id)) return { kind: "marco", turn: marcoTurn(id) };
@@ -314,6 +356,13 @@ function modelOf(id) {
   if (isStoneStair(id)) return { kind: "degrauPedra", turn: stairTurn(id) };
   if (isChair(id)) return { kind: "cadeira", turn: chairTurn(id) };
   if (isDoor(id) && !isDoorUpper(id)) return { kind: "porta", turn: id - T.DOOR & 15 };
+  if (isCoralPlant(id)) return { kind: CORAL_KINDS[id - T.CORAL], turn: 0 };
+  if (isCoralFan(id)) return { kind: CORAL_KINDS[10 + id - T.CORAL_FAN], turn: 0 };
+  if (id === T.SEAGRASS) return { kind: "ervaMarinha", turn: 0 };
+  if (id === T.SEAGRASS_TALL) return { kind: "ervaAlta", turn: 0 };
+  if (id === T.SEAGRASS_TALL_TOP) return { kind: "ervaAltaTopo", turn: 0 };
+  if (id === T.KELP) return { kind: "alga", turn: 0 };
+  if (id === T.KELP_TOP) return { kind: "algaTopo", turn: 0 };
   if (id === T.BRAZIER) return { kind: "braseiro", turn: 0 };
   if (id === T.BRAZIER_LIT) return { kind: "braseiroAceso", turn: 0 };
   return null;
@@ -375,6 +424,13 @@ BLOCK_TILES[T.CLAY_BLOCK] = ot("bloco-argila");
 BLOCK_TILES[T.BRICK_BLOCK] = ot("bloco-tijolos");
 BLOCK_TILES[T.COAL_ORE] = ot("minerio-carvao");
 BLOCK_TILES[T.COAL_BLOCK] = ot("bloco-carvao");
+BLOCK_TILES[T.DRIED_KELP_BLOCK] = ot("alga-seca", "alga-seca", "alga-seca");
+for (let i = 0; i < 10; i++) {
+  const t = `coral-bloco-${CORAL_FAMILIES[i % 5]}-${i < 5 ? "vivo" : "morto"}`;
+  BLOCK_TILES[T.CORAL_BLOCK + i] = ot(t, t, t);
+}
+BLOCK_TILES[T.MELON] = ot("melancia-topo", "melancia-lateral", "melancia-topo");
+BLOCK_TILES[T.PUMPKIN] = ot("abobora-topo", "abobora-lateral", "abobora-topo");
 for (let t = 0; t < 8; t++) BLOCK_TILES[T.FURNACE + t] = ot("fornalha-topo", "fornalha-lateral", "fornalha-topo");
 for (let t = 0; t < 4; t++) BLOCK_TILES[T.CARPENTRY + t] = [tileIndex("orvalis/mesa-topo"), tileIndex("orvalis/mesa-lateral"), tileIndex("orvalis/tabua-carvalho")];
 BLOCK_TILES[T.REED_BLOCK] = faces3("21-bloco-de-junco");
@@ -407,7 +463,7 @@ function hoeResult(v, block, x, y, z) {
 var shovelResult = (block) => block === T.GRASS || block === T.DIRT ? T.PATH : null;
 
 // src/titan/items.ts
-var Item = { SAND: 1, DAMP_SAND: 2, DARK_ROCK: 3, FROST: 4, ROCK_SHARD: 5, FROST_SHARD: 6, CAPSULE: 7, LANTERN: 8, WORKBENCH: 9, ICE_LENS: 10, EMBER: 11, GLASS_REED: 12, SLAB: 13, MARCO: 14, PAINEL: 15, NOZ: 16, COPPER_SHARD: 17, COPPER_INGOT: 18, DRY_REED: 19, STONE_PICK: 20, BRAZIER: 21, STONE_DAGGER: 22, COPPER_PICK: 23, COPPER_DAGGER: 24, PLATE: 25, CARAPACE: 26, RAW_MEAT: 27, COOKED_MEAT: 28, EMBER_BLOCK: 29, NOZ_TORRADA: 30, ESTEIRA: 31, ESCADA: 32, BAU: 33, CAMA: 34, BALDE: 35, BALDE_CHEIO: 36, BLOCO_JUNCO: 37, LAJE_JUNCO: 38, DEGRAU_JUNCO: 39, CADEIRA_JUNCO: 40, PORTA_JUNCO: 41, GRASS: 42, DIRT: 43, STONE: 44, BEACH: 45, LOG_OAK: 46, LEAVES_OAK: 47, LOG_CHERRY: 48, LEAVES_CHERRY: 49, LOG_BIRCH: 50, LEAVES_BIRCH: 51, TABUA_CARVALHO: 52, TABUA_CEREJEIRA: 53, TABUA_BETULA: 54, HASTE: 55, MESA_CARPINTARIA: 56, PEDRA_LISA: 57, TIJOLO_PEDRA: 58, LAJE_PEDRA: 59, DEGRAU_PEDRA: 60, MURETA_PEDRA: 61, TERRA_ARADA_SECA: 62, TERRA_ARADA_UMIDA: 63, CAMINHO_TERRA: 64, TERRA_INFERTIL: 65, BLOCO_ARGILA: 66, BLOCO_TIJOLOS: 67, BOLA_ARGILA: 68, TIJOLO: 69, PICARETA_MADEIRA: 70, PICARETA_PEDRA: 71, MACHADO_MADEIRA: 72, MACHADO_PEDRA: 73, PA_MADEIRA: 74, PA_PEDRA: 75, ENXADA_MADEIRA: 76, ENXADA_PEDRA: 77, SEMENTE_TRIGO: 78, TRIGO: 79, CENOURA: 80, BATATA: 81, TOMATE: 82, FORNALHA: 83, CARVAO_VEGETAL: 84, TOCHA: 85, CARVAO: 87, BLOCO_CARVAO: 88 };
+var Item = { SAND: 1, DAMP_SAND: 2, DARK_ROCK: 3, FROST: 4, ROCK_SHARD: 5, FROST_SHARD: 6, CAPSULE: 7, LANTERN: 8, WORKBENCH: 9, ICE_LENS: 10, EMBER: 11, GLASS_REED: 12, SLAB: 13, MARCO: 14, PAINEL: 15, NOZ: 16, COPPER_SHARD: 17, COPPER_INGOT: 18, DRY_REED: 19, STONE_PICK: 20, BRAZIER: 21, STONE_DAGGER: 22, COPPER_PICK: 23, COPPER_DAGGER: 24, PLATE: 25, CARAPACE: 26, RAW_MEAT: 27, COOKED_MEAT: 28, EMBER_BLOCK: 29, NOZ_TORRADA: 30, ESTEIRA: 31, ESCADA: 32, BAU: 33, CAMA: 34, BALDE: 35, BALDE_CHEIO: 36, BLOCO_JUNCO: 37, LAJE_JUNCO: 38, DEGRAU_JUNCO: 39, CADEIRA_JUNCO: 40, PORTA_JUNCO: 41, GRASS: 42, DIRT: 43, STONE: 44, BEACH: 45, LOG_OAK: 46, LEAVES_OAK: 47, LOG_CHERRY: 48, LEAVES_CHERRY: 49, LOG_BIRCH: 50, LEAVES_BIRCH: 51, TABUA_CARVALHO: 52, TABUA_CEREJEIRA: 53, TABUA_BETULA: 54, HASTE: 55, MESA_CARPINTARIA: 56, PEDRA_LISA: 57, TIJOLO_PEDRA: 58, LAJE_PEDRA: 59, DEGRAU_PEDRA: 60, MURETA_PEDRA: 61, TERRA_ARADA_SECA: 62, TERRA_ARADA_UMIDA: 63, CAMINHO_TERRA: 64, TERRA_INFERTIL: 65, BLOCO_ARGILA: 66, BLOCO_TIJOLOS: 67, BOLA_ARGILA: 68, TIJOLO: 69, PICARETA_MADEIRA: 70, PICARETA_PEDRA: 71, MACHADO_MADEIRA: 72, MACHADO_PEDRA: 73, PA_MADEIRA: 74, PA_PEDRA: 75, ENXADA_MADEIRA: 76, ENXADA_PEDRA: 77, SEMENTE_TRIGO: 78, TRIGO: 79, CENOURA: 80, BATATA: 81, TOMATE: 82, FORNALHA: 83, CARVAO_VEGETAL: 84, TOCHA: 85, CARVAO: 87, BLOCO_CARVAO: 88, COURO: 89, LA: 90, PENA: 91, PORCO_CRU: 92, PORCO_ASSADO: 93, BOVINA_CRUA: 94, BIFE: 95, CARNEIRO_CRU: 96, CARNEIRO_ASSADO: 97, FRANGO_CRU: 98, FRANGO_ASSADO: 99, BETERRABA: 100, SEMENTE_BETERRABA: 101, SEMENTE_ABOBORA: 102, SEMENTE_MELANCIA: 103, FATIA_MELANCIA: 104, BLOCO_ABOBORA: 105, VARA_PESCA: 106, BACALHAU_CRU: 107, SALMAO_CRU: 108, BAIACU: 109, PEIXE_TROPICAL: 110, BACALHAU_ASSADO: 111, SALMAO_ASSADO: 112, BOIA: 113, LINHA: 114, ERVA_MARINHA: 115, ALGA: 116, ALGA_SECA: 117, BLOCO_ALGA_SECA: 118, CORAL_VIVO: 123, CORAL_MORTO: 128, GORGONIA_VIVA: 133, GORGONIA_MORTA: 138, BLOCO_CORAL_VIVO: 143, BLOCO_CORAL_MORTO: 148, BOTE_CARVALHO: 153, BOTE_BETULA: 154, BOTE_CEREJEIRA: 155 };
 var ITEM_NAMES = {
   1: "Areia ocre",
   2: "Areia \xFAmida",
@@ -451,20 +507,24 @@ var ITEM_NAMES = {
   40: "Cadeira de Junco",
   41: "Porta de Junco"
 };
-var ORVALIS_ITEM_BLOCKS = { [Item.GRASS]: T.GRASS, [Item.DIRT]: T.DIRT, [Item.STONE]: T.STONE, [Item.BEACH]: T.BEACH, [Item.LOG_OAK]: T.LOG_OAK, [Item.LEAVES_OAK]: T.LEAVES_OAK, [Item.LOG_CHERRY]: T.LOG_CHERRY, [Item.LEAVES_CHERRY]: T.LEAVES_CHERRY, [Item.LOG_BIRCH]: T.LOG_BIRCH, [Item.LEAVES_BIRCH]: T.LEAVES_BIRCH, [Item.TABUA_CARVALHO]: T.PLANKS_OAK, [Item.TABUA_CEREJEIRA]: T.PLANKS_CHERRY, [Item.TABUA_BETULA]: T.PLANKS_BIRCH, [Item.MESA_CARPINTARIA]: T.CARPENTRY, [Item.PEDRA_LISA]: T.STONE_SMOOTH, [Item.TIJOLO_PEDRA]: T.STONE_BRICK, [Item.LAJE_PEDRA]: T.STONE_SLAB, [Item.TERRA_ARADA_SECA]: T.FARMLAND_DRY, [Item.TERRA_ARADA_UMIDA]: T.FARMLAND_WET, [Item.CAMINHO_TERRA]: T.PATH, [Item.TERRA_INFERTIL]: T.DIRT_INFERTILE, [Item.BLOCO_ARGILA]: T.CLAY_BLOCK, [Item.BLOCO_TIJOLOS]: T.BRICK_BLOCK, [Item.FORNALHA]: T.FURNACE, [Item.TOCHA]: T.TORCH, [Item.BLOCO_CARVAO]: T.COAL_BLOCK };
-var ORVALIS_BLOCK_ITEMS = { ...Object.fromEntries(Object.entries(ORVALIS_ITEM_BLOCKS).map(([item, block]) => [block, Number(item)])), ...Object.fromEntries(Array.from({ length: 8 }, (_, t) => [T.FURNACE + t, Item.FORNALHA])), ...Object.fromEntries(Array.from({ length: 5 }, (_, t) => [T.TORCH + t, Item.TOCHA])), [T.COAL_ORE]: Item.CARVAO };
+var CORAL_ITEM_BLOCKS = Object.fromEntries(Array.from({ length: 30 }, (_, i) => [123 + i, [T.CORAL, T.CORAL_FAN, T.CORAL_BLOCK][Math.floor(i / 10)] + i % 10]));
+var ORVALIS_ITEM_BLOCKS = { ...CORAL_ITEM_BLOCKS, [Item.GRASS]: T.GRASS, [Item.DIRT]: T.DIRT, [Item.STONE]: T.STONE, [Item.BEACH]: T.BEACH, [Item.LOG_OAK]: T.LOG_OAK, [Item.LEAVES_OAK]: T.LEAVES_OAK, [Item.LOG_CHERRY]: T.LOG_CHERRY, [Item.LEAVES_CHERRY]: T.LEAVES_CHERRY, [Item.LOG_BIRCH]: T.LOG_BIRCH, [Item.LEAVES_BIRCH]: T.LEAVES_BIRCH, [Item.TABUA_CARVALHO]: T.PLANKS_OAK, [Item.TABUA_CEREJEIRA]: T.PLANKS_CHERRY, [Item.TABUA_BETULA]: T.PLANKS_BIRCH, [Item.MESA_CARPINTARIA]: T.CARPENTRY, [Item.PEDRA_LISA]: T.STONE_SMOOTH, [Item.TIJOLO_PEDRA]: T.STONE_BRICK, [Item.LAJE_PEDRA]: T.STONE_SLAB, [Item.TERRA_ARADA_SECA]: T.FARMLAND_DRY, [Item.TERRA_ARADA_UMIDA]: T.FARMLAND_WET, [Item.CAMINHO_TERRA]: T.PATH, [Item.TERRA_INFERTIL]: T.DIRT_INFERTILE, [Item.BLOCO_ARGILA]: T.CLAY_BLOCK, [Item.BLOCO_TIJOLOS]: T.BRICK_BLOCK, [Item.FORNALHA]: T.FURNACE, [Item.TOCHA]: T.TORCH, [Item.BLOCO_CARVAO]: T.COAL_BLOCK, [Item.BLOCO_ABOBORA]: T.PUMPKIN, [Item.ERVA_MARINHA]: T.SEAGRASS, [Item.ALGA]: T.KELP, [Item.BLOCO_ALGA_SECA]: T.DRIED_KELP_BLOCK };
+var ORVALIS_BLOCK_ITEMS = { ...Object.fromEntries(Object.entries(ORVALIS_ITEM_BLOCKS).map(([item, block]) => [block, Number(item)])), ...Object.fromEntries(Array.from({ length: 8 }, (_, t) => [T.FURNACE + t, Item.FORNALHA])), ...Object.fromEntries(Array.from({ length: 5 }, (_, t) => [T.TORCH + t, Item.TOCHA])), [T.COAL_ORE]: Item.CARVAO, [T.MELON]: Item.FATIA_MELANCIA, [T.SEAGRASS_TALL]: Item.ERVA_MARINHA, [T.SEAGRASS_TALL_TOP]: Item.ERVA_MARINHA, [T.KELP_TOP]: Item.ALGA };
 for (const [item, block] of Object.entries(ORVALIS_ITEM_BLOCKS)) ITEM_NAMES[Number(item)] = BLOCK_NAMES[block];
 Object.assign(ITEM_NAMES, { 70: "Picareta de Madeira", 71: "Picareta de Pedra", 72: "Machado de Madeira", 73: "Machado de Pedra", 74: "P\xE1 de Madeira", 75: "P\xE1 de Pedra", 76: "Enxada de Madeira", 77: "Enxada de Pedra" });
 Object.assign(ITEM_NAMES, { 78: "Semente de Trigo", 79: "Trigo", 80: "Cenoura", 81: "Batata", 82: "Tomate" });
+Object.assign(ITEM_NAMES, { 89: "Couro", 90: "L\xE3", 91: "Pena", 92: "Carne de Porco Crua", 93: "Carne de Porco Assada", 94: "Carne Bovina Crua", 95: "Bife", 96: "Carneiro Cru", 97: "Carneiro Assado", 98: "Frango Cru", 99: "Frango Assado", 100: "Beterraba", 101: "Semente de Beterraba", 102: "Semente de Ab\xF3bora", 103: "Semente de Melancia", 104: "Fatia de Melancia", 105: "Bloco de Ab\xF3bora", 106: "Vara de Pesca", 107: "Bacalhau Cru", 108: "Salm\xE3o Cru", 109: "Baiacu", 110: "Peixe Tropical", 111: "Bacalhau Assado", 112: "Salm\xE3o Assado", 114: "Linha", 115: "Erva Marinha", 116: "Alga", 117: "Alga Seca", 118: "Bloco de Alga Seca" });
 ITEM_NAMES[Item.CARVAO_VEGETAL] = "Carv\xE3o Vegetal";
 ITEM_NAMES[Item.CARVAO] = "Carv\xE3o";
 ITEM_NAMES[Item.BOLA_ARGILA] = "Bola de Argila";
 ITEM_NAMES[Item.TIJOLO] = "Tijolo";
 ITEM_NAMES[Item.MURETA_PEDRA] = "Mureta de Pedra";
+Object.assign(ITEM_NAMES, { 153: "Bote de Carvalho", 154: "Bote de B\xE9tula", 155: "Bote de Cerejeira" });
 ITEM_NAMES[Item.DEGRAU_PEDRA] = "Degrau de Pedra";
 ITEM_NAMES[Item.HASTE] = "Haste de Madeira";
 var maxStack = (item) => item === Item.CAPSULE || item === Item.LANTERN || item === Item.WORKBENCH || isBucket(item) || isTool(item) ? 1 : 64;
-var isItem = (n) => Number.isInteger(n) && n >= 1 && n <= 88 && n !== 86;
+var isItem = (n) => Number.isInteger(n) && n >= 1 && (n <= 118 || n >= 123 && n <= 155) && n !== 86 && n !== 113;
+var isBoatItem = (item) => item === Item.BOTE_CARVALHO || item === Item.BOTE_BETULA || item === Item.BOTE_CEREJEIRA;
 var isBucket = (item) => item === Item.BALDE || item === Item.BALDE_CHEIO;
 function blockOfItem(item) {
   if (item >= Item.SAND && item <= Item.FROST) return item;
@@ -520,7 +580,31 @@ function itemOfBlock(block) {
   return null;
 }
 var dropCountOf = (block) => block === T.SLAB_DOUBLE ? 2 : 1;
-var FOOD = { [Item.NOZ]: { hunger: 4, saturation: 2.4 }, [Item.NOZ_TORRADA]: { hunger: 7, saturation: 5.6 }, [Item.RAW_MEAT]: { hunger: 2, saturation: 1.2 }, [Item.COOKED_MEAT]: { hunger: 8, saturation: 12.8 }, [Item.CENOURA]: { hunger: 3, saturation: 3.6 }, [Item.BATATA]: { hunger: 1, saturation: 0.6 }, [Item.TOMATE]: { hunger: 2, saturation: 2.4 } };
+var FOOD = {
+  [Item.NOZ]: { hunger: 4, saturation: 2.4 },
+  [Item.NOZ_TORRADA]: { hunger: 7, saturation: 5.6 },
+  [Item.RAW_MEAT]: { hunger: 2, saturation: 1.2 },
+  [Item.COOKED_MEAT]: { hunger: 8, saturation: 12.8 },
+  [Item.CENOURA]: { hunger: 3, saturation: 3.6 },
+  [Item.BATATA]: { hunger: 1, saturation: 0.6 },
+  [Item.TOMATE]: { hunger: 2, saturation: 2.4 },
+  [Item.PORCO_CRU]: { hunger: 3, saturation: 1.8 },
+  [Item.PORCO_ASSADO]: { hunger: 8, saturation: 12.8 },
+  [Item.BOVINA_CRUA]: { hunger: 3, saturation: 1.8 },
+  [Item.BIFE]: { hunger: 8, saturation: 12.8 },
+  [Item.CARNEIRO_CRU]: { hunger: 2, saturation: 1.2 },
+  [Item.CARNEIRO_ASSADO]: { hunger: 6, saturation: 9.6 },
+  [Item.FRANGO_CRU]: { hunger: 2, saturation: 1.2 },
+  [Item.FRANGO_ASSADO]: { hunger: 6, saturation: 7.2 },
+  [Item.BETERRABA]: { hunger: 1, saturation: 1.2 },
+  [Item.FATIA_MELANCIA]: { hunger: 2, saturation: 1.2 },
+  [Item.BACALHAU_CRU]: { hunger: 2, saturation: 0.4 },
+  [Item.SALMAO_CRU]: { hunger: 2, saturation: 0.4 },
+  [Item.BACALHAU_ASSADO]: { hunger: 5, saturation: 6 },
+  [Item.SALMAO_ASSADO]: { hunger: 6, saturation: 9.6 },
+  [Item.PEIXE_TROPICAL]: { hunger: 1, saturation: 0.2 },
+  [Item.ALGA_SECA]: { hunger: 1, saturation: 0.6 }
+};
 var foodOf = (item) => FOOD[item] ?? null;
 var TOOLS = {
   [Item.STONE_PICK]: { kind: "pick", tier: "rock" },
@@ -542,6 +626,93 @@ var isTool = (item) => item in TOOLS;
 var isPick = (item) => toolOf(item)?.kind === "pick";
 var isShovel = (item) => toolOf(item)?.kind === "shovel";
 var isHoe = (item) => toolOf(item)?.kind === "hoe";
+
+// src/titan/fishing.ts
+var FISH_WAIT_MIN_S = 5;
+var FISH_WAIT_MAX_S = 30;
+var FISH_TABLE = [
+  { item: Item.BACALHAU_CRU, weight: 60 },
+  { item: Item.SALMAO_CRU, weight: 25 },
+  { item: Item.BAIACU, weight: 13 },
+  { item: Item.PEIXE_TROPICAL, weight: 2 }
+];
+var span = (min, max, rng) => min + (max - min) * rng();
+var newBobber = (x, y, z, rng = Math.random) => ({ x, y, z, phase: "wait", t: span(FISH_WAIT_MIN_S, FISH_WAIT_MAX_S, rng) });
+function rollFish(rng = Math.random) {
+  const total = FISH_TABLE.reduce((a, e) => a + e.weight, 0);
+  let r = rng() * total;
+  for (const e of FISH_TABLE) {
+    r -= e.weight;
+    if (r < 0) return e.item;
+  }
+  return FISH_TABLE[0].item;
+}
+
+// src/titan/coral.ts
+var CORAL_DRY_MIN_S = 3;
+var CORAL_DRY_MAX_S = 6;
+var key = (x, y, z) => `${x},${y},${z}`;
+var NEIGHBORS = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]];
+var coralWet = (s, x, y, z) => NEIGHBORS.some(([dx, dy, dz]) => isLiquidCell(s.volume.get(x + dx, y + dy, z + dz)));
+function watchCoral(s, x, y, z, rng = Math.random) {
+  const id = s.volume.get(x, y, z);
+  if (!isCoralBlock(id) || !isCoralLive(id) || coralWet(s, x, y, z)) return;
+  s.coralWatch.set(key(x, y, z), { x, y, z, t: CORAL_DRY_MIN_S + (CORAL_DRY_MAX_S - CORAL_DRY_MIN_S) * rng() });
+}
+function stepCoral(s, dt) {
+  let died = 0;
+  for (const [k, w] of [...s.coralWatch]) {
+    const id = s.volume.get(w.x, w.y, w.z);
+    if (!isCoralBlock(id) || !isCoralLive(id) || coralWet(s, w.x, w.y, w.z)) {
+      s.coralWatch.delete(k);
+      continue;
+    }
+    w.t -= Math.max(0, dt);
+    if (w.t > 0) continue;
+    s.coralWatch.delete(k);
+    if (s.volume.set(w.x, w.y, w.z, deadCoral(id))) died++;
+  }
+  return died;
+}
+
+// src/titan/boat.ts
+var BOAT_KINDS = ["carvalho", "betula", "cerejeira"];
+var BOAT_NAMES = ["Bote de Carvalho", "Bote de B\xE9tula", "Bote de Cerejeira"];
+var BOAT_HALF_LENGTH = 1.2;
+var BOAT_HALF_WIDTH = 0.62;
+var BOAT_Y = LAKE_SURFACE_Y - 0.1;
+var boatHeading = (yaw) => [-Math.sin(yaw), -Math.cos(yaw)];
+var boatWater = (vol, x, z) => {
+  const cx = Math.floor(x), cz = Math.floor(z);
+  return isLiquidCell(vol.get(cx, LAKE_LAST_Y, cz)) && vol.get(cx, LAKE_SURFACE_Y, cz) === T.AIR;
+};
+function boatFits(vol, x, z, yaw) {
+  const [hx, hz] = boatHeading(yaw), sx = -hz, sz = hx;
+  const L = BOAT_HALF_LENGTH * 0.95, W = BOAT_HALF_WIDTH * 0.9;
+  return [[0, 0], [L, 0], [-L, 0], [0, W], [0, -W]].every(([f, s]) => boatWater(vol, x + hx * f + sx * s, z + hz * f + sz * s));
+}
+var newBoatId = (list) => {
+  let n = 0;
+  for (const b of list) {
+    const k = Number(b.id.slice(5));
+    if (Number.isInteger(k) && k >= n) n = k + 1;
+  }
+  return `boat:${n}`;
+};
+var boatsToData = (list) => list.map((b) => ({ k: b.kind, x: +b.x.toFixed(3), y: +b.y.toFixed(3), z: +b.z.toFixed(3), r: +b.yaw.toFixed(4) }));
+function boatsFromData(raw) {
+  if (!Array.isArray(raw)) return [];
+  const out = [];
+  for (const e of raw.slice(0, 64)) {
+    if (!e || typeof e !== "object") continue;
+    const o = e;
+    const k = o.k, x = o.x, y = o.y, z = o.z, r = o.r;
+    if (!Number.isInteger(k) || k < 0 || k >= BOAT_KINDS.length) continue;
+    if (![x, y, z, r].every((v) => typeof v === "number" && Number.isFinite(v)) || y < Y_MIN || y > Y_MAX) continue;
+    out.push({ id: `boat:${out.length}`, kind: k, x, y, z, yaw: r });
+  }
+  return out;
+}
 
 // src/world/random.ts
 function mulberry32(seed) {
@@ -654,12 +825,30 @@ var RECIPES = [
   { id: "carvao-carvalho", name: "Carv\xE3o Vegetal (tora de carvalho)", group: "materiais", result: { item: Item.CARVAO_VEGETAL, count: 1 }, ingredients: [{ item: Item.LOG_OAK, count: 1 }], station: "furnace", world: "orvalis" },
   { id: "carvao-cerejeira", name: "Carv\xE3o Vegetal (tora de cerejeira)", group: "materiais", result: { item: Item.CARVAO_VEGETAL, count: 1 }, ingredients: [{ item: Item.LOG_CHERRY, count: 1 }], station: "furnace", world: "orvalis" },
   { id: "carvao-betula", name: "Carv\xE3o Vegetal (tora de b\xE9tula)", group: "materiais", result: { item: Item.CARVAO_VEGETAL, count: 1 }, ingredients: [{ item: Item.LOG_BIRCH, count: 1 }], station: "furnace", world: "orvalis" },
+  { id: "linha-la", name: "Linha (da l\xE3)", group: "materiais", result: { item: Item.LINHA, count: 4 }, ingredients: [{ item: Item.LA, count: 1 }], station: "personal", world: "orvalis" },
+  // o inverso da receita da Wiki (4 fios = 1 lã); sem aranhas, a lã é a fonte (ADR 0134)
+  { id: "vara-pesca", name: "Vara de Pesca", group: "ferramentas", result: { item: Item.VARA_PESCA, count: 1 }, ingredients: [{ item: Item.HASTE, count: 3 }, { item: Item.LINHA, count: 2 }], station: "workbench", world: "orvalis" },
+  { id: "alga-seca", name: "Alga Seca", group: "materiais", result: { item: Item.ALGA_SECA, count: 1 }, ingredients: [{ item: Item.ALGA, count: 1 }], station: "furnace", world: "orvalis" },
+  // Wiki: a alga assada vira alga seca (ADR 0135)
+  { id: "bloco-alga-seca", name: "Bloco de Alga Seca", group: "materiais", result: { item: Item.BLOCO_ALGA_SECA, count: 1 }, ingredients: [{ item: Item.ALGA_SECA, count: 9 }], station: "workbench", world: "orvalis" },
+  { id: "alga-seca-do-bloco", name: "Alga Seca (do bloco)", group: "materiais", result: { item: Item.ALGA_SECA, count: 9 }, ingredients: [{ item: Item.BLOCO_ALGA_SECA, count: 1 }], station: "personal", world: "orvalis" },
+  { id: "bote-carvalho", name: "Bote de Carvalho", group: "utilidades", result: { item: Item.BOTE_CARVALHO, count: 1 }, ingredients: [{ item: Item.TABUA_CARVALHO, count: 5 }], station: "workbench", world: "orvalis" },
+  { id: "bote-betula", name: "Bote de B\xE9tula", group: "utilidades", result: { item: Item.BOTE_BETULA, count: 1 }, ingredients: [{ item: Item.TABUA_BETULA, count: 5 }], station: "workbench", world: "orvalis" },
+  { id: "bote-cerejeira", name: "Bote de Cerejeira", group: "utilidades", result: { item: Item.BOTE_CEREJEIRA, count: 1 }, ingredients: [{ item: Item.TABUA_CEREJEIRA, count: 5 }], station: "workbench", world: "orvalis" },
+  { id: "assar-bacalhau", name: "Bacalhau Assado", group: "materiais", result: { item: Item.BACALHAU_ASSADO, count: 1 }, ingredients: [{ item: Item.BACALHAU_CRU, count: 1 }], station: "furnace", world: "orvalis" },
+  { id: "assar-salmao", name: "Salm\xE3o Assado", group: "materiais", result: { item: Item.SALMAO_ASSADO, count: 1 }, ingredients: [{ item: Item.SALMAO_CRU, count: 1 }], station: "furnace", world: "orvalis" },
+  { id: "assar-porco", name: "Carne de Porco Assada", group: "materiais", result: { item: Item.PORCO_ASSADO, count: 1 }, ingredients: [{ item: Item.PORCO_CRU, count: 1 }], station: "furnace", world: "orvalis" },
+  { id: "assar-bife", name: "Bife", group: "materiais", result: { item: Item.BIFE, count: 1 }, ingredients: [{ item: Item.BOVINA_CRUA, count: 1 }], station: "furnace", world: "orvalis" },
+  { id: "assar-carneiro", name: "Carneiro Assado", group: "materiais", result: { item: Item.CARNEIRO_ASSADO, count: 1 }, ingredients: [{ item: Item.CARNEIRO_CRU, count: 1 }], station: "furnace", world: "orvalis" },
+  { id: "assar-frango", name: "Frango Assado", group: "materiais", result: { item: Item.FRANGO_ASSADO, count: 1 }, ingredients: [{ item: Item.FRANGO_CRU, count: 1 }], station: "furnace", world: "orvalis" },
   { id: "tocha", name: "Tocha", group: "utilidades", result: { item: Item.TOCHA, count: 4 }, ingredients: [{ item: Item.CARVAO_VEGETAL, count: 1 }, { item: Item.HASTE, count: 1 }], station: "personal", world: "orvalis" },
   // Wiki: carvão (vegetal) + graveto → 4 (ADR 0121)
   { id: "tocha-carvao", name: "Tocha (carv\xE3o)", group: "utilidades", result: { item: Item.TOCHA, count: 4 }, ingredients: [{ item: Item.CARVAO, count: 1 }, { item: Item.HASTE, count: 1 }], station: "personal", world: "orvalis" },
   // Wiki: carvão ou carvão vegetal (ADR 0122)
   { id: "bloco-carvao", name: "Bloco de Carv\xE3o", group: "construcao", result: { item: Item.BLOCO_CARVAO, count: 1 }, ingredients: [{ item: Item.CARVAO, count: 9 }], station: "workbench", world: "orvalis" },
   { id: "carvao-do-bloco", name: "Carv\xE3o (do bloco)", group: "materiais", result: { item: Item.CARVAO, count: 9 }, ingredients: [{ item: Item.BLOCO_CARVAO, count: 1 }], station: "personal", world: "orvalis" },
+  { id: "semente-abobora", name: "Sementes de Ab\xF3bora", group: "materiais", result: { item: Item.SEMENTE_ABOBORA, count: 4 }, ingredients: [{ item: Item.BLOCO_ABOBORA, count: 1 }], station: "personal", world: "orvalis" },
+  { id: "semente-melancia", name: "Semente de Melancia", group: "materiais", result: { item: Item.SEMENTE_MELANCIA, count: 1 }, ingredients: [{ item: Item.FATIA_MELANCIA, count: 1 }], station: "personal", world: "orvalis" },
   { id: "laje-pedra", name: "Laje de Pedra", group: "construcao", result: { item: Item.LAJE_PEDRA, count: 6 }, ingredients: [{ item: Item.PEDRA_LISA, count: 3 }], station: "workbench", world: "orvalis" }
 ];
 var stationMet = (r, at) => r.station === "personal" || r.station === at;
@@ -680,6 +869,8 @@ var FUEL_TIME_S = {
   [Item.CARVAO_VEGETAL]: 80,
   [Item.CARVAO]: 80,
   [Item.BLOCO_CARVAO]: 800,
+  [Item.ALGA_SECA]: 200,
+  [Item.BLOCO_ALGA_SECA]: 2e3,
   [Item.LOG_OAK]: 15,
   [Item.LOG_CHERRY]: 15,
   [Item.LOG_BIRCH]: 15,
@@ -774,8 +965,8 @@ function furnaceFromData(d, rules = BRAZIER_RULES) {
   f.input = i && accepts("input", i.item, rules.station) ? i : null;
   f.fuel = fu && accepts("fuel", fu.item) ? fu : null;
   f.output = unpack(o.o);
-  f.burnTotal = num(o.t, 0, 800);
-  f.burnLeft = Math.min(num(o.b, 0, 800), f.burnTotal);
+  f.burnTotal = num(o.t, 0, 2e3);
+  f.burnLeft = Math.min(num(o.b, 0, 2e3), f.burnTotal);
   f.cook = num(o.c, 0, COOK_TIME_S);
   return f;
 }
@@ -873,8 +1064,8 @@ function skyAt(frac, palette = "titan", rain = 0, days = 0) {
   let i = LOOKS.length - 1;
   for (let k2 = 0; k2 < LOOKS.length; k2++) if (f >= LOOKS[k2].t) i = k2;
   const a = LOOKS[i], b = LOOKS[(i + 1) % LOOKS.length];
-  const span = (b.t - a.t + 1) % 1 || 1;
-  const k = ease((f - a.t + 1) % 1 / span);
+  const span2 = (b.t - a.t + 1) % 1 || 1;
+  const k = ease((f - a.t + 1) % 1 / span2);
   const u = f / tickFrac(PHASE_TICKS.sunsetStart);
   const up = u >= 0 && u <= 1;
   const elev = up ? Math.sin(Math.PI * u) : -0.2;
@@ -935,6 +1126,7 @@ var GRAVITY = 28;
 var JUMP_SPEED = Math.sqrt(2 * GRAVITY * 1.25);
 var WALK_SPEED = 4.3;
 var SPRINT_FACTOR = 1.3;
+var SWIM_SPRINT_FACTOR = 1;
 var TERMINAL = 20;
 var CLIMB_UP = 2.3;
 var CLIMB_SLIDE = 1.2;
@@ -1019,7 +1211,7 @@ function waterLedge(v, b, dirX, dirZ) {
     const cellTop = Math.floor(b.y + 0.2) + 1;
     for (let yy = Math.floor(b.y + EPS2); yy <= cellTop + LEDGE_REACH; yy++) {
       const id = v.get(cx, yy, cz), h = v.bodyHeight(cx, yy, cz);
-      if (h <= 0 || id === T.LAKE) continue;
+      if (h <= 0 || isLiquidCell(id)) continue;
       const top = yy + h;
       if (top - cellTop > LEDGE_REACH + EPS2 || top - b.y < 0.05) continue;
       if (collides(v, cx + 0.5, top, cz + 0.5)) continue;
@@ -1051,7 +1243,7 @@ function ladderUnder(v, b) {
 }
 function stepOnce(v, b, input, dt) {
   const feetCell = v.get(Math.floor(b.x), Math.floor(b.y + 0.2), Math.floor(b.z));
-  b.inLiquid = feetCell === T.LAKE;
+  b.inLiquid = isLiquidCell(feetCell);
   const ladder = b.inLiquid ? null : ladderUnder(v, b);
   b.onLadder = !!ladder;
   const speed = WALK_SPEED * (b.inLiquid ? 0.6 : ladder ? LADDER_WALK : input.sprint ? SPRINT_FACTOR : 1);
@@ -1068,6 +1260,12 @@ function stepOnce(v, b, input, dt) {
   if (ladder) {
     const into = -(input.dirX * ladder[0] + input.dirZ * ladder[1]);
     b.vy = input.jump || into > 0.3 ? CLIMB_UP : -CLIMB_SLIDE;
+  } else if (b.inLiquid && input.sprint && input.pitch !== void 0 && (input.dirX !== 0 || input.dirZ !== 0) && !b.hop) {
+    const m = Math.min(1, Math.hypot(input.dirX, input.dirZ)), v2 = WALK_SPEED * SWIM_SPRINT_FACTOR * m, cp = Math.cos(input.pitch);
+    const k = m > 0 ? v2 * cp / m : 0;
+    b.vx = input.dirX * k;
+    b.vz = input.dirZ * k;
+    b.vy = Math.sin(input.pitch) * v2;
   } else if (b.inLiquid) {
     b.vy = Math.max(b.vy - GRAVITY * 0.25 * dt, b.hop ? -TERMINAL : -2.5);
     if (input.jump && !b.hop) {
@@ -1134,9 +1332,9 @@ function moveAxis(v, b, axis, d) {
   }
   return true;
 }
-function canPlaceAt(v, b, x, y, z, items, span = [0, 1]) {
+function canPlaceAt(v, b, x, y, z, items, span2 = [0, 1]) {
   if (!v.editable(x, y, z) || isOccupied(v.get(x, y, z)) || items?.at(x, y, z)) return false;
-  const overlap = x + 1 > b.x - BODY_HALF && x < b.x + BODY_HALF && z + 1 > b.z - BODY_HALF && z < b.z + BODY_HALF && y + span[1] > b.y + EPS2 && y + span[0] < b.y + BODY_HEIGHT;
+  const overlap = x + 1 > b.x - BODY_HALF && x < b.x + BODY_HALF && z + 1 > b.z - BODY_HALF && z < b.z + BODY_HALF && y + span2[1] > b.y + EPS2 && y + span2[0] < b.y + BODY_HEIGHT;
   return !overlap;
 }
 function safePosition(v, p, fallback) {
@@ -1186,6 +1384,8 @@ var MAX_DURABILITY = {
   [Item.MACHADO_MADEIRA]: 59,
   [Item.PA_MADEIRA]: 59,
   [Item.ENXADA_MADEIRA]: 59,
+  [Item.VARA_PESCA]: 64,
+  // Wiki (Java): 64 usos, 1 por captura (ADR 0133)
   [Item.PICARETA_PEDRA]: 131,
   [Item.MACHADO_PEDRA]: 131,
   [Item.PA_PEDRA]: 131,
@@ -1530,7 +1730,7 @@ function stepDrops(s, dt) {
       }
       const state = fx ?? { delay: 0, age: 0 };
       if (!fx) s.dropFx.set(d.id, state);
-      const wet = s.volume.get(d.x, Math.floor(fy + EPS3), d.z) === T.LAKE;
+      const wet = isLiquidCell(s.volume.get(d.x, Math.floor(fy + EPS3), d.z));
       const vy = Math.min(wet ? LIQUID_TERMINAL : DROP_TERMINAL, (state.vy ?? 0) + (wet ? LIQUID_GRAVITY : DROP_GRAVITY) * h);
       fy -= vy * h;
       if (fy <= ry + EPS3) {
@@ -1646,8 +1846,15 @@ function chestFromData(d) {
 var chestIsEmpty = (c) => c.every((s) => !s);
 
 // src/titan/crops.ts
-var GARDEN_SPECIES = ["trigo", "cenoura", "batata", "tomate"];
+var GARDEN_SPECIES = ["trigo", "cenoura", "batata", "tomate", "beterraba", "abobora", "melancia"];
 var isGarden = (species) => GARDEN_SPECIES.includes(species);
+var STEM_MAX_AGE = 7;
+var EIGHT_AGE_SPECIES = ["trigo", "cenoura", "batata"];
+var isEightAge = (species) => EIGHT_AGE_SPECIES.includes(species);
+var isStem = (species) => species === "abobora" || species === "melancia";
+var STEM_DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+var FRUIT_BLOCK = { abobora: T.PUMPKIN, melancia: T.MELON };
+var fruitGround = (below) => below === T.GRASS || below === T.DIRT || below === T.DIRT_INFERTILE || below === T.FARMLAND_DRY || below === T.FARMLAND_WET;
 var CROP_TICK_MEAN_S = 30;
 var CROP_SIM_RADIUS = 56;
 var CROP_MIN_LIGHT = 9;
@@ -1660,9 +1867,16 @@ function parseCropId(id) {
 }
 var soilKind = (block) => block === T.DAMP_SAND ? "umido" : block === T.SAND ? "seco" : null;
 var maxAge = (kind) => kind === "umido" ? 2 : 1;
-var maxAgeOf = (species, soil) => species === "noz" || isGarden(species) ? 2 : maxAge(soil);
+var maxAgeOf = (species, soil) => isStem(species) || isEightAge(species) ? STEM_MAX_AGE : species === "beterraba" ? BEET_MAX_AGE : species === "noz" || isGarden(species) ? 2 : maxAge(soil);
+var BEET_MAX_AGE = 3;
+var BEET_SKIP = 1 / 3;
+var BEET_SEEDS = { min: 1, max: 4 };
 var isRipe = (species, soil, age) => age >= maxAgeOf(species, soil);
 function harvestOf(species, soil) {
+  if (isStem(species)) return { item: seedOf(species), count: 0, backTo: STEM_MAX_AGE, label: "" };
+  if (species === "beterraba") return { item: Item.BETERRABA, count: 1, backTo: 0, label: "beterraba", extra: { item: Item.SEMENTE_BETERRABA, ...BEET_SEEDS } };
+  if (species === "trigo") return { item: Item.TRIGO, count: 1, backTo: 0, label: "trigo", extra: { item: Item.SEMENTE_TRIGO, min: 1, max: 4 } };
+  if (species === "cenoura" || species === "batata") return { item: GARDEN_HARVEST[species].item, count: 2, countMax: 5, backTo: 0, label: GARDEN_HARVEST[species].label };
   if (isGarden(species)) {
     const g = GARDEN_HARVEST[species];
     return { item: g.item, count: GARDEN_YIELD, backTo: 0, label: g.label };
@@ -1671,12 +1885,12 @@ function harvestOf(species, soil) {
   return soil === "umido" ? { item: Item.GLASS_REED, count: CROP_YIELD, backTo: 1, label: "mudas de junco" } : { item: Item.DRY_REED, count: CROP_YIELD, backTo: 0, label: "hastes secas" };
 }
 var seedOf = (species) => isGarden(species) ? GARDEN_SEED[species] : species === "noz" ? Item.NOZ : Item.GLASS_REED;
-var GARDEN_SEED = { trigo: Item.SEMENTE_TRIGO, cenoura: Item.CENOURA, batata: Item.BATATA, tomate: Item.TOMATE };
-var GARDEN_HARVEST = { trigo: { item: Item.TRIGO, label: "trigo" }, cenoura: { item: Item.CENOURA, label: "cenouras" }, batata: { item: Item.BATATA, label: "batatas" }, tomate: { item: Item.TOMATE, label: "tomates" } };
+var GARDEN_SEED = { trigo: Item.SEMENTE_TRIGO, cenoura: Item.CENOURA, batata: Item.BATATA, tomate: Item.TOMATE, beterraba: Item.SEMENTE_BETERRABA, abobora: Item.SEMENTE_ABOBORA, melancia: Item.SEMENTE_MELANCIA };
+var GARDEN_HARVEST = { trigo: { item: Item.TRIGO, label: "trigo" }, cenoura: { item: Item.CENOURA, label: "cenouras" }, batata: { item: Item.BATATA, label: "batatas" }, beterraba: { item: Item.BETERRABA, label: "beterraba" }, tomate: { item: Item.TOMATE, label: "tomates" } };
 var GARDEN_YIELD = 2;
 function wildSeedAt(x, y, z) {
   const h = (Math.imul(x, 73856093) ^ Math.imul(y, 19349663) ^ Math.imul(z, 83492791)) >>> 0, r = h % 24;
-  return r < 4 ? Item.SEMENTE_TRIGO : r === 4 ? Item.CENOURA : r === 5 ? Item.BATATA : r === 6 ? Item.TOMATE : null;
+  return r < 4 ? Item.SEMENTE_TRIGO : r === 4 ? Item.CENOURA : r === 5 ? Item.BATATA : r === 6 ? Item.TOMATE : r === 7 ? Item.SEMENTE_BETERRABA : r === 8 ? Item.SEMENTE_ABOBORA : r === 9 ? Item.SEMENTE_MELANCIA : null;
 }
 var gardenSpeciesOf = (item) => GARDEN_SPECIES.find((sp) => GARDEN_SEED[sp] === item) ?? null;
 var plantableSoil = (species, block) => isGarden(species) ? isFarmland(block) : species === "noz" ? block === T.SAND : block === T.SAND || block === T.DAMP_SAND;
@@ -1704,11 +1918,18 @@ function randomTick(crop, ctx, rng) {
   if (!kind || crop.species === "noz" && kind !== "seco" || crop.age >= maxAgeOf(crop.species, kind) || ctx.light < CROP_MIN_LIGHT) return false;
   let points = growthPoints(ctx.soilAt);
   if (crowded(ctx.sameAt)) points *= 0.5;
+  if (crop.species === "beterraba" && rng() < BEET_SKIP) return false;
   if (rng() < growChance(points)) {
     crop.age++;
     return true;
   }
   return false;
+}
+function stemFruitTick(crop, points, light, rng, free) {
+  if (!isStem(crop.species) || crop.age < STEM_MAX_AGE || crop.dir !== void 0 || light < CROP_MIN_LIGHT) return null;
+  if (!(rng() < growChance(points))) return null;
+  const dir = Math.min(3, Math.floor(rng() * 4));
+  return free(dir) ? dir : null;
 }
 
 // src/titan/actions.ts
@@ -1716,6 +1937,7 @@ var FULL = { ok: false, msg: "Mochila cheia" };
 var COPPER_YIELD = 2;
 var amberYield = (x, y, z) => hash2(41906, x * 31 + z, y) < 0.5 ? 1 : 2;
 function collectItem(s, id) {
+  if (id.startsWith("bt:")) return pickBoat(s, id.slice(3));
   if (id.startsWith("reed:")) return collectReed(s, id);
   if (id.startsWith("nut:")) return collectNut(s, id);
   if (id.startsWith("crop:")) return collectCrop(s, id);
@@ -1732,13 +1954,23 @@ function collectCrop(s, id) {
   const p = parseCropId(id), crop = p ? s.crops.get(cropKey(p[0], p[1], p[2])) : void 0;
   const kind = crop ? soilKindFor(crop.species, s.volume.get(crop.x, crop.y - 1, crop.z)) : null;
   if (!crop || !kind) return { ok: false };
+  if (isStem(crop.species)) return { ok: false, msg: crop.dir === void 0 ? crop.age >= STEM_MAX_AGE ? "O caule est\xE1 maduro: o fruto vem logo" : "Ainda est\xE1 crescendo" : "O fruto est\xE1 ao lado: quebre-o" };
   if (!isRipe(crop.species, kind, crop.age)) return { ok: false, msg: "Ainda est\xE1 crescendo" };
   const h = harvestOf(crop.species, kind);
-  if (!s.inventory.canAdd(h.item, h.count)) return FULL;
-  s.inventory.add(h.item, h.count);
+  const cell = Math.imul(crop.x, 73856093) ^ Math.imul(crop.z, 83492791) | 0, salt = crop.y + s.days * 1009 + Math.floor(s.time * 1e3);
+  const count = h.countMax ? h.count + Math.floor(hash2(s.seed, cell, salt + 77) * (h.countMax - h.count + 1)) : h.count;
+  if (!s.inventory.canAdd(h.item, count)) return FULL;
+  s.inventory.add(h.item, count);
   crop.age = h.backTo;
   s.metaRev++;
-  return { ok: true, msg: `${h.count} ${h.label}` };
+  let extra = "";
+  if (h.extra) {
+    const n = h.extra.min + Math.floor(hash2(s.seed, cell, salt) * (h.extra.max - h.extra.min + 1));
+    if (s.inventory.canAdd(h.extra.item, n)) s.inventory.add(h.extra.item, n);
+    else restDrop(s, `seed:${crop.x},${crop.y},${crop.z}:s${s.days}:${Math.floor(s.time * 1e3)}`, h.extra.item, crop.x, crop.y, crop.z, n);
+    extra = ` e ${n} ${n > 1 ? "sementes" : "semente"}`;
+  }
+  return { ok: true, msg: `${count} ${h.label}${extra}` };
 }
 function plantSpotFree(s, hit) {
   const x = hit.x, y = hit.y + 1, z = hit.z;
@@ -1775,6 +2007,50 @@ function releaseTorches(s, x, y, z) {
       const [fx, fz] = ladderFacing(wallTorchTurn(id));
       if (fx === dx && fz === dz) drop(x + dx, y, z + dz);
     }
+  }
+}
+function placeBoat(s, hit, slot, kind) {
+  const v = s.volume, x = hit.x + 0.5, z = hit.z + 0.5;
+  if (hit.item || !boatWater(v, x, z)) return { ok: false, msg: "O bote se p\xF5e na superf\xEDcie da \xE1gua" };
+  if (!boatFits(v, x, z, s.yaw)) return { ok: false, msg: "Falta \xE1gua para o bote" };
+  if (s.boats.length >= 64 || s.boats.some((b) => Math.hypot(b.x - x, b.z - z) < 1.6)) return { ok: false, msg: "J\xE1 h\xE1 um bote aqui" };
+  s.boats.push({ id: newBoatId(s.boats), kind, x, y: BOAT_Y, z, yaw: s.yaw });
+  s.inventory.consume(slot);
+  s.metaRev++;
+  return { ok: true, msg: BOAT_NAMES[kind] };
+}
+function pickBoat(s, id) {
+  const i = s.boats.findIndex((e) => e.id === id), b = s.boats[i];
+  if (!b) return { ok: false };
+  if (s.boatRide?.id === id) return { ok: false, msg: "Des\xE7a antes de recolher o bote" };
+  const item = Item.BOTE_CARVALHO + b.kind;
+  s.boats.splice(i, 1);
+  s.metaRev++;
+  if (s.inventory.canAdd(item, 1)) s.inventory.add(item, 1);
+  else {
+    let n = 0;
+    while (s.drops.has(`m:bote:${n}`)) n++;
+    restDrop(s, `m:bote:${n}`, item, b.x, LAKE_LAST_Y + 1, b.z, 1);
+  }
+  return { ok: true, msg: BOAT_NAMES[b.kind] };
+}
+function placeWaterPlant(s, hit, slot, block) {
+  const kelp = block === T.KELP, label = kelp ? "A alga" : isCoralPlant(block) || isCoralFan(block) ? isCoralFan(block) ? "A gorg\xF4nia" : "O coral" : "A erva marinha";
+  const v = s.volume, x = hit.x + hit.nx, y = hit.y + hit.ny, z = hit.z + hit.nz;
+  if (hit.item || !v.editable(x, y, z) || v.get(x, y, z) !== T.LAKE || v.get(x, y + 1, z) !== T.LAKE) return { ok: false, msg: `${label} se planta dentro da \xE1gua, sob a superf\xEDcie` };
+  const below = v.get(x, y - 1, z);
+  if (!(isFull(below) || kelp && (below === T.KELP || below === T.KELP_TOP))) return { ok: false, msg: "Precisa de um piso firme" };
+  if (!v.set(x, y, z, kelp ? T.KELP_TOP : block)) return { ok: false };
+  if (kelp && below === T.KELP_TOP) v.set(x, y - 1, z, T.KELP);
+  s.inventory.consume(slot);
+  return { ok: true };
+}
+function releaseWaterPlants(s, x, y, z, was) {
+  if (was === T.SEAGRASS_TALL_TOP && s.volume.get(x, y - 1, z) === T.SEAGRASS_TALL && s.volume.remove(x, y - 1, z)) spillBlock(s, Item.ERVA_MARINHA, 1, x, y - 1, z);
+  for (let yy = y + 1; isWaterPlant(s.volume.get(x, yy, z)); yy++) {
+    const item = itemOfBlock(s.volume.get(x, yy, z));
+    if (!s.volume.remove(x, yy, z)) break;
+    if (item !== null) spillBlock(s, item, 1, x, yy, z);
   }
 }
 function releaseMat(s, x, y, z) {
@@ -1890,7 +2166,8 @@ function releaseCrop(s, x, y, z) {
   if (!crop) return;
   s.crops.delete(cropKey(x, y, z));
   s.metaRev++;
-  dropShard(s, seedOf(crop.species), x, y, z);
+  const n = isStem(crop.species) ? Math.floor(hash2(s.seed, Math.imul(x, 73856093) ^ Math.imul(z, 83492791) | 0, y + s.days * 1009 + Math.floor(s.time * 1e3)) * 4) : 1;
+  if (n > 0) dropShard(s, seedOf(crop.species), x, y, z, n);
 }
 function collectReed(s, id) {
   const m = /^reed:(-?\d+),(-?\d+),(-?\d+)$/.exec(id);
@@ -2055,7 +2332,7 @@ function breakOrCollectBlock(s, hit) {
   }
   const item = itemOfBlock(s.volume.get(x, y, z));
   if (item === null) return { ok: false };
-  const count = dropCountOf(s.volume.get(x, y, z));
+  const count = s.volume.get(x, y, z) === T.MELON ? 3 + Math.floor(hash2(s.seed, Math.imul(x, 73856093) ^ Math.imul(z, 83492791) | 0, y) * 5) : dropCountOf(s.volume.get(x, y, z));
   const block = s.volume.get(x, y, z);
   const direct = item === Item.LANTERN;
   if (direct && !s.inventory.canAdd(item, count)) return FULL;
@@ -2075,6 +2352,7 @@ function breakOrCollectBlock(s, hit) {
   releaseMat(s, x, y + 1, z);
   releaseLadders(s, x, y, z);
   releaseTorches(s, x, y, z);
+  releaseWaterPlants(s, x, y, z, block);
   if (isBed(s.volume.get(x, y + 1, z))) breakBed(s, x, y + 1, z);
   if (isDoor(s.volume.get(x, y + 1, z))) breakDoor(s, x, y + 1, z);
   return { ok: true };
@@ -2101,7 +2379,7 @@ function dropShard(s, item, x, y, z, count = 1) {
   s.drops.set(id, { id, item, ...count > 1 ? { count } : {}, x, y, z });
   s.dropsRev++;
 }
-var PICKUP_DELAY_S = 0.45;
+var PICKUP_DELAY_S = 0.5;
 var DROP_LIFE_S = 300;
 function spillBlock(s, item, count, x, y, z) {
   let n = 0;
@@ -2111,19 +2389,53 @@ function spillBlock(s, item, count, x, y, z) {
   s.dropFx.set(id, { delay: PICKUP_DELAY_S, age: 0 });
   s.dropsRev++;
 }
-var PICKUP_RADIUS = 1.45;
+function mergeDrops(s) {
+  const cells = /* @__PURE__ */ new Map();
+  for (const d of s.drops.values()) {
+    if (d.wear || s.dropFx.get(d.id)?.fy !== void 0) continue;
+    const k = `${d.x},${d.y},${d.z},${d.item},${everLasts(d.id) ? 1 : 0}`, l = cells.get(k);
+    if (l) l.push(d);
+    else cells.set(k, [d]);
+  }
+  let merged = false;
+  for (const l of cells.values()) {
+    if (l.length < 2) continue;
+    const cap = maxStack(l[0].item), age = (d) => s.dropFx.get(d.id)?.age ?? 0;
+    l.sort((a, b) => age(a) - age(b) || (a.id < b.id ? -1 : 1));
+    let keep = l[0];
+    for (let i = 1; i < l.length; i++) {
+      const o = l[i], sum = (keep.count ?? 1) + (o.count ?? 1);
+      if (sum > cap) {
+        keep = o;
+        continue;
+      }
+      const kf = s.dropFx.get(keep.id), of = s.dropFx.get(o.id);
+      if (kf && of) kf.delay = Math.max(kf.delay, of.delay);
+      keep = { ...keep, count: sum };
+      s.drops.set(keep.id, keep);
+      s.drops.delete(o.id);
+      s.dropFx.delete(o.id);
+      s.dropsRev++;
+      merged = true;
+    }
+  }
+  return merged;
+}
+var PICKUP_RADIUS = 1.425;
+var everLasts = (id) => id.startsWith("d:");
 function collectNearby(s, px, py, pz, dt = 0) {
   let collected = 0, full = false, moved = dt > 0 ? stepDrops(s, dt) : settleDrops(s);
+  if (mergeDrops(s)) moved = true;
   for (const d of [...s.drops.values()]) {
     let fx = s.dropFx.get(d.id);
-    if (!fx && d.id.startsWith("b:")) {
+    if (!fx && !everLasts(d.id)) {
       fx = { delay: 0, age: 0 };
       s.dropFx.set(d.id, fx);
     }
     if (fx) {
       fx.delay = Math.max(0, fx.delay - dt);
       fx.age += dt;
-      if (d.id.startsWith("b:") && fx.age >= DROP_LIFE_S) {
+      if (!everLasts(d.id) && fx.age >= DROP_LIFE_S) {
         s.drops.delete(d.id);
         s.dropFx.delete(d.id);
         s.dropsRev++;
@@ -2166,6 +2478,32 @@ function useBucket(s, hit, slot) {
   s.inventory.replace(slot, Item.BALDE);
   return { ok: true, msg: "L\xEDquido despejado" };
 }
+function reelIn(s, slot, rng = Math.random) {
+  const f = s.fishing;
+  s.fishing = null;
+  s.dropsRev++;
+  if (!f || f.phase !== "bite") return { ok: true, msg: "Linha recolhida" };
+  const fish = rollFish(rng);
+  if (s.inventory.canAdd(fish, 1)) s.inventory.add(fish, 1);
+  else {
+    let n = 0;
+    while (s.drops.has(`f:${f.x},${f.y},${f.z}:${n}`)) n++;
+    restDrop(s, `f:${f.x},${f.y},${f.z}:${n}`, fish, f.x, f.y, f.z, 1);
+  }
+  const w = s.inventory.damage(slot, 1);
+  return w?.broken ? { ok: true, broken: true, msg: `Pescou: ${ITEM_NAMES[fish]} \xB7 a vara quebrou` } : { ok: true, msg: `Pescou: ${ITEM_NAMES[fish]}` };
+}
+function useRod(s, hit, slot, rng = Math.random) {
+  if (s.fishing) return reelIn(s, slot, rng);
+  const v = s.volume;
+  if (hit.item || v.get(hit.x, hit.y, hit.z) !== T.LAKE) return { ok: false, msg: "Lance a vara na \xE1gua" };
+  let y = hit.y;
+  while (v.get(hit.x, y + 1, hit.z) === T.LAKE) y++;
+  if (v.get(hit.x, y + 1, hit.z) !== T.AIR) return { ok: false, msg: "Falta espa\xE7o livre sobre a \xE1gua" };
+  s.fishing = newBobber(hit.x, y + 1, hit.z, rng);
+  s.dropsRev++;
+  return { ok: true, msg: "Vara lan\xE7ada" };
+}
 function useSoilTool(s, hit, hoe) {
   const { x, y, z } = hit;
   if (hit.item || hit.ny !== 1 || !s.volume.editable(x, y, z)) return { ok: false, msg: hoe ? "A enxada ara a face de cima da terra" : "A p\xE1 abre caminho na face de cima da grama" };
@@ -2177,9 +2515,21 @@ function useSoilTool(s, hit, hoe) {
   return w.broken ? { ok: true, broken: true, msg: `${w.name} quebrou` } : { ok: true };
 }
 function placeFromSlot(s, hit, slot) {
+  const held = s.inventory.get(slot)?.item, block = held ? blockOfItem(held) : null;
+  const r = placeFromSlotCore(s, hit, slot);
+  if (r.ok && block !== null && isCoralBlock(block)) watchCoral(s, hit.x + hit.nx, hit.y + hit.ny, hit.z + hit.nz);
+  return r;
+}
+function placeFromSlotCore(s, hit, slot) {
   const stack = s.inventory.get(slot);
   if (!stack) return { ok: false };
   if (isHoe(stack.item) || isShovel(stack.item)) return useSoilTool(s, hit, isHoe(stack.item));
+  if (isBoatItem(stack.item)) return placeBoat(s, hit, slot, stack.item - Item.BOTE_CARVALHO);
+  {
+    const wp = blockOfItem(stack.item);
+    if (wp !== null && (stack.item === Item.ERVA_MARINHA || stack.item === Item.ALGA || isCoralPlant(wp) || isCoralFan(wp))) return placeWaterPlant(s, hit, slot, wp === T.KELP ? T.KELP : wp);
+  }
+  if (stack.item === Item.VARA_PESCA) return useRod(s, hit, slot);
   if (isBucket(stack.item)) return useBucket(s, hit, slot);
   if (stack.item === Item.NOZ && canPlantNut(s, hit)) return plantCrop(s, hit, slot, "noz");
   const garden = gardenSpeciesOf(stack.item);
@@ -2396,6 +2746,86 @@ function hurtFarejador(f, damage) {
   f.aggro = 8;
   f.cooldown = 0;
   return { dead: f.hp <= 0 };
+}
+
+// src/titan/fauna.ts
+var FAUNA_KINDS = {
+  porco: { name: "Porco", hp: 10, width: 0.9, height: 0.9, walk: 1.3, panic: 1.25, weight: 10 },
+  vaca: { name: "Vaca", hp: 10, width: 0.9, height: 1.4, walk: 1.1, panic: 1.25, weight: 8 },
+  ovelha: { name: "Ovelha", hp: 8, width: 0.9, height: 1.3, walk: 1.2, panic: 1.25, weight: 12 },
+  galinha: { name: "Galinha", hp: 4, width: 0.4, height: 0.7, walk: 1.3, panic: 1.4, weight: 10 }
+};
+var FAUNA_ORDER = ["ovelha", "galinha", "porco", "vaca"];
+var GROUP_SIZE = 4;
+var GROUP_SPREAD = 4;
+var GROUP_CHANCE = 0.1;
+var GROUP_CHANCE_V3 = 0.4;
+var groupChanceFor = (version) => version >= 4 ? GROUP_CHANCE : GROUP_CHANCE_V3;
+var SPAWN_MIN_Y = 64;
+var BREED_COOLDOWN_S = 300;
+var GROW_S = 1200;
+var MAX_FAUNA = 200;
+var BREED_FOOD = {
+  porco: [Item.CENOURA, Item.BATATA, Item.BETERRABA],
+  vaca: [Item.TRIGO],
+  ovelha: [Item.TRIGO],
+  galinha: [Item.SEMENTE_TRIGO]
+};
+var hasFauna = (g) => g.world === "orvalis" && g.version >= 3;
+function faunaSpecs(g) {
+  if (!hasFauna(g)) return [];
+  const chance = groupChanceFor(g.version), out = [], total = FAUNA_ORDER.reduce((a, k) => a + FAUNA_KINDS[k].weight, 0);
+  for (let cx = Math.floor(g.region.min / 16); cx < Math.ceil(g.region.max / 16); cx++) for (let cz = Math.floor(g.region.min / 16); cz < Math.ceil(g.region.max / 16); cz++) {
+    const key2 = Math.imul(cx + 64, 4093) + (cz + 64);
+    for (let n = 0; n < 3 && hash2(g.seed, key2, 9100 + n * 17) < chance; n++) {
+      let pick = hash2(g.seed, key2, 9101 + n * 17) * total, kind = FAUNA_ORDER[0];
+      for (const k of FAUNA_ORDER) {
+        pick -= FAUNA_KINDS[k].weight;
+        if (pick < 0) {
+          kind = k;
+          break;
+        }
+      }
+      const ox = cx * 16 + Math.floor(hash2(g.seed, key2, 9102 + n * 17) * 16), oz = cz * 16 + Math.floor(hash2(g.seed, key2, 9103 + n * 17) * 16);
+      for (let m = 0; m < GROUP_SIZE; m++) {
+        const x = ox + Math.floor(hash2(g.seed, key2, 9200 + n * 31 + m * 2) * (2 * GROUP_SPREAD + 1)) - GROUP_SPREAD, z = oz + Math.floor(hash2(g.seed, key2, 9201 + n * 31 + m * 2) * (2 * GROUP_SPREAD + 1)) - GROUP_SPREAD;
+        if (!g.inRegion(x, z)) continue;
+        const top = g.column(x, z).top;
+        if (top < SPAWN_MIN_Y || g.blockAt(x, top, z) !== T.GRASS || g.blockAt(x, top + 1, z) !== T.AIR || g.blockAt(x, top + 2, z) !== T.AIR) continue;
+        out.push({ id: `f${cx}_${cz}_${n}_${m}`, kind, x, y: top + 1, z });
+      }
+    }
+  }
+  return out;
+}
+function newFauna(sp, seed) {
+  const hx = sp.x + 0.5, hz = sp.z + 0.5, salt = [...sp.id].reduce((a, ch) => Math.imul(a, 31) + ch.charCodeAt(0) >>> 0, 7);
+  return { id: sp.id, kind: sp.kind, body: newBody(hx, sp.y, hz), yaw: hash2(seed, salt, 3) * Math.PI * 2, phase: "wander", t: 0, home: { x: hx, z: hz }, goal: { x: hx, z: hz }, pause: 0.5 + 2 * hash2(seed, salt, 4), stuck: 0, hp: FAUNA_KINDS[sp.kind].hp, hurt: 99, from: { x: hx, z: hz }, clock: 0, seed: (seed >>> 0) + salt >>> 0, baby: false, grow: 0, love: 0, rest: 0 };
+}
+var newFaunaFromSpecs = (specs, seed) => specs.map((sp) => newFauna(sp, seed));
+var maxHp = (f) => f.baby ? Math.ceil(FAUNA_KINDS[f.kind].hp / 2) : FAUNA_KINDS[f.kind].hp;
+var r2 = (n) => Math.round(n * 100) / 100;
+var faunaToData = (list) => list.map((f) => ({ id: f.id, k: f.kind, x: r2(f.body.x), y: r2(f.body.y), z: r2(f.body.z), hp: f.hp, ...f.baby ? { b: 1, g: r2(f.grow) } : {}, ...f.rest > 0 ? { r: r2(f.rest) } : {} }));
+function faunaFromData(raw, seed, inRegion2) {
+  if (!Array.isArray(raw)) return null;
+  const out = [], ids = /* @__PURE__ */ new Set(), num3 = (v) => typeof v === "number" && Number.isFinite(v);
+  for (const d of raw) {
+    if (out.length >= MAX_FAUNA) break;
+    if (!d || typeof d.id !== "string" || d.id.length > 64 || ids.has(d.id) || !(d.k && d.k in FAUNA_KINDS) || !num3(d.x) || !num3(d.y) || !num3(d.z) || !inRegion2(Math.floor(d.x), Math.floor(d.z))) continue;
+    const f = newFauna({ id: d.id, kind: d.k, x: Math.floor(d.x), y: Math.floor(d.y), z: Math.floor(d.z) }, seed);
+    f.body.x = d.x;
+    f.body.y = d.y;
+    f.body.z = d.z;
+    if (d.b === 1) {
+      f.baby = true;
+      f.grow = num3(d.g) ? Math.min(GROW_S, Math.max(1, d.g)) : GROW_S;
+    }
+    f.hp = num3(d.hp) ? Math.min(maxHp(f), Math.max(1, Math.round(d.hp))) : maxHp(f);
+    if (num3(d.r)) f.rest = Math.min(BREED_COOLDOWN_S, Math.max(0, d.r));
+    ids.add(d.id);
+    out.push(f);
+  }
+  return out;
 }
 
 // src/titan/combat.ts
@@ -2694,7 +3124,7 @@ var TitanGenerator = class {
    */
   planEmber(strict = true) {
     const a = this.arrival, base = derive(this.seed, PURPOSE.brasa), reach = this.walkable();
-    const key = (x, z) => (x + 4096) * 8192 + (z + 4096);
+    const key2 = (x, z) => (x + 4096) * 8192 + (z + 4096);
     const out = [];
     for (const k of reach) {
       const x = Math.floor(k / 8192) - 4096, z = k % 8192 - 4096;
@@ -2704,7 +3134,7 @@ var TitanGenerator = class {
       if (strict && (c.surface !== T.DAMP_SAND || c.top < 63 || c.top > 65)) continue;
       if (c.surface !== T.DAMP_SAND && c.surface !== T.SAND) continue;
       if (this.formations.some((f) => Math.hypot(f.x - x, f.z - z) < 5)) continue;
-      if (![[1, 0], [-1, 0], [0, 1], [0, -1]].every(([dx, dz]) => reach.has(key(x + dx, z + dz)))) continue;
+      if (![[1, 0], [-1, 0], [0, 1], [0, -1]].every(([dx, dz]) => reach.has(key2(x + dx, z + dz)))) continue;
       out.push({ x, z, h: hash2(base, x * 131 + z, 3) });
     }
     out.sort((p, q) => p.h - q.h || p.x - q.x || p.z - q.z);
@@ -2779,14 +3209,14 @@ var TitanGenerator = class {
   /** Grupos de junco de vidro: um em volta do depósito (sem os 8 vizinhos, para a passagem e a brasa ficarem livres) e outro afastado, só em areia úmida alcançável. Puro por seed e posição. */
   reedsFor(ex, ez) {
     const reach = this.walkable(), base = derive(this.seed, PURPOSE.junco);
-    const key = (x, z) => (x + 4096) * 8192 + (z + 4096);
+    const key2 = (x, z) => (x + 4096) * 8192 + (z + 4096);
     const centers = [{ x: ex, z: ez }];
     const far = this.planEmber().find((c) => Math.hypot(c.x - ex, c.z - ez) >= 9);
     if (far) centers.push(far);
     const seen = /* @__PURE__ */ new Set(), out = [];
     for (const c of centers) {
       for (let dz = -3; dz <= 3; dz++) for (let dx = -3; dx <= 3; dx++) {
-        const x = c.x + dx, z = c.z + dz, k = key(x, z);
+        const x = c.x + dx, z = c.z + dz, k = key2(x, z);
         if (seen.has(k) || Math.abs(x - ex) <= 1 && Math.abs(z - ez) <= 1 || !reach.has(k) || !this.inRegion(x, z)) continue;
         const col = this.column(x, z);
         if (col.surface !== T.DAMP_SAND || col.top < 63 || col.top > 65) continue;
@@ -2804,20 +3234,20 @@ var TitanGenerator = class {
    */
   nutsFor() {
     const a = this.arrival, reach = this.walkable(), base = derive(this.seed, PURPOSE.noz);
-    const key = (x, z) => (x + 4096) * 8192 + (z + 4096);
-    const reeds = new Set(this.reeds.map((r) => key(r.x, r.z)));
+    const key2 = (x, z) => (x + 4096) * 8192 + (z + 4096);
+    const reeds = new Set(this.reeds.map((r) => key2(r.x, r.z)));
     const cands = [];
     for (const k of reach) {
       const x = Math.floor(k / 8192) - 4096, z = k % 8192 - 4096;
       if (x < this.region.min + 4 || x >= this.region.max - 4 || z < this.region.min + 4 || z >= this.region.max - 4) continue;
-      if (this.inClearing(x, z, 3) || reeds.has(key(x, z))) continue;
+      if (this.inClearing(x, z, 3) || reeds.has(key2(x, z))) continue;
       const c = this.column(x, z);
       if (c.surface !== T.SAND && c.surface !== T.DAMP_SAND || c.top < 64 || c.top > 66) continue;
       if (this.version >= 12 && c.surface !== T.SAND) continue;
       if (this.formations.some((f) => Math.hypot(f.x - x, f.z - z) < 4)) continue;
       if (this.emberSites.some((e) => Math.hypot(e.x - x, e.z - z) < 3)) continue;
       if (this.copperSites.some((s) => Math.hypot(s.x - x, s.z - z) < 6) || this.shelterSites.some((s) => Math.hypot(s.x - x, s.z - z) < 6)) continue;
-      if (![[1, 0], [-1, 0], [0, 1], [0, -1]].every(([dx, dz]) => reach.has(key(x + dx, z + dz)))) continue;
+      if (![[1, 0], [-1, 0], [0, 1], [0, -1]].every(([dx, dz]) => reach.has(key2(x + dx, z + dz)))) continue;
       cands.push({ x, z, top: c.top, h: hash2(base, x * 131 + z, 7), d: Math.hypot(x - a.x, z - a.z) });
     }
     cands.sort((p, q) => p.h - q.h || p.x - q.x || p.z - q.z);
@@ -2863,18 +3293,18 @@ var TitanGenerator = class {
   }
   /** Colunas alcançáveis a pé desde a chegada: vizinhas por degraus de até 1 bloco, fora d'água funda (topo ≥ 63) e dentro da região. */
   walkableFromArrival() {
-    const key = (x, z) => (x + 4096) * 8192 + (z + 4096);
+    const key2 = (x, z) => (x + 4096) * 8192 + (z + 4096);
     const seen = /* @__PURE__ */ new Set();
     const a = this.arrival;
     const queue = [[Math.floor(a.x), Math.floor(a.z)]];
-    seen.add(key(queue[0][0], queue[0][1]));
+    seen.add(key2(queue[0][0], queue[0][1]));
     for (let i = 0; i < queue.length; i++) {
       const [x, z] = queue[i];
       const t = this.baseTop(x, z);
       for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
         const nx = x + dx, nz = z + dz;
         if (nx < this.region.min + 1 || nx >= this.region.max - 1 || nz < this.region.min + 1 || nz >= this.region.max - 1) continue;
-        const k = key(nx, nz);
+        const k = key2(nx, nz);
         if (seen.has(k)) continue;
         const nt = this.baseTop(nx, nz);
         if (nt < 63 || Math.abs(nt - t) > 1) continue;
@@ -2905,7 +3335,7 @@ var TitanGenerator = class {
   /** 3 veios por formação: o centro e os dois vizinhos de menor sorteio, no topo da coluna (superfície de rocha escura ou gelo fosco). */
   placeVeins() {
     const base = derive(this.seed, PURPOSE.veioSuperficie);
-    const key = (x, z) => (x + 4096) * 8192 + (z + 4096);
+    const key2 = (x, z) => (x + 4096) * 8192 + (z + 4096);
     for (const f of this.formations) {
       const want = f.kind === "rock" ? T.DARK_ROCK : T.FROST;
       const ring = [];
@@ -2915,8 +3345,8 @@ var TitanGenerator = class {
         if (this.column(x, z).surface === want) ring.push({ x, z, h: hash2(base, x * 131 + z, f.kind === "rock" ? 1 : 2) });
       }
       ring.sort((p, q) => p.h - q.h || p.x - q.x || p.z - q.z);
-      this.veins.set(key(f.x, f.z), f.kind);
-      for (const c of ring.slice(0, 2)) this.veins.set(key(c.x, c.z), f.kind);
+      this.veins.set(key2(f.x, f.z), f.kind);
+      for (const c of ring.slice(0, 2)) this.veins.set(key2(c.x, c.z), f.kind);
     }
   }
   /** Posições (x, y, z) dos veios naturais (v3), com o tipo. Vazio nas versões anteriores. */
@@ -2952,13 +3382,13 @@ var TitanGenerator = class {
     this.copperSites = sites;
     this.cols.clear();
     const cells = [];
-    const key = (x, z) => (x + 4096) * 8192 + (z + 4096);
+    const key2 = (x, z) => (x + 4096) * 8192 + (z + 4096);
     for (const s of sites) {
       const ring = [];
       for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) if (dx || dz) ring.push({ x: s.x + dx, z: s.z + dz, h: hash2(base, (s.x + dx) * 131 + s.z + dz, 9) });
       ring.sort((p, q) => p.h - q.h || p.x - q.x || p.z - q.z);
       for (const c of [{ x: s.x, z: s.z }, ...ring.slice(0, 2)]) {
-        this.copper.add(key(c.x, c.z));
+        this.copper.add(key2(c.x, c.z));
         cells.push({ x: c.x, y: this.column(c.x, c.z).top, z: c.z });
       }
     }
@@ -2993,12 +3423,12 @@ var TitanGenerator = class {
   /** Hastes secas (v7): até 8 em colunas de areia perto dos grupos de junco (≤ 7 blocos de um junco), fora das células de junco e de planta, alcançáveis a pé, afastadas ≥ 2 entre si. */
   dryReedsFor() {
     const reach = this.walkable(), base = derive(this.seed, PURPOSE.haste);
-    const key = (x, z) => (x + 4096) * 8192 + (z + 4096);
-    const taken = new Set([...this.reeds, ...this.nutPlants].map((r) => key(r.x, r.z)));
+    const key2 = (x, z) => (x + 4096) * 8192 + (z + 4096);
+    const taken = new Set([...this.reeds, ...this.nutPlants].map((r) => key2(r.x, r.z)));
     const cands = [];
     const seen = /* @__PURE__ */ new Set();
     for (const r of this.reeds) for (let dz = -7; dz <= 7; dz++) for (let dx = -7; dx <= 7; dx++) {
-      const x = r.x + dx, z = r.z + dz, k = key(x, z);
+      const x = r.x + dx, z = r.z + dz, k = key2(x, z);
       if (seen.has(k) || taken.has(k) || !reach.has(k) || !this.inRegion(x, z)) continue;
       seen.add(k);
       const c = this.column(x, z);
@@ -3146,11 +3576,11 @@ var TitanGenerator = class {
   // ---- Colunas e voxels ----
   /** Coluna em (x, z): memoizada (as consultas de voxel e de malha repetem muito a mesma coluna). */
   column(x, z) {
-    const key = (x + 4096) * 8192 + (z + 4096);
-    const hit = this.cols.get(key);
+    const key2 = (x + 4096) * 8192 + (z + 4096);
+    const hit = this.cols.get(key2);
     if (hit) return hit;
     const col = this.computeColumn(x, z);
-    this.cols.set(key, col);
+    this.cols.set(key2, col);
     return col;
   }
   computeColumn(x, z) {
@@ -3256,16 +3686,295 @@ var TitanGenerator = class {
         const x = cx * 16 + Math.floor(rng() * 16), z = cz * 16 + Math.floor(rng() * 16), y = sampleOreY(rng, rule);
         const pri = ri * 1e10 + ck * 1e3 + k;
         for (const [vx, vy, vz] of veinCells(rng, x, y, z, rule, replaceable, exposed)) {
-          const key = ((vx + 4096) * 8192 + (vz + 4096)) * 512 + (vy + 64), old = this.ores.get(key);
-          if (!old || pri < old.pri) this.ores.set(key, { id: rule.blockId, pri });
+          const key2 = ((vx + 4096) * 8192 + (vz + 4096)) * 512 + (vy + 64), old = this.ores.get(key2);
+          if (!old || pri < old.pri) this.ores.set(key2, { id: rule.blockId, pri });
         }
       }
     });
   }
 };
 
+// src/titan/orvalis/generator.ts
+var ORVALIS_GENERATOR_VERSION = 6;
+var REEF = { threshold: 0.3, scale: 16, famCell: 9, minDepth: 3, maxDepth: 10, h0: 0.35, h1: 0.75, plant: 0.35, fan: 0.6 };
+var FLORA = { kelp: 0.05, seagrass: 0.2, tallShare: 0.4, kelpMinDepth: 5, kelpBase: 3, kelpSpread: 10 };
+var PURPOSE2 = { recife: 11, relevo: 1, colinas: 2, mar: 3, rio: 4, montanha: 5, bioma: 6, bosque: 7, arvore: 8, chegada: 9, mina: 10 };
+var ORVALIS_ORE_RULES = [
+  { blockId: T.COAL_ORE, veinsPerChunk: 20, veinSize: 4, veinSizeMax: 30, minY: -60, maxY: 90, peakY: 40, airDiscardChance: 0.5 }
+];
+var CLEARING2 = 6;
+var SEA_BAND = 20;
+var GRID = 5;
+var sm = (k) => {
+  const c = Math.min(1, Math.max(0, k));
+  return c * c * (3 - 2 * c);
+};
+var LOG = { oak: T.LOG_OAK, birch: T.LOG_BIRCH, cherry: T.LOG_CHERRY };
+var LEAVES = { oak: T.LEAVES_OAK, birch: T.LEAVES_BIRCH, cherry: T.LEAVES_CHERRY };
+var CROWN = { oak: [2, 2, 1, 1], birch: [2, 2, 1, 1], cherry: [2, 3, 2, 1] };
+var NO_TREES = [];
+var OrvalisGenerator = class {
+  constructor(seed, version = ORVALIS_GENERATOR_VERSION) {
+    this.seed = seed;
+    this.version = version;
+    this.nLand = new Noise(derive(seed, PURPOSE2.relevo));
+    this.nHills = new Noise(derive(seed, PURPOSE2.colinas));
+    this.nSea = new Noise(derive(seed, PURPOSE2.mar));
+    this.nRiver = new Noise(derive(seed, PURPOSE2.rio));
+    this.nMount = new Noise(derive(seed, PURPOSE2.montanha));
+    this.nBiome = new Noise(derive(seed, PURPOSE2.bioma));
+    this.nForest = new Noise(derive(seed, PURPOSE2.bosque));
+    this.nReef = new Noise(derive(seed, PURPOSE2.recife));
+    this.arrival = this.findArrival();
+  }
+  seed;
+  version;
+  world = "orvalis";
+  region = REGION_V6;
+  arrival;
+  // Conteúdo próprio do Titã: vazio aqui (o motor lê os mesmos campos em todo mundo; ver `TerrainGen`).
+  surfaceItems = [];
+  plates = [];
+  dryReeds = [];
+  reeds = [];
+  nutPlants = [];
+  den = null;
+  reedsFor() {
+    return [];
+  }
+  planEmber() {
+    return [];
+  }
+  nLand;
+  nHills;
+  nSea;
+  nRiver;
+  nMount;
+  nBiome;
+  nForest;
+  nReef;
+  cols = /* @__PURE__ */ new Map();
+  treeCells = /* @__PURE__ */ new Map();
+  near = /* @__PURE__ */ new Map();
+  ores = /* @__PURE__ */ new Map();
+  oreDone = /* @__PURE__ */ new Set();
+  oreReady = /* @__PURE__ */ new Set();
+  inRegion(x, z) {
+    return inRegion(x, z, this.region);
+  }
+  /** Bioma da coluna: `true` = Bosque de Sakura (cerejeiras); `false` = Campos. */
+  sakura(x, z) {
+    return this.nBiome.fbm2(x / 60 + 3.5, z / 60 + 8.5, 2) > 0.2;
+  }
+  // ---- Relevo ----
+  /** Altura do terreno sem a clareira da chegada (pura em x, z). */
+  rawTop(x, z) {
+    let h = 69 + 6 * this.nLand.fbm2(x / 70 + 0.5, z / 70 + 0.5, 3) + 3 * this.nHills.fbm2(x / 26 + 5.5, z / 26 + 1.5, 3);
+    const m = this.nMount.fbm2(x / 80 + 2.5, z / 80 + 6.5, 3);
+    if (m > 0.05) h += (m - 0.05) * 110;
+    const s = this.nSea.fbm2(x / 110 + 7.5, z / 110 + 3.5, 2);
+    if (s < -0.3) h = h + (46 - h) * sm((-0.3 - s) / 0.25) * 0.8;
+    const r = Math.abs(this.nRiver.noise2(x / 48 + 1.5, z / 48 + 9.5));
+    const bank = 1 - r / 0.05;
+    if (bank > 0 && h >= 63) h += (61 - h) * sm(bank) * (1 - sm((h - 72) / 10));
+    const edge = Math.min(x - this.region.min, this.region.max - 1 - x, z - this.region.min, this.region.max - 1 - z) + 6 * this.nLand.noise2(x / 17 + 9.5, z / 17 + 4.5);
+    if (edge < SEA_BAND) h -= sm((SEA_BAND - edge) / SEA_BAND) * (h - 44);
+    return Math.round(h);
+  }
+  column(x, z) {
+    const key2 = (x + 4096) * 8192 + (z + 4096);
+    const hit = this.cols.get(key2);
+    if (hit) return hit;
+    const col = this.computeColumn(x, z);
+    this.cols.set(key2, col);
+    return col;
+  }
+  computeColumn(x, z) {
+    const c = this.arrival.clearing;
+    const inClear = x >= c.x0 && x < c.x0 + c.size && z >= c.z0 && z < c.z0 + c.size;
+    const top = inClear ? this.arrival.y - 1 : this.rawTop(x, z);
+    if (inClear) return { top, surface: T.GRASS, sub: T.DIRT };
+    const slope = Math.max(Math.abs(this.rawTop(x + 1, z) - top), Math.abs(this.rawTop(x - 1, z) - top), Math.abs(this.rawTop(x, z + 1) - top), Math.abs(this.rawTop(x, z - 1) - top));
+    if (top <= 65) return { top, surface: T.BEACH, sub: T.BEACH };
+    if (top >= 86 || slope >= 4) return { top, surface: T.STONE, sub: T.STONE };
+    return { top, surface: T.GRASS, sub: T.DIRT };
+  }
+  // ---- Chegada ----
+  /** Clareira plana de grama a que o jogador chega, e o olhar voltado para a água mais próxima (ou para o centro da ilha). */
+  findArrival() {
+    const base = derive(this.seed, PURPOSE2.chegada);
+    const flat = (x0, z0) => {
+      let lo = Infinity, hi = -Infinity;
+      for (let z = z0 - 2; z < z0 + CLEARING2 + 2; z++) for (let x = x0 - 2; x < x0 + CLEARING2 + 2; x++) {
+        const t = this.rawTop(x, z);
+        if (t < 67 || t > 78) return null;
+        lo = Math.min(lo, t);
+        hi = Math.max(hi, t);
+      }
+      return hi - lo <= 2 ? Math.round((lo + hi) / 2) : null;
+    };
+    let pick = null;
+    const span2 = this.region.max - this.region.min - 2 * (SEA_BAND + 6);
+    for (let k = 0; k < 800 && !pick; k++) {
+      const x0 = Math.floor(hash2(base, k, 11) * span2) + this.region.min + SEA_BAND + 6, z0 = Math.floor(hash2(base, k, 23) * span2) + this.region.min + SEA_BAND + 6;
+      const level = flat(x0, z0);
+      if (level !== null) pick = { x0, z0, level };
+    }
+    if (!pick) pick = { x0: -3, z0: -3, level: 68 };
+    const cx = pick.x0 + CLEARING2 / 2, cz = pick.z0 + CLEARING2 / 2;
+    let best = { d: Infinity, dx: -cx, dz: -cz };
+    for (let a = 0; a < 16; a++) {
+      const ang = a * Math.PI / 8, dx = Math.cos(ang), dz = Math.sin(ang);
+      for (let d = 4; d <= 60 && d < best.d; d += 2) if (this.rawTop(Math.round(cx + dx * d), Math.round(cz + dz * d)) <= 63) {
+        best = { d, dx: dx * d, dz: dz * d };
+        break;
+      }
+    }
+    return { x: cx, y: pick.level + 1, z: cz, yaw: Math.atan2(-best.dx, -best.dz), clearing: { x0: pick.x0, z0: pick.z0, size: CLEARING2 } };
+  }
+  // ---- Árvores ----
+  /** A árvore da célula (gx, gz) da grade de sorteio, ou null: depende só da seed e das colunas dela (nunca de outras árvores). */
+  treeIn(gx, gz) {
+    const ck = (gx + 1024) * 2048 + (gz + 1024);
+    if (this.treeCells.has(ck)) return this.treeCells.get(ck);
+    const base = derive(this.seed, PURPOSE2.arvore);
+    const x = gx * GRID + Math.floor(hash2(base, ck, 1) * GRID), z = gz * GRID + Math.floor(hash2(base, ck, 2) * GRID);
+    let tree = null;
+    const c = this.arrival.clearing;
+    const inside = x >= this.region.min + 4 && x < this.region.max - 4 && z >= this.region.min + 4 && z < this.region.max - 4;
+    const nearClearing = x >= c.x0 - 4 && x < c.x0 + c.size + 4 && z >= c.z0 - 4 && z < c.z0 + c.size + 4;
+    if (inside && !nearClearing) {
+      const col = this.column(x, z), sak = this.sakura(x, z);
+      const density = (sak ? 0.5 : 0.2) + 0.35 * Math.max(0, this.nForest.fbm2(x / 34 + 4.5, z / 34 + 2.5, 2));
+      if (col.surface === T.GRASS && col.top >= 66 && hash2(base, ck, 3) < density) {
+        const p = hash2(base, ck, 4);
+        const sp = sak ? p < 0.8 ? "cherry" : "oak" : p < 0.55 ? "oak" : p < 0.9 ? "birch" : "cherry";
+        tree = { x, z, top: col.top, h: 4 + Math.floor(hash2(base, ck, 5) * 3) + (sp === "birch" ? 1 : 0), sp, seed: Math.floor(hash2(base, ck, 6) * 4294967296) };
+      }
+    }
+    this.treeCells.set(ck, tree);
+    return tree;
+  }
+  /** Árvores cujo tronco ou copa pode tocar a coluna (x, z): raiz a até 3 blocos de distância. */
+  treesNear(x, z) {
+    const key2 = (x + 4096) * 8192 + (z + 4096), hit = this.near.get(key2);
+    if (hit) return hit;
+    let out = null;
+    for (let gz = Math.floor((z - 3 - (GRID - 1)) / GRID); gz <= Math.floor((z + 3) / GRID); gz++) for (let gx = Math.floor((x - 3 - (GRID - 1)) / GRID); gx <= Math.floor((x + 3) / GRID); gx++) {
+      const t = this.treeIn(gx, gz);
+      if (t && Math.abs(t.x - x) <= 3 && Math.abs(t.z - z) <= 3) (out ??= []).push(t);
+    }
+    const r = out ?? NO_TREES;
+    this.near.set(key2, r);
+    return r;
+  }
+  /** Bloco (tora ou folha) que a árvore põe na célula, ou 0. */
+  treeBlock(t, x, y, z) {
+    const dx = x - t.x, dz = z - t.z, dy = y - t.top;
+    if (dx === 0 && dz === 0 && dy >= 1 && dy <= t.h) return LOG[t.sp];
+    const layer = dy - (t.h - 2);
+    if (layer < 0 || layer > 3) return 0;
+    const r = CROWN[t.sp][layer], d2 = dx * dx + dz * dz;
+    if (d2 > r * r + 0.5 || dx === 0 && dz === 0 && layer < 3) return 0;
+    if (d2 >= r * r - 0.5 && r >= 2 && hash2(t.seed, x * 31 + dy, z) < 0.14) return 0;
+    return LEAVES[t.sp];
+  }
+  /** O recife da coluna (v6, ADR 0136), ou null: altura do monte de coral, a planta de cima (0 = nenhuma) e a família (0–4). Só em fundo de areia, com `REEF.minDepth` a `REEF.maxDepth` de água, onde o ruído passa do limiar. */
+  reefInfo(x, z, top) {
+    const depth = LAKE_LAST_Y - top;
+    if (depth < REEF.minDepth || depth > REEF.maxDepth || top > 60) return null;
+    const cl = this.arrival.clearing;
+    if (this.column(x, z).surface !== T.BEACH || x >= cl.x0 && x < cl.x0 + cl.size && z >= cl.z0 && z < cl.z0 + cl.size) return null;
+    if (this.nReef.fbm2(x / REEF.scale + 3.5, z / REEF.scale + 8.5, 2) < REEF.threshold) return null;
+    const r = hash2(this.seed ^ 2017, x, z), r22 = hash2(this.seed ^ 937, x, z);
+    const fam = Math.floor(hash2(this.seed ^ 709, Math.floor(x / REEF.famCell), Math.floor(z / REEF.famCell)) * 5);
+    const h = Math.min(depth - 2, r < REEF.h0 ? 0 : r < REEF.h1 ? 1 : 2);
+    return { h, plant: r22 < REEF.plant ? T.CORAL + fam : r22 < REEF.fan ? T.CORAL_FAN + fam : 0 };
+  }
+  /** Bloco do recife na célula `(x, y, z)` acima do piso `top` (0 = nada): monte de coral vivo e, por cima, coral ou gorgônia. */
+  reefBlock(x, y, z, top) {
+    const k = y - top;
+    if (k < 1 || k > 3) return 0;
+    const r = this.reefInfo(x, z, top);
+    if (!r) return 0;
+    if (k <= r.h) return T.CORAL_BLOCK + Math.floor(hash2(this.seed ^ 709, Math.floor(x / REEF.famCell), Math.floor(z / REEF.famCell)) * 5);
+    return k === r.h + 1 ? r.plant : 0;
+  }
+  /** Planta aquática da célula `(x, y, z)` acima do piso `top` (0 = só água): erva marinha, erva alta ou alga, pela regra pura `FLORA` (v5, ADR 0135). */
+  floraBlock(x, y, z, top) {
+    const k = y - top, depth = LAKE_LAST_Y - top;
+    if (k < 1 || k > 13 || depth < 2 || top > 61) return 0;
+    if (this.version >= 6 && this.reefInfo(x, z, top) !== null) return 0;
+    const c = this.column(x, z);
+    if (c.surface !== T.BEACH || this.arrival.clearing && x >= this.arrival.clearing.x0 && x < this.arrival.clearing.x0 + this.arrival.clearing.size && z >= this.arrival.clearing.z0 && z < this.arrival.clearing.z0 + this.arrival.clearing.size) return 0;
+    const r = hash2(this.seed ^ 20970, x, z), r22 = hash2(this.seed ^ 2583, x, z);
+    if (depth >= FLORA.kelpMinDepth && r < FLORA.kelp) {
+      const h = Math.min(depth - 2, FLORA.kelpBase + Math.floor(r22 * FLORA.kelpSpread));
+      return k < h ? T.KELP : k === h ? T.KELP_TOP : 0;
+    }
+    if (r >= FLORA.kelp && r < FLORA.kelp + FLORA.seagrass) {
+      if (depth >= 3 && r22 < FLORA.tallShare) return k === 1 ? T.SEAGRASS_TALL : k === 2 ? T.SEAGRASS_TALL_TOP : 0;
+      return k === 1 ? T.SEAGRASS : 0;
+    }
+    return 0;
+  }
+  /** Voxel da base (sem edições) em coordenadas globais. */
+  blockAt(x, y, z) {
+    if (y <= Y_MIN) return T.BEDROCK;
+    const c = this.column(x, z);
+    if (y > c.top) {
+      if (y <= LAKE_LAST_Y) {
+        const f = (this.version >= 6 ? this.reefBlock(x, y, z, c.top) : 0) || (this.version >= 5 ? this.floraBlock(x, y, z, c.top) : 0);
+        return f || T.LAKE;
+      }
+      const ts = this.treesNear(x, z);
+      for (let i = 0; i < ts.length; i++) {
+        const b = this.treeBlock(ts[i], x, y, z);
+        if (b) return b;
+      }
+      return T.AIR;
+    }
+    if (y === c.top) return c.surface;
+    if (y >= c.top - 3) return c.sub;
+    if (this.version >= 2) {
+      const o = this.oreAt(x, y, z);
+      if (o !== null) return o;
+    }
+    return T.STONE;
+  }
+  /** Minério da célula (v2), ou `null`. Garante que os 3 × 3 chunks em volta já foram gerados, porque um veio passa de um chunk para o vizinho (o resultado nunca depende da ordem de leitura). */
+  oreAt(x, y, z) {
+    const cx = x >> 4, cz = z >> 4, rk = (cx + 512) * 1024 + (cz + 512);
+    if (!this.oreReady.has(rk)) {
+      for (let dx = -1; dx <= 1; dx++) for (let dz = -1; dz <= 1; dz++) this.genOreChunk(cx + dx, cz + dz);
+      this.oreReady.add(rk);
+    }
+    return this.ores.get(((x + 4096) * 8192 + (z + 4096)) * 512 + (y + 64))?.id ?? null;
+  }
+  genOreChunk(cx, cz) {
+    const ck = (cx + 512) * 1024 + (cz + 512);
+    if (this.oreDone.has(ck)) return;
+    this.oreDone.add(ck);
+    if (!this.inRegion(cx * 16 + 8, cz * 16 + 8) && !this.inRegion(cx * 16, cz * 16) && !this.inRegion(cx * 16 + 15, cz * 16 + 15)) return;
+    const replaceable = (x, y, z) => y > Y_MIN && this.inRegion(x, z) && y < this.column(x, z).top - 3;
+    const exposed = (x, y, z) => [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]].some(([dx, dy, dz]) => y + dy > this.column(x + dx, z + dz).top && y + dy > LAKE_LAST_Y);
+    ORVALIS_ORE_RULES.forEach((rule, ri) => {
+      const rng = mulberry32((derive(this.seed, PURPOSE2.mina) ^ Math.imul(ck + 1, 2654435761) ^ Math.imul(ri + 1, 2246822507)) >>> 0);
+      const n = attemptsFor(rng, rule.veinsPerChunk);
+      for (let k = 0; k < n; k++) {
+        const x = cx * 16 + Math.floor(rng() * 16), z = cz * 16 + Math.floor(rng() * 16), y = sampleOreY(rng, rule), pri = ri * 1e10 + ck * 1e3 + k;
+        for (const [vx, vy, vz] of veinCells(rng, x, y, z, rule, replaceable, exposed)) {
+          const key2 = ((vx + 4096) * 8192 + (vz + 4096)) * 512 + (vy + 64), old = this.ores.get(key2);
+          if (!old || pri < old.pri) this.ores.set(key2, { id: rule.blockId, pri });
+        }
+      }
+    });
+  }
+};
+var orvalisGeneratorFor = (seed, version) => Number.isInteger(version) && version >= 1 && version <= ORVALIS_GENERATOR_VERSION ? new OrvalisGenerator(seed, version) : null;
+
 // src/titan/save.ts
-var TITAN_SAVE_VERSION = 5;
+var TITAN_SAVE_VERSION = 8;
 
 // src/titan/light.ts
 var LIGHT_MAX = 15;
@@ -3630,23 +4339,23 @@ var TitanVolume = class _TitanVolume {
     if (!this.editable(x, y, z)) return false;
     if (isWall(id)) id = wallId(wallMaskFor((a, b, c) => this.get(a, b, c), x, y, z));
     const cx = chunkOf(x), cz = chunkOf(z);
-    const key = chunkKey(cx, cz);
+    const key2 = chunkKey(cx, cz);
     const idx = columnIndex(localOf(x), y, localOf(z));
     const baseId = this.gen.blockAt(x, y, z);
-    let e = this.edits.get(key);
+    let e = this.edits.get(key2);
     const current = e?.get(idx) ?? baseId;
     if (current === id) return false;
     if (id === baseId) {
       e?.delete(idx);
-      if (e && e.size === 0) this.edits.delete(key);
+      if (e && e.size === 0) this.edits.delete(key2);
     } else {
       if (!e) {
         e = /* @__PURE__ */ new Map();
-        this.edits.set(key, e);
+        this.edits.set(key2, e);
       }
       e.set(idx, id);
     }
-    this.dirty.set(key, ++this.chunkRev);
+    this.dirty.set(key2, ++this.chunkRev);
     this.markSections(x, y, z);
     this.updateLight(x, y, z, current, id);
     this.onSet?.(x, y, z, id);
@@ -3667,7 +4376,7 @@ var TitanVolume = class _TitanVolume {
   remove(x, y, z) {
     const baseId = this.gen.blockAt(x, y, z), before = this.get(x, y, z);
     const floods = baseId !== T.LAKE && isSolid(before) && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dz]) => this.get(x + dx, y, z + dz) === T.LAKE);
-    return this.set(x, y, z, baseId === T.LAKE || floods ? T.LAKE : T.AIR);
+    return this.set(x, y, z, baseId === T.LAKE || floods || isWaterPlant(before) ? T.LAKE : T.AIR);
   }
   /** Coloca um sólido na célula (ar ou líquido; o líquido é deslocado, mas continua na base para voltar depois). */
   place(x, y, z, id) {
@@ -3701,8 +4410,8 @@ var TitanVolume = class _TitanVolume {
   /** Seções com edição (e as vizinhas das bordas): entram na fila inicial do renderer, mesmo acima do relevo natural (ex.: construção em Y = 150 ao reabrir). */
   editedSections() {
     const out = /* @__PURE__ */ new Set();
-    for (const [key, cells] of this.edits) {
-      const [cx, cz] = key.split(",").map(Number);
+    for (const [key2, cells] of this.edits) {
+      const [cx, cz] = key2.split(",").map(Number);
       for (const idx of cells.keys()) {
         const u = unpackIndex(idx);
         for (const k of this.sectionsAround(cx * 16 + u.lx, u.y, cz * 16 + u.lz)) out.add(k);
@@ -3732,16 +4441,16 @@ var TitanVolume = class _TitanVolume {
    * Depois da confirmação, `markClean` limpa só a revisão confirmada.
    */
   dirtyChunks() {
-    return [...this.dirty].map(([key, rev]) => {
-      const [cx, cz] = key.split(",").map(Number);
-      return { cx, cz, rev, edits: [...this.edits.get(key) ?? []] };
+    return [...this.dirty].map(([key2, rev]) => {
+      const [cx, cz] = key2.split(",").map(Number);
+      return { cx, cz, rev, edits: [...this.edits.get(key2) ?? []] };
     });
   }
   /** Marca como gravada a revisão confirmada; um chunk editado de novo durante a gravação (revisão maior) continua pendente. */
   markClean(saved) {
     for (const k of saved) {
-      const key = chunkKey(k.cx, k.cz);
-      if (this.dirty.get(key) === k.rev) this.dirty.delete(key);
+      const key2 = chunkKey(k.cx, k.cz);
+      if (this.dirty.get(key2) === k.rev) this.dirty.delete(key2);
     }
   }
   get hasDirty() {
@@ -3776,9 +4485,18 @@ var TitanVolume = class _TitanVolume {
   }
   // ---- Luz de lanterna ----
   /** Modelos 3D colocados (mesa, Marco de Margem, Painel de Junco): o renderer desenha uma instância por célula; `modelVersion` muda a cada peça posta, retirada ou carregada. */
-  models = { workbench: /* @__PURE__ */ new Map(), marco: /* @__PURE__ */ new Map(), painel: /* @__PURE__ */ new Map(), escada: /* @__PURE__ */ new Map(), bau: /* @__PURE__ */ new Map(), cama: /* @__PURE__ */ new Map(), braseiro: /* @__PURE__ */ new Map(), braseiroAceso: /* @__PURE__ */ new Map(), degrau: /* @__PURE__ */ new Map(), degrauPedra: /* @__PURE__ */ new Map(), cadeira: /* @__PURE__ */ new Map(), porta: /* @__PURE__ */ new Map(), tocha: /* @__PURE__ */ new Map(), tochaParede: /* @__PURE__ */ new Map(), ...Object.fromEntries(MURETA_KINDS.map((k) => [k, /* @__PURE__ */ new Map()])) };
+  models = { workbench: /* @__PURE__ */ new Map(), marco: /* @__PURE__ */ new Map(), painel: /* @__PURE__ */ new Map(), escada: /* @__PURE__ */ new Map(), bau: /* @__PURE__ */ new Map(), cama: /* @__PURE__ */ new Map(), braseiro: /* @__PURE__ */ new Map(), braseiroAceso: /* @__PURE__ */ new Map(), degrau: /* @__PURE__ */ new Map(), degrauPedra: /* @__PURE__ */ new Map(), cadeira: /* @__PURE__ */ new Map(), porta: /* @__PURE__ */ new Map(), tocha: /* @__PURE__ */ new Map(), tochaParede: /* @__PURE__ */ new Map(), ervaMarinha: /* @__PURE__ */ new Map(), ervaAlta: /* @__PURE__ */ new Map(), ervaAltaTopo: /* @__PURE__ */ new Map(), alga: /* @__PURE__ */ new Map(), algaTopo: /* @__PURE__ */ new Map(), ...Object.fromEntries(CORAL_KINDS.map((k) => [k, /* @__PURE__ */ new Map()])), ...Object.fromEntries(MURETA_KINDS.map((k) => [k, /* @__PURE__ */ new Map()])) };
   modelVersion = 0;
   /** Cada peça: `[x, y, z, giro]` (giro 0–3 em quartos de volta ao redor de Y; o painel usa 0 = ao longo de X e 1 = ao longo de Z). */
+  /** Registra um modelo que vem do **gerador** (a flora marinha, ADR 0135), descoberto quando a seção é malhada: os modelos editados entram por `set` e pelo carregamento; os da base, só aqui. Idempotente. */
+  registerModelCell(x, y, z, id) {
+    const md = modelOf(id);
+    if (!md) return;
+    const key2 = lightKey(x, y, z), m = this.models[md.kind];
+    if (m.has(key2)) return;
+    m.set(key2, [x, y, z, md.turn]);
+    this.modelVersion++;
+  }
   modelCells(kind) {
     return [...this.models[kind].values()];
   }
@@ -3809,7 +4527,7 @@ var TitanVolume = class _TitanVolume {
   /** Sobe a cada mudança real do céu depois de calculado: o renderer relê o céu das plantas (que não passam pelas instâncias de modelo). */
   skyRev = 0;
   static skyKind(id) {
-    return blocksLight(id) ? 2 : isLeaves(id) || id === T.LAKE ? 1 : 0;
+    return blocksLight(id) ? 2 : isLeaves(id) || id === T.LAKE || isWaterPlant(id) ? 1 : 0;
   }
   buildSky() {
     const r = this.gen.region, sky = new SkyLight({ kind: (x, y, z) => _TitanVolume.skyKind(this.get(x, y, z)), x0: r.min, x1: r.max, z0: r.min, z1: r.max, yMin: Y_MIN, yMax: Y_MAX });
@@ -3836,23 +4554,23 @@ var TitanVolume = class _TitanVolume {
    * (e as vizinhas das bordas) para refazer a malha. Antes de o mapa existir (nada desenhado ainda) não há o que atualizar.
    */
   updateLight(x, y, z, before, after) {
-    const key = lightKey(x, y, z);
+    const key2 = lightKey(x, y, z);
     const mBefore = modelOf(before), mAfter = modelOf(after);
     if (mBefore) {
-      this.models[mBefore.kind].delete(key);
+      this.models[mBefore.kind].delete(key2);
       this.modelVersion++;
     }
     if (mAfter) {
-      this.models[mAfter.kind].set(key, [x, y, z, mAfter.turn]);
+      this.models[mAfter.kind].set(key2, [x, y, z, mAfter.turn]);
       this.modelVersion++;
     }
     const wasLantern = before === T.LANTERN, isLantern = after === T.LANTERN;
     if (wasLantern && !isLantern) {
-      this.lanterns.delete(key);
+      this.lanterns.delete(key2);
       this.lanternVersion++;
     }
     if (isLantern && !wasLantern) {
-      this.lanterns.set(key, [x, y, z]);
+      this.lanterns.set(key2, [x, y, z]);
       this.lanternVersion++;
     }
     if (this.sky && _TitanVolume.skyKind(before) !== _TitanVolume.skyKind(after)) {
@@ -3869,8 +4587,8 @@ var TitanVolume = class _TitanVolume {
     }
     const lvBefore = lightLevelOf(before), lvAfter = lightLevelOf(after);
     if (lvBefore !== lvAfter) {
-      if (lvAfter) this.emitters.set(key, [x, y, z, lvAfter]);
-      else this.emitters.delete(key);
+      if (lvAfter) this.emitters.set(key2, [x, y, z, lvAfter]);
+      else this.emitters.delete(key2);
     }
     if (!this.light$.ready) return;
     const t0 = this.onLightMs ? performance.now() : 0;
@@ -3920,27 +4638,27 @@ var stateRev = (s) => s.inventory.rev + s.collectedRev + s.dropsRev + s.metaRev;
 var reedId = (x, y, z) => `reed:${x},${y},${z}`;
 function makeItems(s) {
   const all = [...s.volume.gen.surfaceItems, ...s.volume.gen.dryReeds, ...s.volume.gen.plates];
-  const key = (x, y, z) => `${x},${y},${z}`;
-  const byCell = new Map(all.map((i) => [key(i.x, i.y, i.z), i.id]));
+  const key2 = (x, y, z) => `${x},${y},${z}`;
+  const byCell = new Map(all.map((i) => [key2(i.x, i.y, i.z), i.id]));
   let reeds = null;
   const reedAt = (x, y, z) => {
     if (!reeds) {
       const gen = s.volume.gen;
       const list = gen.version >= 4 ? gen.reeds : s.grants.ember ? gen.reedsFor(s.grants.ember[0], s.grants.ember[2]) : [];
-      reeds = new Map(list.map((r) => [key(r.x, r.y, r.z), reedId(r.x, r.y, r.z)]));
+      reeds = new Map(list.map((r) => [key2(r.x, r.y, r.z), reedId(r.x, r.y, r.z)]));
     }
-    const id = reeds.get(key(x, y, z));
+    const id = reeds.get(key2(x, y, z));
     return id && !s.collected.has(id) && s.volume.get(x, y, z) === T.AIR && isSolid(s.volume.get(x, y - 1, z)) ? id : null;
   };
   let nuts = null;
   const nutAt = (x, y, z) => {
-    if (!nuts) nuts = new Map(s.volume.gen.nutPlants.map((n) => [key(n.x, n.y, n.z), nutId(n.x, n.y, n.z)]));
-    const id = nuts.get(key(x, y, z));
+    if (!nuts) nuts = new Map(s.volume.gen.nutPlants.map((n) => [key2(n.x, n.y, n.z), nutId(n.x, n.y, n.z)]));
+    const id = nuts.get(key2(x, y, z));
     return id && !s.regrow.has(id) && s.volume.get(x, y, z) === T.AIR && isSolid(s.volume.get(x, y - 1, z)) ? id : null;
   };
   return {
     at: (x, y, z) => {
-      const id = byCell.get(key(x, y, z));
+      const id = byCell.get(key2(x, y, z));
       return id && !s.collected.has(id) ? id : reedAt(x, y, z) ?? nutAt(x, y, z) ?? (s.crops.has(cropKey(x, y, z)) ? cropId(x, y, z) : null);
     },
     remaining: () => all.filter((i) => !s.collected.has(i.id))
@@ -3996,16 +4714,18 @@ function validRespawn(raw, ids) {
   for (const [k, v] of Object.entries(raw)) if (ids.has(k) && typeof v === "number" && Number.isFinite(v) && v > 0) out.set(k, Math.min(v, 3600));
   return out;
 }
-function validCrops(raw, vol) {
+function validCrops(raw, vol, saveVersion) {
   const out = /* @__PURE__ */ new Map();
   if (!raw || typeof raw !== "object") return out;
   for (const [k, v] of Object.entries(raw)) {
     const m = /^(-?\d+),(-?\d+),(-?\d+)$/.exec(k);
     const tag = v && typeof v === "object" ? v.s : void 0, other = typeof tag === "string" && (tag === "noz" || GARDEN_SPECIES.includes(tag));
-    const age = other ? v.a : v;
-    if (!m || typeof age !== "number" || !Number.isInteger(age) || age < 0) continue;
-    const [x, y, z] = [Number(m[1]), Number(m[2]), Number(m[3])], species = other ? tag : "junco", below = vol.get(x, y - 1, z), kind = soilKindFor(species, below);
-    if (kind && plantableSoil(species, below) && vol.get(x, y, z) === T.AIR && vol.gen.inRegion(x, z) && age <= maxAgeOf(species, kind)) out.set(k, { x, y, z, age, species });
+    const age0 = other ? v.a : v;
+    if (!m || typeof age0 !== "number" || !Number.isInteger(age0) || age0 < 0) continue;
+    const species0 = other ? tag : "junco", age = saveVersion < 7 && isEightAge(species0) && age0 <= 2 ? [0, 3, 7][age0] : age0;
+    const [x, y, z] = [Number(m[1]), Number(m[2]), Number(m[3])], species = species0, below = vol.get(x, y - 1, z), kind = soilKindFor(species, below);
+    const d = other ? v.d : void 0, dir = isStem(species) && age >= STEM_MAX_AGE && typeof d === "number" && Number.isInteger(d) && d >= 0 && d <= 3 ? d : void 0;
+    if (kind && plantableSoil(species, below) && vol.get(x, y, z) === T.AIR && vol.gen.inRegion(x, z) && age <= maxAgeOf(species, kind)) out.set(k, { x, y, z, age, species, ...dir !== void 0 ? { dir } : {} });
   }
   return out;
 }
@@ -4029,6 +4749,22 @@ function validDrops(raw, gen) {
 }
 var generatorFor = (seed, version) => version >= 1 && version <= GENERATOR_VERSION && Number.isInteger(version) ? new TitanGenerator(seed, version) : null;
 var creaturesFor = (gen) => creatureSpecs(gen).map((sp) => newFromSpec(sp, gen.seed));
+var faunaFor = (gen) => newFaunaFromSpecs(faunaSpecs(gen), gen.seed);
+function faunaFromSave(raw, gen, vol) {
+  if (!hasFauna(gen)) return [];
+  const saved = faunaFromData(raw, gen.seed, (x, z) => gen.inRegion(x, z));
+  if (!saved) return faunaFor(gen);
+  for (const f of saved) {
+    let y = Math.floor(f.body.y + 0.01);
+    const x = Math.floor(f.body.x), z = Math.floor(f.body.z);
+    while (y < Y_MAX && isSolid(vol.get(x, y, z))) y++;
+    if (y > f.body.y) {
+      f.body.y = y;
+      f.body.vy = 0;
+    }
+  }
+  return saved;
+}
 function fresh(gen) {
   const volume = new TitanVolume(gen);
   const a = gen.arrival;
@@ -4036,7 +4772,7 @@ function fresh(gen) {
   const regrow = /* @__PURE__ */ new Map();
   const crops = /* @__PURE__ */ new Map();
   const grants = {};
-  const s = { seed: gen.seed, volume, body: newBody(a.x, a.y, a.z), yaw: a.yaw, pitch: -0.12, selected: 0, resumed: false, relocated: false, time: START_FRAC, days: 0, weather: newWeather(Math.random), inventory: Inventory.starting(), collected, collectedRev: 0, regrow, crops, furnaces: /* @__PURE__ */ new Map(), chests: /* @__PURE__ */ new Map(), spawn: null, respawn: /* @__PURE__ */ new Map(), creatures: creaturesFor(gen), savedStateRev: -1, drops: /* @__PURE__ */ new Map(), dropFx: /* @__PURE__ */ new Map(), dropsRev: 0, vitals: newVitals(), known: /* @__PURE__ */ new Set(), grants, metaRev: 0, items: makeItems({ volume, collected, grants, regrow, crops }) };
+  const s = { seed: gen.seed, volume, body: newBody(a.x, a.y, a.z), yaw: a.yaw, pitch: -0.12, selected: 0, resumed: false, relocated: false, time: START_FRAC, days: 0, weather: newWeather(Math.random), inventory: Inventory.starting(), collected, collectedRev: 0, regrow, crops, furnaces: /* @__PURE__ */ new Map(), chests: /* @__PURE__ */ new Map(), spawn: null, respawn: /* @__PURE__ */ new Map(), creatures: creaturesFor(gen), fauna: faunaFor(gen), savedStateRev: -1, drops: /* @__PURE__ */ new Map(), dropFx: /* @__PURE__ */ new Map(), fishing: null, coralWatch: /* @__PURE__ */ new Map(), boats: [], boatRide: null, dropsRev: 0, vitals: newVitals(), known: /* @__PURE__ */ new Set(), grants, metaRev: 0, items: makeItems({ volume, collected, grants, regrow, crops }) };
   return s;
 }
 function resume(gen, save) {
@@ -4056,10 +4792,10 @@ function resume(gen, save) {
   const g = save.header.grants?.ember;
   if (Array.isArray(g) && g.length === 3 && g.every(Number.isInteger)) grants.ember = [g[0], g[1], g[2]];
   const regrow = validRegrow(save.header.regrow);
-  const crops = validCrops(save.header.crops, volume);
+  const crops = validCrops(save.header.crops, volume, save.header.v);
   const respawn = validRespawn(save.header.respawn, new Set(creatureSpecs(gen).map((c) => c.id)));
   const known = new Set((save.header.recipes ?? []).filter((x) => typeof x === "string"));
-  const s = { seed: gen.seed, volume, body: newBody(safe.x, safe.y, safe.z), yaw: p.yaw, pitch: p.pitch, selected: Math.max(0, Math.min(HOTBAR - 1, save.header.selected | 0)), resumed: true, relocated: moved, time: validDay(save.header.time), days: Number.isInteger(save.header.days) && save.header.days >= 0 ? save.header.days : 0, weather: weatherFromData(save.header.weather, Math.random), inventory: inv, collected, collectedRev: 0, regrow, crops, furnaces: validFurnaces(save.header.furnaces, volume), chests: validChests(save.header.chests, volume), spawn: validSpawn(save.header.spawn, volume), respawn, creatures: creaturesFor(gen).filter((c) => !respawn.has(c.id)), savedStateRev: -1, drops: validDrops(save.header.drops, gen), dropFx: /* @__PURE__ */ new Map(), dropsRev: 0, known, grants, metaRev: 0, vitals: vitalsFromData(save.header.vitals), items: makeItems({ volume, collected, grants, regrow, crops }) };
+  const s = { seed: gen.seed, volume, body: newBody(safe.x, safe.y, safe.z), yaw: p.yaw, pitch: p.pitch, selected: Math.max(0, Math.min(HOTBAR - 1, save.header.selected | 0)), resumed: true, relocated: moved, time: validDay(save.header.time), days: Number.isInteger(save.header.days) && save.header.days >= 0 ? save.header.days : 0, weather: weatherFromData(save.header.weather, Math.random), inventory: inv, collected, collectedRev: 0, regrow, crops, furnaces: validFurnaces(save.header.furnaces, volume), chests: validChests(save.header.chests, volume), spawn: validSpawn(save.header.spawn, volume), respawn, creatures: creaturesFor(gen).filter((c) => !respawn.has(c.id)), fauna: faunaFromSave(save.header.fauna, gen, volume), savedStateRev: -1, drops: validDrops(save.header.drops, gen), dropFx: /* @__PURE__ */ new Map(), fishing: null, coralWatch: /* @__PURE__ */ new Map(), boats: boatsFromData(save.header.boats), boatRide: null, dropsRev: 0, known, grants, metaRev: 0, vitals: vitalsFromData(save.header.vitals), items: makeItems({ volume, collected, grants, regrow, crops }) };
   const granted = gen.version < 4 && !grants.ember ? grantEmber(s) : false;
   discoverRecipes(s);
   const clean = save.header.inventory && inv.rev === revBefore && !converted && !granted && save.header.v >= TITAN_SAVE_VERSION;
@@ -4134,15 +4870,40 @@ function tickCrops(s, dt, rng, near) {
     }
     const self = kindAt(0, 0);
     const sameAt = (dx, dz) => !!self && s.crops.get(cropKey(c.x + dx, c.y, c.z + dz))?.species === c.species && kindAt(dx, dz) === self;
-    if (randomTick(c, { soilAt: kindAt, sameAt, light: cropLight(s, c.x, c.y, c.z) }, rng)) {
+    const light = cropLight(s, c.x, c.y, c.z);
+    if (randomTick(c, { soilAt: kindAt, sameAt, light }, rng)) {
       changed = true;
       s.metaRev++;
+    }
+    if (isStem(c.species)) {
+      if (c.dir !== void 0) {
+        const [dx, dz] = STEM_DIRS[c.dir];
+        if (s.volume.get(c.x + dx, c.y, c.z + dz) !== FRUIT_BLOCK[c.species]) {
+          delete c.dir;
+          changed = true;
+          s.metaRev++;
+        }
+      } else {
+        let pts = growthPoints(kindAt);
+        if (crowded(sameAt)) pts *= 0.5;
+        const dir = stemFruitTick(c, pts, light, rng, (d) => {
+          const [dx, dz] = STEM_DIRS[d], fx = c.x + dx, fz = c.z + dz;
+          return s.volume.get(fx, c.y, fz) === T.AIR && fruitGround(s.volume.get(fx, c.y - 1, fz)) && !s.crops.has(cropKey(fx, c.y, fz)) && s.items.at(fx, c.y, fz) === null;
+        });
+        if (dir !== null) {
+          const [dx, dz] = STEM_DIRS[dir];
+          s.volume.set(c.x + dx, c.y, c.z + dz, FRUIT_BLOCK[c.species]);
+          c.dir = dir;
+          changed = true;
+          s.metaRev++;
+        }
+      }
     }
   }
   return changed;
 }
 function headerOf(s) {
-  return { v: TITAN_SAVE_VERSION, world: s.volume.gen.world, seed: s.seed, generatorVersion: s.volume.gen.version, savedAt: Date.now(), player: { x: s.body.x, y: s.body.y, z: s.body.z, yaw: s.yaw, pitch: s.pitch }, selected: s.selected, time: s.time, days: s.days, ...hasWeather(s.volume.gen.world) ? { weather: weatherToData(s.weather) } : {}, inventory: { bag: s.inventory.toData(), collected: [...s.collected].sort() }, recipes: [...s.known].sort(), grants: s.grants.ember ? { ember: s.grants.ember } : void 0, drops: [...s.drops.values()].sort((a, b) => a.id < b.id ? -1 : 1), vitals: vitalsToData(s.vitals), ...s.respawn.size ? { respawn: Object.fromEntries(s.respawn) } : {}, ...s.spawn ? { spawn: s.spawn } : {}, ...s.chests.size ? { chests: Object.fromEntries([...s.chests].filter(([, c]) => !chestIsEmpty(c)).map(([k, c]) => [k, chestToData(c)])) } : {}, ...s.furnaces.size ? { furnaces: Object.fromEntries([...s.furnaces].map(([k, f]) => [k, furnaceToData(f)])) } : {}, ...s.regrow.size ? { regrow: Object.fromEntries([...s.regrow].map(([id, t]) => [id, Math.round(t * 10) / 10])) } : {}, ...s.crops.size ? { crops: Object.fromEntries([...s.crops.values()].map((c) => [cropKey(c.x, c.y, c.z), c.species === "junco" ? c.age : { s: c.species, a: c.age }])) } : {} };
+  return { v: TITAN_SAVE_VERSION, world: s.volume.gen.world, seed: s.seed, generatorVersion: s.volume.gen.version, savedAt: Date.now(), player: { x: s.body.x, y: s.body.y, z: s.body.z, yaw: s.yaw, pitch: s.pitch }, selected: s.selected, time: s.time, days: s.days, ...hasWeather(s.volume.gen.world) ? { weather: weatherToData(s.weather) } : {}, ...hasFauna(s.volume.gen) ? { fauna: faunaToData(s.fauna) } : {}, ...s.boats.length ? { boats: boatsToData(s.boats) } : {}, inventory: { bag: s.inventory.toData(), collected: [...s.collected].sort() }, recipes: [...s.known].sort(), grants: s.grants.ember ? { ember: s.grants.ember } : void 0, drops: [...s.drops.values()].sort((a, b) => a.id < b.id ? -1 : 1), vitals: vitalsToData(s.vitals), ...s.respawn.size ? { respawn: Object.fromEntries(s.respawn) } : {}, ...s.spawn ? { spawn: s.spawn } : {}, ...s.chests.size ? { chests: Object.fromEntries([...s.chests].filter(([, c]) => !chestIsEmpty(c)).map(([k, c]) => [k, chestToData(c)])) } : {}, ...s.furnaces.size ? { furnaces: Object.fromEntries([...s.furnaces].map(([k, f]) => [k, furnaceToData(f)])) } : {}, ...s.regrow.size ? { regrow: Object.fromEntries([...s.regrow].map(([id, t]) => [id, Math.round(t * 10) / 10])) } : {}, ...s.crops.size ? { crops: Object.fromEntries([...s.crops.values()].map((c) => [cropKey(c.x, c.y, c.z), c.species === "junco" ? c.age : { s: c.species, a: c.age, ...c.dir !== void 0 ? { d: c.dir } : {} }])) } : {} };
 }
 
 // src/net/titan/protocol.ts
@@ -4150,7 +4911,11 @@ var TITAN_PROTOCOL_VERSION = 3;
 var TITAN_MAX_PLAYERS = 10;
 var TITAN_NAME_MIN = 2;
 var TITAN_NAME_MAX = 16;
-var TITAN_ROOMS = [{ id: 101, name: "Tit\xE3 1", seed: 20261122 }];
+var TITAN_ROOMS = [
+  { id: 101, name: "Tit\xE3 1", seed: 20261122, world: "titan" },
+  { id: 102, name: "Orvalis 1", seed: 20261127, world: "orvalis" }
+  // Orvalis em sala (ADR 0138): o mesmo motor, o gerador e as regras do Orvalis
+];
 var titanRoomById = (id) => TITAN_ROOMS.find((r) => r.id === id);
 var num2 = (v, lim = 1e6) => typeof v === "number" && Number.isFinite(v) && Math.abs(v) <= lim;
 var int = (v, lim = 1e6) => num2(v, lim) && Number.isInteger(v);
@@ -4255,18 +5020,22 @@ function playerView(world, own) {
   return v;
 }
 var TitanRoom = class {
-  constructor(id, name, seed, rand = Math.random) {
+  /** `kind` = o mundo da sala (ADR 0138): o Titã ou o Orvalis em voxel, cada um com o gerador, os itens e as regras dele. A fauna, a pesca e os botes do Orvalis ainda não vão pela sala (próximas entregas). */
+  constructor(id, name, seed, rand = Math.random, kind = "titan") {
     this.id = id;
     this.name = name;
     this.seed = seed;
     this.rand = rand;
-    this.world = fresh(new TitanGenerator(seed));
+    this.kind = kind;
+    this.world = fresh(kind === "orvalis" ? new OrvalisGenerator(seed) : new TitanGenerator(seed));
+    if (kind === "orvalis") this.world.fauna = [];
     this.hook();
   }
   id;
   name;
   seed;
   rand;
+  kind;
   world;
   players = /* @__PURE__ */ new Map();
   saved = /* @__PURE__ */ new Map();
@@ -4395,9 +5164,12 @@ var TitanRoom = class {
     if (near) {
       r = { ok: false };
       switch (a.k) {
-        case "place":
-          r = placeFromSlot(v, a.hit, a.slot);
+        case "place": {
+          const held = v.inventory.get(a.slot)?.item;
+          r = held === Item.VARA_PESCA || isBoatItem(held) ? { ok: false, msg: "Ainda n\xE3o dispon\xEDvel nas salas" } : placeFromSlot(v, a.hit, a.slot);
           break;
+        }
+        // pesca e botes: próximas entregas (ADR 0138)
         case "break":
           r = breakOrCollect(v, a.hit);
           break;
@@ -4494,6 +5266,7 @@ var TitanRoom = class {
     if (tickFurnaces(w, dt)) this.dirty = true;
     if (tickRegrow(w, dt)) this.dirty = true;
     stepDrops(w, dt);
+    if (w.coralWatch.size && stepCoral(w, dt)) this.dirty = true;
     const n = Math.max(1, this.players.size);
     for (const p of this.players.values()) {
       const b = p.view.body;
@@ -4557,9 +5330,11 @@ var TitanRoom = class {
   /** Restaura uma sala vazia a partir de um `snapshot`; devolve `false` (sem mudar nada) se a seed ou o gerador não batem. */
   restore(snap) {
     if (!snap || snap.v !== TITAN_SNAPSHOT_VERSION || !snap.header || snap.header.seed !== this.seed || this.players.size) return false;
-    const gen = generatorFor(snap.header.seed, snap.header.generatorVersion);
+    if ((snap.header.world ?? "titan") !== this.kind) return false;
+    const gen = this.kind === "orvalis" ? orvalisGeneratorFor(snap.header.seed, snap.header.generatorVersion) : generatorFor(snap.header.seed, snap.header.generatorVersion);
     if (!gen) return false;
     this.world = resume(gen, { header: snap.header, chunks: snap.chunks });
+    if (this.kind === "orvalis") this.world.fauna = [];
     this.saved.clear();
     for (const [k, v] of Object.entries(snap.players ?? {})) this.saved.set(k, v);
     this.pending = [];
