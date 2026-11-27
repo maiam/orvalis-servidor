@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.186.0 (e8a3ad0) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.187.0 (aaccef9) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -122,7 +122,11 @@ var tiles_default = {
     "orvalis/caminho-lateral",
     "orvalis/terra-infertil",
     "orvalis/bloco-argila",
-    "orvalis/bloco-tijolos"
+    "orvalis/bloco-tijolos",
+    "orvalis/fornalha-topo",
+    "orvalis/fornalha-lateral",
+    "orvalis/fornalha-frente-apagada",
+    "orvalis/fornalha-frente-acesa"
   ]
 };
 
@@ -137,13 +141,21 @@ var REGION_V6 = { min: -64, max: 64 };
 var regionFor = (generatorVersion) => generatorVersion >= 6 ? REGION_V6 : REGION_LEGACY;
 var REGION_MIN = REGION_LEGACY.min;
 var REGION_MAX = REGION_LEGACY.max;
-var T = { AIR: 0, SAND: 1, DAMP_SAND: 2, DARK_ROCK: 3, FROST: 4, LAKE: 5, BEDROCK: 6, LANTERN: 7, VEIN_ROCK: 8, VEIN_FROST: 9, WORKBENCH: 10, EMBER: 11, SLAB: 12, WORKBENCH_90: 13, WORKBENCH_180: 14, WORKBENCH_270: 15, SLAB_TOP: 16, SLAB_DOUBLE: 17, MARCO: 18, MARCO_90: 19, MARCO_180: 20, MARCO_270: 21, PAINEL: 22, PAINEL_Z: 23, VEIN_COPPER: 24, BRAZIER: 25, BRAZIER_LIT: 26, CARAPACE: 27, EMBER_VEIN: 28, EMBER_BLOCK: 29, MAT: 30, LADDER: 31, LADDER_90: 32, LADDER_180: 33, LADDER_270: 34, CHEST: 35, CHEST_90: 36, CHEST_180: 37, CHEST_270: 38, BED: 39, BED_90: 40, BED_180: 41, BED_270: 42, BED_HEAD: 43, BED_HEAD_90: 44, BED_HEAD_180: 45, BED_HEAD_270: 46, REED_BLOCK: 47, REED_SLAB: 48, REED_SLAB_TOP: 49, REED_STAIR: 50, REED_STAIR_90: 51, REED_STAIR_180: 52, REED_STAIR_270: 53, REED_CHAIR: 54, REED_CHAIR_90: 55, REED_CHAIR_180: 56, REED_CHAIR_270: 57, DOOR: 58, DOOR_LAST: 89, GRASS: 90, DIRT: 91, STONE: 92, BEACH: 93, LOG_OAK: 94, LEAVES_OAK: 95, LOG_CHERRY: 96, LEAVES_CHERRY: 97, LOG_BIRCH: 98, LEAVES_BIRCH: 99, PLANKS_OAK: 100, PLANKS_CHERRY: 101, PLANKS_BIRCH: 102, CARPENTRY: 103, CARPENTRY_90: 104, CARPENTRY_180: 105, CARPENTRY_270: 106, STONE_SMOOTH: 107, STONE_BRICK: 108, STONE_SLAB: 109, STONE_SLAB_TOP: 110, STONE_STAIR: 111, STONE_STAIR_90: 112, STONE_STAIR_180: 113, STONE_STAIR_270: 114, STONE_WALL: 115, STONE_WALL_LAST: 130, FARMLAND_DRY: 131, FARMLAND_WET: 132, PATH: 133, DIRT_INFERTILE: 134, CLAY_BLOCK: 135, BRICK_BLOCK: 136 };
-var T_MAX = T.BRICK_BLOCK;
+var T = { AIR: 0, SAND: 1, DAMP_SAND: 2, DARK_ROCK: 3, FROST: 4, LAKE: 5, BEDROCK: 6, LANTERN: 7, VEIN_ROCK: 8, VEIN_FROST: 9, WORKBENCH: 10, EMBER: 11, SLAB: 12, WORKBENCH_90: 13, WORKBENCH_180: 14, WORKBENCH_270: 15, SLAB_TOP: 16, SLAB_DOUBLE: 17, MARCO: 18, MARCO_90: 19, MARCO_180: 20, MARCO_270: 21, PAINEL: 22, PAINEL_Z: 23, VEIN_COPPER: 24, BRAZIER: 25, BRAZIER_LIT: 26, CARAPACE: 27, EMBER_VEIN: 28, EMBER_BLOCK: 29, MAT: 30, LADDER: 31, LADDER_90: 32, LADDER_180: 33, LADDER_270: 34, CHEST: 35, CHEST_90: 36, CHEST_180: 37, CHEST_270: 38, BED: 39, BED_90: 40, BED_180: 41, BED_270: 42, BED_HEAD: 43, BED_HEAD_90: 44, BED_HEAD_180: 45, BED_HEAD_270: 46, REED_BLOCK: 47, REED_SLAB: 48, REED_SLAB_TOP: 49, REED_STAIR: 50, REED_STAIR_90: 51, REED_STAIR_180: 52, REED_STAIR_270: 53, REED_CHAIR: 54, REED_CHAIR_90: 55, REED_CHAIR_180: 56, REED_CHAIR_270: 57, DOOR: 58, DOOR_LAST: 89, GRASS: 90, DIRT: 91, STONE: 92, BEACH: 93, LOG_OAK: 94, LEAVES_OAK: 95, LOG_CHERRY: 96, LEAVES_CHERRY: 97, LOG_BIRCH: 98, LEAVES_BIRCH: 99, PLANKS_OAK: 100, PLANKS_CHERRY: 101, PLANKS_BIRCH: 102, CARPENTRY: 103, CARPENTRY_90: 104, CARPENTRY_180: 105, CARPENTRY_270: 106, STONE_SMOOTH: 107, STONE_BRICK: 108, STONE_SLAB: 109, STONE_SLAB_TOP: 110, STONE_STAIR: 111, STONE_STAIR_90: 112, STONE_STAIR_180: 113, STONE_STAIR_270: 114, STONE_WALL: 115, STONE_WALL_LAST: 130, FARMLAND_DRY: 131, FARMLAND_WET: 132, PATH: 133, DIRT_INFERTILE: 134, CLAY_BLOCK: 135, BRICK_BLOCK: 136, FURNACE: 137, FURNACE_90: 138, FURNACE_180: 139, FURNACE_270: 140, FURNACE_LIT: 141, FURNACE_LIT_90: 142, FURNACE_LIT_180: 143, FURNACE_LIT_270: 144 };
+var T_MAX = T.FURNACE_LIT_270;
 var BLOCK_NAMES = { 1: "Areia ocre", 2: "Areia \xFAmida", 3: "Rocha escura", 4: "Gelo fosco", 5: "Lago escuro", 6: "Rocha-m\xE3e", 7: "Lanterna da margem", 8: "Rocha com veio", 9: "Gelo com veio", 10: "Mesa de Trabalho", 11: "Brasa de \xE2mbar", 12: "Laje de rocha", 13: "Mesa de Trabalho", 14: "Mesa de Trabalho", 15: "Mesa de Trabalho", 16: "Laje de rocha", 17: "Laje dupla de rocha", 18: "Marco de Margem", 19: "Marco de Margem", 20: "Marco de Margem", 21: "Marco de Margem", 22: "Painel de Junco", 23: "Painel de Junco", 24: "Veio de Cobre de Duna", 25: "Braseiro de Rocha", 26: "Braseiro de Rocha (aceso)", 27: "Revestimento de Carapa\xE7a", 28: "Veio de \xC2mbar", 29: "Bloco de \xC2mbar Compactado", 30: "Esteira de Junco", 31: "Escada de Junco", 32: "Escada de Junco", 33: "Escada de Junco", 34: "Escada de Junco", 35: "Ba\xFA de Rocha e Junco", 36: "Ba\xFA de Rocha e Junco", 37: "Ba\xFA de Rocha e Junco", 38: "Ba\xFA de Rocha e Junco", 39: "Cama de Junco", 40: "Cama de Junco", 41: "Cama de Junco", 42: "Cama de Junco", 43: "Cama de Junco", 44: "Cama de Junco", 45: "Cama de Junco", 46: "Cama de Junco", 47: "Bloco de Junco", 48: "Laje de Junco", 49: "Laje de Junco", 50: "Degrau de Junco", 51: "Degrau de Junco", 52: "Degrau de Junco", 53: "Degrau de Junco", 54: "Cadeira de Junco", 55: "Cadeira de Junco", 56: "Cadeira de Junco", 57: "Cadeira de Junco" };
 for (let id = T.DOOR; id <= T.DOOR_LAST; id++) BLOCK_NAMES[id] = "Porta de Junco";
+for (let t = 0; t < 4; t++) {
+  BLOCK_NAMES[T.FURNACE + t] = "Fornalha";
+  BLOCK_NAMES[T.FURNACE_LIT + t] = "Fornalha acesa";
+}
 Object.assign(BLOCK_NAMES, { 90: "Terra com Grama", 91: "Terra", 92: "Pedra", 93: "Areia da Praia", 94: "Tora de Carvalho", 95: "Folhas de Carvalho", 96: "Tora de Cerejeira", 97: "Folhas de Cerejeira", 98: "Tora de B\xE9tula", 99: "Folhas de B\xE9tula" });
 Object.assign(BLOCK_NAMES, { 100: "T\xE1buas de Carvalho", 101: "T\xE1buas de Cerejeira", 102: "T\xE1buas de B\xE9tula", 103: "Mesa de Carpintaria", 104: "Mesa de Carpintaria", 105: "Mesa de Carpintaria", 106: "Mesa de Carpintaria" });
 var isCarpentry = (id) => id >= T.CARPENTRY && id <= T.CARPENTRY_270;
+var isFurnace = (id) => id >= T.FURNACE && id <= T.FURNACE_LIT_270;
+var isFurnaceLit = (id) => id >= T.FURNACE_LIT && id <= T.FURNACE_LIT_270;
+var furnaceTurn = (id) => isFurnace(id) ? (id - T.FURNACE) % 4 : 0;
+var furnaceId = (turn, lit) => (lit ? T.FURNACE_LIT : T.FURNACE) + (turn % 4 + 4) % 4;
 var carpentryId = (turn) => T.CARPENTRY + (turn % 4 + 4) % 4;
 var carpentryTurnFacing = (yaw) => (Math.round(yaw / (Math.PI / 2)) % 4 + 4) % 4;
 Object.assign(BLOCK_NAMES, { 107: "Pedra Lisa", 108: "Tijolo de Pedra", 109: "Laje de Pedra", 110: "Laje de Pedra", 111: "Degrau de Pedra", 112: "Degrau de Pedra", 113: "Degrau de Pedra", 114: "Degrau de Pedra" });
@@ -238,7 +250,7 @@ var blockBoxes = (id) => BOXES.get(id) ?? null;
 var isBrazier = (id) => id === T.BRAZIER || id === T.BRAZIER_LIT;
 var BRAZIER_HEIGHT = 0.774;
 var BRAZIER_LIGHT = 13;
-var lightLevelOf = (id) => id === T.LANTERN ? 15 : id === T.BRAZIER_LIT ? BRAZIER_LIGHT : 0;
+var lightLevelOf = (id) => id === T.LANTERN ? 15 : id === T.BRAZIER_LIT || isFurnaceLit(id) ? BRAZIER_LIGHT : 0;
 var isCopperVein = (id) => id === T.VEIN_COPPER;
 var isAmberVein = (id) => id === T.EMBER_VEIN;
 var WORKBENCH_IDS = [T.WORKBENCH, T.WORKBENCH_90, T.WORKBENCH_180, T.WORKBENCH_270];
@@ -350,10 +362,13 @@ BLOCK_TILES[T.PATH] = ot("caminho-topo", "caminho-lateral", "terra");
 BLOCK_TILES[T.DIRT_INFERTILE] = ot("terra-infertil");
 BLOCK_TILES[T.CLAY_BLOCK] = ot("bloco-argila");
 BLOCK_TILES[T.BRICK_BLOCK] = ot("bloco-tijolos");
+for (let t = 0; t < 8; t++) BLOCK_TILES[T.FURNACE + t] = ot("fornalha-topo", "fornalha-lateral", "fornalha-topo");
 for (let t = 0; t < 4; t++) BLOCK_TILES[T.CARPENTRY + t] = [tileIndex("orvalis/mesa-topo"), tileIndex("orvalis/mesa-lateral"), tileIndex("orvalis/tabua-carvalho")];
 BLOCK_TILES[T.REED_BLOCK] = faces3("21-bloco-de-junco");
 BLOCK_TILES[T.REED_SLAB] = [tileIndex("22-laje-de-junco/topo"), tileIndex("22-laje-de-junco/lateral"), tileIndex("22-laje-de-junco/topo")];
 BLOCK_TILES[T.REED_SLAB_TOP] = BLOCK_TILES[T.REED_SLAB];
+var FRONT_FURNACE = tileIndex("orvalis/fornalha-frente-apagada");
+var FRONT_FURNACE_LIT = tileIndex("orvalis/fornalha-frente-acesa");
 var FRONT_CARPENTRY = tileIndex("orvalis/mesa-frente");
 var inRegion = (x, z, r = REGION_LEGACY) => x >= r.min && x < r.max && z >= r.min && z < r.max;
 var chunkOf = (v) => Math.floor(v / 16);
@@ -379,7 +394,7 @@ function hoeResult(v, block, x, y, z) {
 var shovelResult = (block) => block === T.GRASS || block === T.DIRT ? T.PATH : null;
 
 // src/titan/items.ts
-var Item = { SAND: 1, DAMP_SAND: 2, DARK_ROCK: 3, FROST: 4, ROCK_SHARD: 5, FROST_SHARD: 6, CAPSULE: 7, LANTERN: 8, WORKBENCH: 9, ICE_LENS: 10, EMBER: 11, GLASS_REED: 12, SLAB: 13, MARCO: 14, PAINEL: 15, NOZ: 16, COPPER_SHARD: 17, COPPER_INGOT: 18, DRY_REED: 19, STONE_PICK: 20, BRAZIER: 21, STONE_DAGGER: 22, COPPER_PICK: 23, COPPER_DAGGER: 24, PLATE: 25, CARAPACE: 26, RAW_MEAT: 27, COOKED_MEAT: 28, EMBER_BLOCK: 29, NOZ_TORRADA: 30, ESTEIRA: 31, ESCADA: 32, BAU: 33, CAMA: 34, BALDE: 35, BALDE_CHEIO: 36, BLOCO_JUNCO: 37, LAJE_JUNCO: 38, DEGRAU_JUNCO: 39, CADEIRA_JUNCO: 40, PORTA_JUNCO: 41, GRASS: 42, DIRT: 43, STONE: 44, BEACH: 45, LOG_OAK: 46, LEAVES_OAK: 47, LOG_CHERRY: 48, LEAVES_CHERRY: 49, LOG_BIRCH: 50, LEAVES_BIRCH: 51, TABUA_CARVALHO: 52, TABUA_CEREJEIRA: 53, TABUA_BETULA: 54, HASTE: 55, MESA_CARPINTARIA: 56, PEDRA_LISA: 57, TIJOLO_PEDRA: 58, LAJE_PEDRA: 59, DEGRAU_PEDRA: 60, MURETA_PEDRA: 61, TERRA_ARADA_SECA: 62, TERRA_ARADA_UMIDA: 63, CAMINHO_TERRA: 64, TERRA_INFERTIL: 65, BLOCO_ARGILA: 66, BLOCO_TIJOLOS: 67, BOLA_ARGILA: 68, TIJOLO: 69, PICARETA_MADEIRA: 70, PICARETA_PEDRA: 71, MACHADO_MADEIRA: 72, MACHADO_PEDRA: 73, PA_MADEIRA: 74, PA_PEDRA: 75, ENXADA_MADEIRA: 76, ENXADA_PEDRA: 77, SEMENTE_TRIGO: 78, TRIGO: 79, CENOURA: 80, BATATA: 81, TOMATE: 82 };
+var Item = { SAND: 1, DAMP_SAND: 2, DARK_ROCK: 3, FROST: 4, ROCK_SHARD: 5, FROST_SHARD: 6, CAPSULE: 7, LANTERN: 8, WORKBENCH: 9, ICE_LENS: 10, EMBER: 11, GLASS_REED: 12, SLAB: 13, MARCO: 14, PAINEL: 15, NOZ: 16, COPPER_SHARD: 17, COPPER_INGOT: 18, DRY_REED: 19, STONE_PICK: 20, BRAZIER: 21, STONE_DAGGER: 22, COPPER_PICK: 23, COPPER_DAGGER: 24, PLATE: 25, CARAPACE: 26, RAW_MEAT: 27, COOKED_MEAT: 28, EMBER_BLOCK: 29, NOZ_TORRADA: 30, ESTEIRA: 31, ESCADA: 32, BAU: 33, CAMA: 34, BALDE: 35, BALDE_CHEIO: 36, BLOCO_JUNCO: 37, LAJE_JUNCO: 38, DEGRAU_JUNCO: 39, CADEIRA_JUNCO: 40, PORTA_JUNCO: 41, GRASS: 42, DIRT: 43, STONE: 44, BEACH: 45, LOG_OAK: 46, LEAVES_OAK: 47, LOG_CHERRY: 48, LEAVES_CHERRY: 49, LOG_BIRCH: 50, LEAVES_BIRCH: 51, TABUA_CARVALHO: 52, TABUA_CEREJEIRA: 53, TABUA_BETULA: 54, HASTE: 55, MESA_CARPINTARIA: 56, PEDRA_LISA: 57, TIJOLO_PEDRA: 58, LAJE_PEDRA: 59, DEGRAU_PEDRA: 60, MURETA_PEDRA: 61, TERRA_ARADA_SECA: 62, TERRA_ARADA_UMIDA: 63, CAMINHO_TERRA: 64, TERRA_INFERTIL: 65, BLOCO_ARGILA: 66, BLOCO_TIJOLOS: 67, BOLA_ARGILA: 68, TIJOLO: 69, PICARETA_MADEIRA: 70, PICARETA_PEDRA: 71, MACHADO_MADEIRA: 72, MACHADO_PEDRA: 73, PA_MADEIRA: 74, PA_PEDRA: 75, ENXADA_MADEIRA: 76, ENXADA_PEDRA: 77, SEMENTE_TRIGO: 78, TRIGO: 79, CENOURA: 80, BATATA: 81, TOMATE: 82, FORNALHA: 83, CARVAO_VEGETAL: 84 };
 var ITEM_NAMES = {
   1: "Areia ocre",
   2: "Areia \xFAmida",
@@ -423,18 +438,19 @@ var ITEM_NAMES = {
   40: "Cadeira de Junco",
   41: "Porta de Junco"
 };
-var ORVALIS_ITEM_BLOCKS = { [Item.GRASS]: T.GRASS, [Item.DIRT]: T.DIRT, [Item.STONE]: T.STONE, [Item.BEACH]: T.BEACH, [Item.LOG_OAK]: T.LOG_OAK, [Item.LEAVES_OAK]: T.LEAVES_OAK, [Item.LOG_CHERRY]: T.LOG_CHERRY, [Item.LEAVES_CHERRY]: T.LEAVES_CHERRY, [Item.LOG_BIRCH]: T.LOG_BIRCH, [Item.LEAVES_BIRCH]: T.LEAVES_BIRCH, [Item.TABUA_CARVALHO]: T.PLANKS_OAK, [Item.TABUA_CEREJEIRA]: T.PLANKS_CHERRY, [Item.TABUA_BETULA]: T.PLANKS_BIRCH, [Item.MESA_CARPINTARIA]: T.CARPENTRY, [Item.PEDRA_LISA]: T.STONE_SMOOTH, [Item.TIJOLO_PEDRA]: T.STONE_BRICK, [Item.LAJE_PEDRA]: T.STONE_SLAB, [Item.TERRA_ARADA_SECA]: T.FARMLAND_DRY, [Item.TERRA_ARADA_UMIDA]: T.FARMLAND_WET, [Item.CAMINHO_TERRA]: T.PATH, [Item.TERRA_INFERTIL]: T.DIRT_INFERTILE, [Item.BLOCO_ARGILA]: T.CLAY_BLOCK, [Item.BLOCO_TIJOLOS]: T.BRICK_BLOCK };
-var ORVALIS_BLOCK_ITEMS = Object.fromEntries(Object.entries(ORVALIS_ITEM_BLOCKS).map(([item, block]) => [block, Number(item)]));
+var ORVALIS_ITEM_BLOCKS = { [Item.GRASS]: T.GRASS, [Item.DIRT]: T.DIRT, [Item.STONE]: T.STONE, [Item.BEACH]: T.BEACH, [Item.LOG_OAK]: T.LOG_OAK, [Item.LEAVES_OAK]: T.LEAVES_OAK, [Item.LOG_CHERRY]: T.LOG_CHERRY, [Item.LEAVES_CHERRY]: T.LEAVES_CHERRY, [Item.LOG_BIRCH]: T.LOG_BIRCH, [Item.LEAVES_BIRCH]: T.LEAVES_BIRCH, [Item.TABUA_CARVALHO]: T.PLANKS_OAK, [Item.TABUA_CEREJEIRA]: T.PLANKS_CHERRY, [Item.TABUA_BETULA]: T.PLANKS_BIRCH, [Item.MESA_CARPINTARIA]: T.CARPENTRY, [Item.PEDRA_LISA]: T.STONE_SMOOTH, [Item.TIJOLO_PEDRA]: T.STONE_BRICK, [Item.LAJE_PEDRA]: T.STONE_SLAB, [Item.TERRA_ARADA_SECA]: T.FARMLAND_DRY, [Item.TERRA_ARADA_UMIDA]: T.FARMLAND_WET, [Item.CAMINHO_TERRA]: T.PATH, [Item.TERRA_INFERTIL]: T.DIRT_INFERTILE, [Item.BLOCO_ARGILA]: T.CLAY_BLOCK, [Item.BLOCO_TIJOLOS]: T.BRICK_BLOCK, [Item.FORNALHA]: T.FURNACE };
+var ORVALIS_BLOCK_ITEMS = { ...Object.fromEntries(Object.entries(ORVALIS_ITEM_BLOCKS).map(([item, block]) => [block, Number(item)])), ...Object.fromEntries(Array.from({ length: 8 }, (_, t) => [T.FURNACE + t, Item.FORNALHA])) };
 for (const [item, block] of Object.entries(ORVALIS_ITEM_BLOCKS)) ITEM_NAMES[Number(item)] = BLOCK_NAMES[block];
 Object.assign(ITEM_NAMES, { 70: "Picareta de Madeira", 71: "Picareta de Pedra", 72: "Machado de Madeira", 73: "Machado de Pedra", 74: "P\xE1 de Madeira", 75: "P\xE1 de Pedra", 76: "Enxada de Madeira", 77: "Enxada de Pedra" });
 Object.assign(ITEM_NAMES, { 78: "Semente de Trigo", 79: "Trigo", 80: "Cenoura", 81: "Batata", 82: "Tomate" });
+ITEM_NAMES[Item.CARVAO_VEGETAL] = "Carv\xE3o Vegetal";
 ITEM_NAMES[Item.BOLA_ARGILA] = "Bola de Argila";
 ITEM_NAMES[Item.TIJOLO] = "Tijolo";
 ITEM_NAMES[Item.MURETA_PEDRA] = "Mureta de Pedra";
 ITEM_NAMES[Item.DEGRAU_PEDRA] = "Degrau de Pedra";
 ITEM_NAMES[Item.HASTE] = "Haste de Madeira";
 var maxStack = (item) => item === Item.CAPSULE || item === Item.LANTERN || item === Item.WORKBENCH || isBucket(item) || isTool(item) ? 1 : 64;
-var isItem = (n) => Number.isInteger(n) && n >= 1 && n <= 82;
+var isItem = (n) => Number.isInteger(n) && n >= 1 && n <= 84;
 var isBucket = (item) => item === Item.BALDE || item === Item.BALDE_CHEIO;
 function blockOfItem(item) {
   if (item >= Item.SAND && item <= Item.FROST) return item;
@@ -598,14 +614,14 @@ var RECIPES = [
   { id: "mesa-carpintaria-cerejeira", name: "Mesa de Carpintaria (t\xE1buas de cerejeira)", group: "utilidades", result: { item: Item.MESA_CARPINTARIA, count: 1 }, ingredients: [{ item: Item.TABUA_CEREJEIRA, count: 4 }], station: "personal", world: "orvalis" },
   { id: "mesa-carpintaria-betula", name: "Mesa de Carpintaria (t\xE1buas de b\xE9tula)", group: "utilidades", result: { item: Item.MESA_CARPINTARIA, count: 1 }, ingredients: [{ item: Item.TABUA_BETULA, count: 4 }], station: "personal", world: "orvalis" },
   // Pedra de obra do Orvalis em voxel (ADR 0108), na Mesa de Carpintaria (a fundição em Braseiro ainda não existe no Orvalis: o polimento é provisório)
-  { id: "pedra-lisa", name: "Pedra Lisa", group: "construcao", result: { item: Item.PEDRA_LISA, count: 1 }, ingredients: [{ item: Item.STONE, count: 1 }], station: "workbench", world: "orvalis" },
+  { id: "pedra-lisa", name: "Pedra Lisa", group: "construcao", result: { item: Item.PEDRA_LISA, count: 1 }, ingredients: [{ item: Item.STONE, count: 1 }], station: "furnace", world: "orvalis" },
   { id: "tijolo-pedra", name: "Tijolo de Pedra", group: "construcao", result: { item: Item.TIJOLO_PEDRA, count: 4 }, ingredients: [{ item: Item.STONE, count: 4 }], station: "workbench", world: "orvalis" },
   { id: "degrau-pedra", name: "Degrau de Pedra", group: "construcao", result: { item: Item.DEGRAU_PEDRA, count: 4 }, ingredients: [{ item: Item.PEDRA_LISA, count: 3 }], station: "workbench", world: "orvalis" },
   { id: "mureta-pedra", name: "Mureta de Pedra", group: "construcao", result: { item: Item.MURETA_PEDRA, count: 6 }, ingredients: [{ item: Item.PEDRA_LISA, count: 6 }], station: "workbench", world: "orvalis" },
   // Solo e cerâmica do Orvalis em voxel (ADR 0111): receitas PROVISÓRIAS até existirem a água do cultivo (E5), a argila no terreno e a fundição; terra arada e caminho agora vêm da enxada e da pá (ADR 0112)
   { id: "terra-infertil", name: "Terra Inf\xE9rtil", group: "construcao", result: { item: Item.TERRA_INFERTIL, count: 2 }, ingredients: [{ item: Item.DIRT, count: 1 }, { item: Item.BEACH, count: 1 }], station: "workbench", world: "orvalis" },
   { id: "bola-argila", name: "Bola de Argila", group: "materiais", result: { item: Item.BOLA_ARGILA, count: 2 }, ingredients: [{ item: Item.DIRT, count: 2 }, { item: Item.BEACH, count: 1 }], station: "workbench", world: "orvalis" },
-  { id: "tijolo", name: "Tijolo", group: "materiais", result: { item: Item.TIJOLO, count: 1 }, ingredients: [{ item: Item.BOLA_ARGILA, count: 1 }], station: "workbench", world: "orvalis" },
+  { id: "tijolo", name: "Tijolo", group: "materiais", result: { item: Item.TIJOLO, count: 1 }, ingredients: [{ item: Item.BOLA_ARGILA, count: 1 }], station: "furnace", world: "orvalis" },
   { id: "bloco-argila", name: "Bloco de Argila", group: "construcao", result: { item: Item.BLOCO_ARGILA, count: 1 }, ingredients: [{ item: Item.BOLA_ARGILA, count: 4 }], station: "workbench", world: "orvalis" },
   { id: "bloco-tijolos", name: "Bloco de Tijolos", group: "construcao", result: { item: Item.BLOCO_TIJOLOS, count: 1 }, ingredients: [{ item: Item.TIJOLO, count: 4 }], station: "workbench", world: "orvalis" },
   // Ferramentas do Orvalis em voxel (ADR 0112), na Mesa de Carpintaria; a de madeira só de tábuas de carvalho por ora (pendência: "qualquer tábua")
@@ -619,6 +635,11 @@ var RECIPES = [
   { id: "enxada-pedra", name: "Enxada de Pedra", group: "ferramentas", result: { item: Item.ENXADA_PEDRA, count: 1 }, ingredients: [{ item: Item.STONE, count: 2 }, { item: Item.HASTE, count: 2 }], station: "workbench", world: "orvalis" },
   // Horta (ADR 0113): o trigo fecha o ciclo (a cenoura, a batata e o tomate se plantam com o próprio produto)
   { id: "semente-trigo", name: "Semente de Trigo", group: "materiais", result: { item: Item.SEMENTE_TRIGO, count: 1 }, ingredients: [{ item: Item.TRIGO, count: 1 }], station: "personal", world: "orvalis" },
+  { id: "fornalha", name: "Fornalha", group: "utilidades", result: { item: Item.FORNALHA, count: 1 }, ingredients: [{ item: Item.STONE, count: 8 }], station: "workbench", world: "orvalis" },
+  // Wiki: 8 pedras em anel (ADR 0120)
+  { id: "carvao-carvalho", name: "Carv\xE3o Vegetal (tora de carvalho)", group: "materiais", result: { item: Item.CARVAO_VEGETAL, count: 1 }, ingredients: [{ item: Item.LOG_OAK, count: 1 }], station: "furnace", world: "orvalis" },
+  { id: "carvao-cerejeira", name: "Carv\xE3o Vegetal (tora de cerejeira)", group: "materiais", result: { item: Item.CARVAO_VEGETAL, count: 1 }, ingredients: [{ item: Item.LOG_CHERRY, count: 1 }], station: "furnace", world: "orvalis" },
+  { id: "carvao-betula", name: "Carv\xE3o Vegetal (tora de b\xE9tula)", group: "materiais", result: { item: Item.CARVAO_VEGETAL, count: 1 }, ingredients: [{ item: Item.LOG_BIRCH, count: 1 }], station: "furnace", world: "orvalis" },
   { id: "laje-pedra", name: "Laje de Pedra", group: "construcao", result: { item: Item.LAJE_PEDRA, count: 6 }, ingredients: [{ item: Item.PEDRA_LISA, count: 3 }], station: "workbench", world: "orvalis" }
 ];
 var stationMet = (r, at) => r.station === "personal" || r.station === at;
@@ -631,31 +652,68 @@ function matchBench(totals) {
 
 // src/titan/furnace.ts
 var COOK_TIME_S = 10;
-var FUEL_TIME_S = { [Item.EMBER]: 40, [Item.EMBER_BLOCK]: 360 };
+var FUEL_TIME_S = {
+  [Item.EMBER]: 40,
+  [Item.EMBER_BLOCK]: 360,
+  // Titã (braseiro)
+  // Orvalis (Fornalha, ADR 0120): segundos de queima da Minecraft Wiki — carvão vegetal 80, tora/tábuas/Mesa de Carpintaria 15, haste 5 (os itens dos dois mundos nunca se misturam, ADR 0114)
+  [Item.CARVAO_VEGETAL]: 80,
+  [Item.LOG_OAK]: 15,
+  [Item.LOG_CHERRY]: 15,
+  [Item.LOG_BIRCH]: 15,
+  [Item.TABUA_CARVALHO]: 15,
+  [Item.TABUA_CEREJEIRA]: 15,
+  [Item.TABUA_BETULA]: 15,
+  [Item.MESA_CARPINTARIA]: 15,
+  [Item.HASTE]: 5
+};
 var newFurnace = () => ({ input: null, fuel: null, output: null, burnLeft: 0, burnTotal: 0, cook: 0 });
 var furnaceKey = (x, y, z) => `${x},${y},${z}`;
-function smeltRecipe(item) {
-  return RECIPES.find((r) => r.station === "brazier" && r.ingredients.length === 1 && r.ingredients[0].item === item) ?? null;
+var BRAZIER_RULES = { station: "brazier", continuous: false };
+var FURNACE_RULES = { station: "furnace", continuous: true };
+var rulesOf = (block) => isFurnace(block) ? FURNACE_RULES : isBrazier(block) ? BRAZIER_RULES : null;
+function smeltRecipe(item, station = "brazier") {
+  return RECIPES.find((r) => r.station === station && r.ingredients.length === 1 && r.ingredients[0].item === item) ?? null;
 }
 var isFuel = (item) => item in FUEL_TIME_S;
-var accepts = (slot, item) => slot === "input" ? smeltRecipe(item) !== null : slot === "fuel" ? isFuel(item) : false;
-function canSmelt(f) {
-  const r = f.input ? smeltRecipe(f.input.item) : null;
+var accepts = (slot, item, station = "brazier") => slot === "input" ? smeltRecipe(item, station) !== null : slot === "fuel" ? isFuel(item) : false;
+function canSmelt(f, rules = BRAZIER_RULES) {
+  const r = f.input ? smeltRecipe(f.input.item, rules.station) : null;
   if (!f.input || !r || f.input.count < r.ingredients[0].count) return false;
   if (!f.output) return true;
   return f.output.item === r.result.item && f.output.count + r.result.count <= maxStack(r.result.item);
 }
-var isWorking = (f) => f.burnLeft > 0 && canSmelt(f);
-function tickFurnace(f, dt) {
+var isWorking = (f, rules = BRAZIER_RULES) => f.burnLeft > 0 && canSmelt(f, rules);
+var showsLit = (f, rules = BRAZIER_RULES) => rules.continuous ? f.burnLeft > 0 : isWorking(f, rules);
+function finishItem(f, rules) {
+  const r = smeltRecipe(f.input.item, rules.station);
+  f.cook = 0;
+  if ((f.input.count -= r.ingredients[0].count) <= 0) f.input = null;
+  f.output = f.output ? { item: f.output.item, count: f.output.count + r.result.count } : { item: r.result.item, count: r.result.count };
+}
+function tickFurnace(f, dt, rules = BRAZIER_RULES) {
   let changed = false;
-  const was = isWorking(f);
+  const was = showsLit(f, rules);
   let rest = dt;
   for (let guard = 0; rest > EPS && guard < 64; guard++) {
-    const can = canSmelt(f);
+    const can = canSmelt(f, rules);
     if (f.burnLeft <= EPS && can && f.fuel && isFuel(f.fuel.item)) {
       f.burnTotal = f.burnLeft = FUEL_TIME_S[f.fuel.item];
       if (--f.fuel.count <= 0) f.fuel = null;
       changed = true;
+    }
+    if (rules.continuous && f.burnLeft > EPS) {
+      const step2 = Math.min(rest, f.burnLeft, can ? COOK_TIME_S - f.cook : Infinity);
+      f.burnLeft -= step2;
+      rest -= step2;
+      if (can) f.cook += step2;
+      else if (f.cook > 0) f.cook = Math.max(0, f.cook - step2 * 2);
+      if (f.burnLeft <= EPS) f.burnLeft = 0;
+      if (can && f.cook >= COOK_TIME_S - EPS) {
+        finishItem(f, rules);
+        changed = true;
+      }
+      continue;
     }
     if (!(f.burnLeft > EPS && can)) {
       if (f.cook > 0) f.cook = Math.max(0, f.cook - rest * 2);
@@ -668,14 +726,11 @@ function tickFurnace(f, dt) {
     rest -= step;
     if (f.burnLeft <= EPS) f.burnLeft = 0;
     if (f.cook >= COOK_TIME_S - EPS) {
-      const r = smeltRecipe(f.input.item);
-      f.cook = 0;
-      if ((f.input.count -= r.ingredients[0].count) <= 0) f.input = null;
-      f.output = f.output ? { item: f.output.item, count: f.output.count + r.result.count } : { item: r.result.item, count: r.result.count };
+      finishItem(f, rules);
       changed = true;
     }
   }
-  if (was !== isWorking(f)) changed = true;
+  if (was !== showsLit(f, rules)) changed = true;
   return { changed };
 }
 var EPS = 1e-6;
@@ -690,11 +745,11 @@ function furnaceToData(f) {
 }
 var unpack = (e) => Array.isArray(e) && isItem(e[0]) && Number.isInteger(e[1]) && e[1] >= 1 && e[1] <= maxStack(e[0]) ? { item: e[0], count: e[1] } : null;
 var num = (v, lo, hi) => typeof v === "number" && Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : 0;
-function furnaceFromData(d) {
+function furnaceFromData(d, rules = BRAZIER_RULES) {
   const o = d && typeof d === "object" ? d : {};
   const f = newFurnace();
   const i = unpack(o.i), fu = unpack(o.f);
-  f.input = i && accepts("input", i.item) ? i : null;
+  f.input = i && accepts("input", i.item, rules.station) ? i : null;
   f.fuel = fu && accepts("fuel", fu.item) ? fu : null;
   f.output = unpack(o.o);
   f.burnTotal = num(o.t, 0, 600);
@@ -1829,7 +1884,7 @@ function eatFromSlot(s, slot) {
 }
 function furnaceAt(s, x, y, z) {
   const id = s.volume.get(x, y, z);
-  if (id !== T.BRAZIER && id !== T.BRAZIER_LIT) return null;
+  if (!rulesOf(id)) return null;
   const k = furnaceKey(x, y, z);
   let f = s.furnaces.get(k);
   if (!f) {
@@ -1842,7 +1897,8 @@ function furnaceAt(s, x, y, z) {
 function furnaceMoveIn(s, x, y, z, slot, invSlot) {
   const f = furnaceAt(s, x, y, z), st = s.inventory.get(invSlot);
   if (!f || !st) return { ok: false };
-  if (!accepts(slot, st.item)) return { ok: false, msg: slot === "fuel" ? "Isso n\xE3o queima" : "O braseiro n\xE3o cozinha isso" };
+  const rules = rulesOf(s.volume.get(x, y, z));
+  if (!accepts(slot, st.item, rules.station)) return { ok: false, msg: slot === "fuel" ? "Isso n\xE3o queima" : rules.station === "furnace" ? "A fornalha n\xE3o cozinha isso" : "O braseiro n\xE3o cozinha isso" };
   const cur = f[slot];
   if (cur && cur.item !== st.item) return { ok: false, msg: "O espa\xE7o j\xE1 tem outro item" };
   const room = maxStack(st.item) - (cur?.count ?? 0), n = Math.min(room, st.count);
@@ -1973,7 +2029,7 @@ function breakOrCollectBlock(s, hit) {
     const seed = wildSeedAt(x, y, z);
     if (seed !== null) spillBlock(s, seed, 1, x, y, z);
   }
-  if (isBrazier(block)) spillFurnace(s, x, y, z);
+  if (isBrazier(block) || isFurnace(block)) spillFurnace(s, x, y, z);
   if (isChest(block)) spillChest(s, x, y, z);
   if (isVein(block)) dropShard(s, block === T.VEIN_ROCK ? 5 : 6, x, y, z);
   releaseReed(s, reed, x, y + 1, z);
@@ -2106,6 +2162,7 @@ function placeFromSlot(s, hit, slot) {
   else if (block === T.REED_STAIR) block = stairId(marcoTurnFacing(s.yaw));
   else if (block === T.STONE_STAIR) block = stairId(marcoTurnFacing(s.yaw), true);
   else if (block === T.REED_CHAIR) block = chairId(marcoTurnFacing(s.yaw));
+  else if (block === T.FURNACE) block = furnaceId(carpentryTurnFacing(s.yaw), false);
   else if (block === T.CARPENTRY) block = carpentryId(carpentryTurnFacing(s.yaw));
   else if (block === T.CHEST) block = chestId(chestTurnFacing(s.yaw));
   if (isSlabBottom(block)) {
@@ -3669,7 +3726,8 @@ function validFurnaces(raw, vol) {
     const m = /^(-?\d+),(-?\d+),(-?\d+)$/.exec(k);
     if (!m) continue;
     const b = vol.get(Number(m[1]), Number(m[2]), Number(m[3]));
-    if (b === T.BRAZIER || b === T.BRAZIER_LIT) out.set(k, furnaceFromData(v));
+    const rules = rulesOf(b);
+    if (rules) out.set(k, furnaceFromData(v, rules));
   }
   return out;
 }
@@ -3693,13 +3751,15 @@ function validChests(raw, vol) {
 function tickFurnaces(s, dt) {
   let any = false;
   for (const [k, f] of s.furnaces) {
-    const r = tickFurnace(f, dt);
+    const [x, y, z] = k.split(",").map(Number), cur = s.volume.get(x, y, z), rules = rulesOf(cur);
+    if (!rules) continue;
+    const r = tickFurnace(f, dt, rules);
     if (!r.changed) continue;
     any = true;
     s.metaRev++;
-    const [x, y, z] = k.split(",").map(Number);
-    const want = isWorking(f) ? T.BRAZIER_LIT : T.BRAZIER, cur = s.volume.get(x, y, z);
-    if ((cur === T.BRAZIER || cur === T.BRAZIER_LIT) && cur !== want) s.volume.set(x, y, z, want);
+    const lit = showsLit(f, rules);
+    const want = isFurnace(cur) ? furnaceId(furnaceTurn(cur), lit) : lit ? T.BRAZIER_LIT : T.BRAZIER;
+    if (cur !== want) s.volume.set(x, y, z, want);
   }
   return any;
 }
