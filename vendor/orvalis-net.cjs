@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.189.0 (7d7f3d6) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.191.0 (c5e1fa3) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -3405,8 +3405,154 @@ var LightEngine = class {
   }
 };
 
+// src/titan/skylight.ts
+var SKY_MAX = 15;
+var SCAN_MARGIN = 24;
+var REACH = 16;
+var SkyLight = class {
+  constructor(w) {
+    this.w = w;
+    this.sx = w.x1 - w.x0;
+    this.sz = w.z1 - w.z0;
+    this.sy = w.yMax - w.yMin + 1;
+    this.lv = new Uint8Array(this.sx * this.sz * this.sy);
+    this.base = new Uint8Array(this.sx * this.sz * this.sy);
+    this.scanTop = new Int16Array(this.sx * this.sz).fill(w.yMin);
+  }
+  w;
+  sx;
+  sz;
+  sy;
+  lv;
+  /** O resultado só da varredura vertical de cada coluna (antes da inundação): `update` refaz só a coluna editada e copia o resto daqui, em vez de varrer ±16 colunas de novo. */
+  base;
+  /** Altura do primeiro nível implícito: acima de `scanTop[col]` vale 15. */
+  scanTop;
+  col(x, z) {
+    return (z - this.w.z0) * this.sx + (x - this.w.x0);
+  }
+  cell(x, y, z) {
+    return (y - this.w.yMin) * this.sx * this.sz + this.col(x, z);
+  }
+  inside(x, z) {
+    return x >= this.w.x0 && x < this.w.x1 && z >= this.w.z0 && z < this.w.z1;
+  }
+  /** Nível do céu na célula (0–15). Fora da grade e acima do `scanTop` da coluna: 15. */
+  at(x, y, z) {
+    if (!this.inside(x, z) || y < this.w.yMin) return this.inside(x, z) ? 0 : SKY_MAX;
+    if (y > this.w.yMax) return SKY_MAX;
+    return y > this.scanTop[this.col(x, z)] ? SKY_MAX : this.lv[this.cell(x, y, z)];
+  }
+  /**
+   * Conta inteira. `topHint(x, z)` = a altura do terreno na coluna (o topo da coluna gerada); `edited` = células editadas pelo jogador (só elas podem criar buracos abaixo do terreno, ou
+   * blocos acima dele): cada uma sobe o `scanTop` da coluna até ela e entra como candidata de sombra.
+   */
+  compute(topHint, edited = []) {
+    this.lv.fill(0);
+    this.base.fill(0);
+    for (let z = this.w.z0; z < this.w.z1; z++) for (let x = this.w.x0; x < this.w.x1; x++) this.scanTop[this.col(x, z)] = Math.min(this.w.yMax, Math.max(this.w.yMin, topHint(x, z)) + SCAN_MARGIN);
+    for (const e of edited) {
+      const [x, y, z] = e;
+      if (!this.inside(x, z)) continue;
+      const c = this.col(x, z);
+      this.scanTop[c] = Math.min(this.w.yMax, Math.max(this.scanTop[c], y + SCAN_MARGIN));
+    }
+    const queue = [];
+    for (let z = this.w.z0; z < this.w.z1; z++) for (let x = this.w.x0; x < this.w.x1; x++) this.sweep(x, z, this.w.yMin, queue);
+    this.flood(queue, null);
+  }
+  /** Varre a coluna de cima para baixo até o primeiro bloco opaco, fixando níveis; empilha as células com nível ≥ 2 para a inundação. */
+  sweep(x, z, yLow, queue) {
+    let level = SKY_MAX;
+    for (let y = this.scanTop[this.col(x, z)]; y >= this.w.yMin; y--) {
+      const k = this.w.kind(x, y, z);
+      if (k === 2) {
+        this.lv[this.cell(x, y, z)] = 0;
+        this.base[this.cell(x, y, z)] = 0;
+        return;
+      }
+      if (k === 1 && level > 0) level--;
+      if (y >= yLow) {
+        const i = this.cell(x, y, z);
+        this.lv[i] = level;
+        this.base[i] = level;
+        if (level >= 2) queue.push(x, y, z);
+      }
+    }
+  }
+  /** Inundação: cada célula passa `nível − 1` aos vizinhos não opacos (para baixo, o 15 desce inteiro); filtros tiram 1 a mais. `box` limita onde se escreve (a vizinhança refeita). */
+  flood(queue, box) {
+    const DIRS3 = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]];
+    for (let head = 0; head < queue.length; head += 3) {
+      const x = queue[head], y = queue[head + 1], z = queue[head + 2], v = this.lv[this.cell(x, y, z)];
+      if (v < 2) continue;
+      for (const [dx, dy, dz] of DIRS3) {
+        const nx = x + dx, ny = y + dy, nz = z + dz;
+        if (!this.inside(nx, nz) || ny < this.w.yMin || ny > this.w.yMax || ny > this.scanTop[this.col(nx, nz)]) continue;
+        if (box && (nx < box.x0 || nx >= box.x1 || nz < box.z0 || nz >= box.z1 || ny < box.y0 || ny > box.y1)) continue;
+        let nv = dy === -1 && v === SKY_MAX ? SKY_MAX : v - 1;
+        const i = this.cell(nx, ny, nz);
+        if (nv <= this.lv[i]) continue;
+        const k = this.w.kind(nx, ny, nz);
+        if (k === 2) continue;
+        if (k === 1 && nv > 0) nv -= 1;
+        if (nv > this.lv[i]) {
+          this.lv[i] = nv;
+          queue.push(nx, ny, nz);
+        }
+      }
+    }
+  }
+  /**
+   * Refaz a vizinhança depois que **uma** célula `(x, y, z)` mudou de classe (opaco, filtro ou transparente). Recalcula as colunas a ±16 em x e z, da primeira célula opaca abaixo de
+   * `y` (menos 16) até o topo, e re-propaga a luz de fora da caixa para dentro.
+   */
+  update(x, y, z, onChange) {
+    if (!this.inside(x, z) || y < this.w.yMin || y > this.w.yMax) return;
+    const c = this.col(x, z);
+    if (y + SCAN_MARGIN > this.scanTop[c]) this.scanTop[c] = Math.min(this.w.yMax, y + SCAN_MARGIN);
+    let below = this.w.yMin;
+    for (let yy = y - 1; yy >= this.w.yMin; yy--) if (this.w.kind(x, yy, z) === 2) {
+      below = yy;
+      break;
+    }
+    const box = { x0: Math.max(this.w.x0, x - REACH), x1: Math.min(this.w.x1, x + REACH + 1), z0: Math.max(this.w.z0, z - REACH), z1: Math.min(this.w.z1, z + REACH + 1), y0: Math.max(this.w.yMin, below - REACH), y1: this.w.yMax };
+    const before = onChange ? this.snapshot(box) : null;
+    for (let yy = this.w.yMin; yy <= this.scanTop[c]; yy++) this.base[this.cell(x, yy, z)] = 0;
+    this.sweep(x, z, this.w.yMin, []);
+    const queue = [];
+    for (let zz = box.z0; zz < box.z1; zz++) for (let xx = box.x0; xx < box.x1; xx++) for (let yy = box.y0; yy <= Math.min(box.y1, this.scanTop[this.col(xx, zz)]); yy++) {
+      const i = this.cell(xx, yy, zz), b = this.base[i];
+      this.lv[i] = b;
+      if (b >= 2) queue.push(xx, yy, zz);
+    }
+    for (let zz = box.z0 - 1; zz <= box.z1; zz++) for (let xx = box.x0 - 1; xx <= box.x1; xx++) {
+      if (!this.inside(xx, zz)) continue;
+      const edgeXZ = xx < box.x0 || xx >= box.x1 || zz < box.z0 || zz >= box.z1;
+      for (let yy = box.y0 - 1; yy <= Math.min(box.y1, this.scanTop[this.col(xx, zz)]); yy++) {
+        if (yy < this.w.yMin) continue;
+        if ((edgeXZ || yy < box.y0) && this.lv[this.cell(xx, yy, zz)] >= 2) queue.push(xx, yy, zz);
+      }
+    }
+    this.flood(queue, box);
+    if (before && onChange) {
+      let i = 0;
+      for (let zz = box.z0; zz < box.z1; zz++) for (let xx = box.x0; xx < box.x1; xx++) for (let yy = box.y0; yy <= Math.min(box.y1, this.scanTop[this.col(xx, zz)]); yy++) if (before[i++] !== this.lv[this.cell(xx, yy, zz)]) onChange(xx, yy, zz);
+    }
+  }
+  /** Cópia dos níveis da caixa (na ordem em que `update` varre), para comparar depois. */
+  snapshot(box) {
+    let n = 0;
+    for (let zz = box.z0; zz < box.z1; zz++) for (let xx = box.x0; xx < box.x1; xx++) n += Math.max(0, Math.min(box.y1, this.scanTop[this.col(xx, zz)]) - box.y0 + 1);
+    const out = new Uint8Array(n);
+    let i = 0;
+    for (let zz = box.z0; zz < box.z1; zz++) for (let xx = box.x0; xx < box.x1; xx++) for (let yy = box.y0; yy <= Math.min(box.y1, this.scanTop[this.col(xx, zz)]); yy++) out[i++] = this.lv[this.cell(xx, yy, zz)];
+    return out;
+  }
+};
+
 // src/titan/volume.ts
-var TitanVolume = class {
+var TitanVolume = class _TitanVolume {
   constructor(gen) {
     this.gen = gen;
   }
@@ -3652,6 +3798,27 @@ var TitanVolume = class {
   lanternCells() {
     return [...this.lanterns.values()];
   }
+  /**
+   * Luz do céu (ADR 0123): 0–15 por célula, nas regras da Wiki (céu aberto 15, filtros −1, lados e para cima −1 por célula). O primeiro uso faz a conta inteira da região (o céu das colunas; o mundo gerado
+   * não tem cavernas) e cada edição que muda a classe da célula (opaco, filtro, transparente) refaz só a vizinhança (`SkyLight.update`). Fora da região vale 15.
+   */
+  skyLight(x, y, z) {
+    return (this.sky ??= this.buildSky()).at(x, y, z);
+  }
+  sky = null;
+  static skyKind(id) {
+    return blocksLight(id) ? 2 : isLeaves(id) || id === T.LAKE ? 1 : 0;
+  }
+  buildSky() {
+    const r = this.gen.region, sky = new SkyLight({ kind: (x, y, z) => _TitanVolume.skyKind(this.get(x, y, z)), x0: r.min, x1: r.max, z0: r.min, z1: r.max, yMin: Y_MIN, yMax: Y_MAX });
+    const edited = [];
+    for (const c of this.dirtyChunks()) for (const [idx] of c.edits) {
+      const u = unpackIndex(idx);
+      edited.push([c.cx * 16 + u.lx, u.y, c.cz * 16 + u.lz]);
+    }
+    sky.compute((x, z) => this.gen.column(x, z).top, edited);
+    return sky;
+  }
   /** Nível de luz (0–15) da célula. O primeiro uso faz o cálculo completo; depois a luz é mantida de forma incremental. */
   light(x, y, z) {
     if (!this.emitters.size) return 0;
@@ -3685,6 +3852,15 @@ var TitanVolume = class {
     if (isLantern && !wasLantern) {
       this.lanterns.set(key, [x, y, z]);
       this.lanternVersion++;
+    }
+    if (this.sky && _TitanVolume.skyKind(before) !== _TitanVolume.skyKind(after)) {
+      let moved = false;
+      this.sky.update(x, y, z, (cx, cy, cz) => {
+        moved = true;
+        this.markLightCell(cx, cy, cz);
+      });
+      this.flushLightTouched();
+      if (moved) this.modelVersion++;
     }
     const lvBefore = lightLevelOf(before), lvAfter = lightLevelOf(after);
     if (lvBefore !== lvAfter) {
