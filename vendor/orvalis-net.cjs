@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.216.0 (c32a08e) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.222.0 (b270faf) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -550,7 +550,7 @@ function hoeResult(v, block, x, y, z) {
 var shovelResult = (block) => block === T.GRASS || block === T.DIRT ? T.PATH : null;
 
 // src/titan/items.ts
-var Item = { SAND: 1, DAMP_SAND: 2, DARK_ROCK: 3, FROST: 4, ROCK_SHARD: 5, FROST_SHARD: 6, CAPSULE: 7, LANTERN: 8, WORKBENCH: 9, ICE_LENS: 10, EMBER: 11, GLASS_REED: 12, SLAB: 13, MARCO: 14, PAINEL: 15, NOZ: 16, COPPER_SHARD: 17, COPPER_INGOT: 18, DRY_REED: 19, STONE_PICK: 20, BRAZIER: 21, STONE_DAGGER: 22, COPPER_PICK: 23, COPPER_DAGGER: 24, PLATE: 25, CARAPACE: 26, RAW_MEAT: 27, COOKED_MEAT: 28, EMBER_BLOCK: 29, NOZ_TORRADA: 30, ESTEIRA: 31, ESCADA: 32, BAU: 33, CAMA: 34, BALDE: 35, BALDE_CHEIO: 36, BLOCO_JUNCO: 37, LAJE_JUNCO: 38, DEGRAU_JUNCO: 39, CADEIRA_JUNCO: 40, PORTA_JUNCO: 41, GRASS: 42, DIRT: 43, STONE: 44, BEACH: 45, LOG_OAK: 46, LEAVES_OAK: 47, LOG_CHERRY: 48, LEAVES_CHERRY: 49, LOG_BIRCH: 50, LEAVES_BIRCH: 51, TABUA_CARVALHO: 52, TABUA_CEREJEIRA: 53, TABUA_BETULA: 54, HASTE: 55, MESA_CARPINTARIA: 56, PEDRA_LISA: 57, TIJOLO_PEDRA: 58, LAJE_PEDRA: 59, DEGRAU_PEDRA: 60, MURETA_PEDRA: 61, TERRA_ARADA_SECA: 62, TERRA_ARADA_UMIDA: 63, CAMINHO_TERRA: 64, TERRA_INFERTIL: 65, BLOCO_ARGILA: 66, BLOCO_TIJOLOS: 67, BOLA_ARGILA: 68, TIJOLO: 69, PICARETA_MADEIRA: 70, PICARETA_PEDRA: 71, MACHADO_MADEIRA: 72, MACHADO_PEDRA: 73, PA_MADEIRA: 74, PA_PEDRA: 75, ENXADA_MADEIRA: 76, ENXADA_PEDRA: 77, SEMENTE_TRIGO: 78, TRIGO: 79, CENOURA: 80, BATATA: 81, TOMATE: 82, FORNALHA: 83, CARVAO_VEGETAL: 84, TOCHA: 85, CARVAO: 87, BLOCO_CARVAO: 88, COURO: 89, LA: 90, PENA: 91, PORCO_CRU: 92, PORCO_ASSADO: 93, BOVINA_CRUA: 94, BIFE: 95, CARNEIRO_CRU: 96, CARNEIRO_ASSADO: 97, FRANGO_CRU: 98, FRANGO_ASSADO: 99, BETERRABA: 100, SEMENTE_BETERRABA: 101, SEMENTE_ABOBORA: 102, SEMENTE_MELANCIA: 103, FATIA_MELANCIA: 104, BLOCO_ABOBORA: 105, VARA_PESCA: 106, BACALHAU_CRU: 107, SALMAO_CRU: 108, BAIACU: 109, PEIXE_TROPICAL: 110, BACALHAU_ASSADO: 111, SALMAO_ASSADO: 112, BOIA: 113, LINHA: 114, ERVA_MARINHA: 115, ALGA: 116, ALGA_SECA: 117, BLOCO_ALGA_SECA: 118, CORAL_VIVO: 123, CORAL_MORTO: 128, GORGONIA_VIVA: 133, GORGONIA_MORTA: 138, BLOCO_CORAL_VIVO: 143, BLOCO_CORAL_MORTO: 148, BOTE_CARVALHO: 153, BOTE_BETULA: 154, BOTE_CEREJEIRA: 155, LAJE_CARVALHO: 156, LAJE_CEREJEIRA: 157, LAJE_BETULA: 158, DEGRAU_CARVALHO: 159, DEGRAU_CEREJEIRA: 160, DEGRAU_BETULA: 161, CERCA_CARVALHO: 162, CERCA_CEREJEIRA: 163, CERCA_BETULA: 164, PORTAO_CARVALHO: 165, PORTAO_CEREJEIRA: 166, PORTAO_BETULA: 167, PORTA_CARVALHO: 168, PORTA_CEREJEIRA: 169, PORTA_BETULA: 170, ALCAPAO_CARVALHO: 171, ALCAPAO_CEREJEIRA: 172, ALCAPAO_BETULA: 173 };
+var Item = { SAND: 1, DAMP_SAND: 2, DARK_ROCK: 3, FROST: 4, ROCK_SHARD: 5, FROST_SHARD: 6, CAPSULE: 7, LANTERN: 8, WORKBENCH: 9, ICE_LENS: 10, EMBER: 11, GLASS_REED: 12, SLAB: 13, MARCO: 14, PAINEL: 15, NOZ: 16, COPPER_SHARD: 17, COPPER_INGOT: 18, DRY_REED: 19, STONE_PICK: 20, BRAZIER: 21, STONE_DAGGER: 22, COPPER_PICK: 23, COPPER_DAGGER: 24, PLATE: 25, CARAPACE: 26, RAW_MEAT: 27, COOKED_MEAT: 28, EMBER_BLOCK: 29, NOZ_TORRADA: 30, ESTEIRA: 31, ESCADA: 32, BAU: 33, CAMA: 34, BALDE: 35, BALDE_CHEIO: 36, BLOCO_JUNCO: 37, LAJE_JUNCO: 38, DEGRAU_JUNCO: 39, CADEIRA_JUNCO: 40, PORTA_JUNCO: 41, GRASS: 42, DIRT: 43, STONE: 44, BEACH: 45, LOG_OAK: 46, LEAVES_OAK: 47, LOG_CHERRY: 48, LEAVES_CHERRY: 49, LOG_BIRCH: 50, LEAVES_BIRCH: 51, TABUA_CARVALHO: 52, TABUA_CEREJEIRA: 53, TABUA_BETULA: 54, HASTE: 55, MESA_CARPINTARIA: 56, PEDRA_LISA: 57, TIJOLO_PEDRA: 58, LAJE_PEDRA: 59, DEGRAU_PEDRA: 60, MURETA_PEDRA: 61, TERRA_ARADA_SECA: 62, TERRA_ARADA_UMIDA: 63, CAMINHO_TERRA: 64, TERRA_INFERTIL: 65, BLOCO_ARGILA: 66, BLOCO_TIJOLOS: 67, BOLA_ARGILA: 68, TIJOLO: 69, PICARETA_MADEIRA: 70, PICARETA_PEDRA: 71, MACHADO_MADEIRA: 72, MACHADO_PEDRA: 73, PA_MADEIRA: 74, PA_PEDRA: 75, ENXADA_MADEIRA: 76, ENXADA_PEDRA: 77, SEMENTE_TRIGO: 78, TRIGO: 79, CENOURA: 80, BATATA: 81, TOMATE: 82, FORNALHA: 83, CARVAO_VEGETAL: 84, TOCHA: 85, CARVAO: 87, BLOCO_CARVAO: 88, COURO: 89, LA: 90, PENA: 91, PORCO_CRU: 92, PORCO_ASSADO: 93, BOVINA_CRUA: 94, BIFE: 95, CARNEIRO_CRU: 96, CARNEIRO_ASSADO: 97, FRANGO_CRU: 98, FRANGO_ASSADO: 99, BETERRABA: 100, SEMENTE_BETERRABA: 101, SEMENTE_ABOBORA: 102, SEMENTE_MELANCIA: 103, FATIA_MELANCIA: 104, BLOCO_ABOBORA: 105, VARA_PESCA: 106, BACALHAU_CRU: 107, SALMAO_CRU: 108, BAIACU: 109, PEIXE_TROPICAL: 110, BACALHAU_ASSADO: 111, SALMAO_ASSADO: 112, BOIA: 113, LINHA: 114, ERVA_MARINHA: 115, ALGA: 116, ALGA_SECA: 117, BLOCO_ALGA_SECA: 118, CORAL_VIVO: 123, CORAL_MORTO: 128, GORGONIA_VIVA: 133, GORGONIA_MORTA: 138, BLOCO_CORAL_VIVO: 143, BLOCO_CORAL_MORTO: 148, BOTE_CARVALHO: 153, BOTE_BETULA: 154, BOTE_CEREJEIRA: 155, LAJE_CARVALHO: 156, LAJE_CEREJEIRA: 157, LAJE_BETULA: 158, DEGRAU_CARVALHO: 159, DEGRAU_CEREJEIRA: 160, DEGRAU_BETULA: 161, CERCA_CARVALHO: 162, CERCA_CEREJEIRA: 163, CERCA_BETULA: 164, PORTAO_CARVALHO: 165, PORTAO_CEREJEIRA: 166, PORTAO_BETULA: 167, PORTA_CARVALHO: 168, PORTA_CEREJEIRA: 169, PORTA_BETULA: 170, ALCAPAO_CARVALHO: 171, ALCAPAO_CEREJEIRA: 172, ALCAPAO_BETULA: 173, ESPADA_MADEIRA: 174, ESPADA_PEDRA: 175 };
 var ITEM_NAMES = {
   1: "Areia ocre",
   2: "Areia \xFAmida",
@@ -607,13 +607,13 @@ ITEM_NAMES[Item.BOLA_ARGILA] = "Bola de Argila";
 ITEM_NAMES[Item.TIJOLO] = "Tijolo";
 ITEM_NAMES[Item.MURETA_PEDRA] = "Mureta de Pedra";
 Object.assign(ITEM_NAMES, { 153: "Bote de Carvalho", 154: "Bote de B\xE9tula", 155: "Bote de Cerejeira" });
-Object.assign(ITEM_NAMES, { 168: "Porta de Carvalho", 169: "Porta de Cerejeira", 170: "Porta de B\xE9tula", 171: "Al\xE7ap\xE3o de Carvalho", 172: "Al\xE7ap\xE3o de Cerejeira", 173: "Al\xE7ap\xE3o de B\xE9tula" });
+Object.assign(ITEM_NAMES, { 168: "Porta de Carvalho", 169: "Porta de Cerejeira", 170: "Porta de B\xE9tula", 171: "Al\xE7ap\xE3o de Carvalho", 172: "Al\xE7ap\xE3o de Cerejeira", 173: "Al\xE7ap\xE3o de B\xE9tula", 174: "Espada de Madeira", 175: "Espada de Pedra" });
 Object.assign(ITEM_NAMES, { 162: "Cerca de Carvalho", 163: "Cerca de Cerejeira", 164: "Cerca de B\xE9tula", 165: "Port\xE3o de Carvalho", 166: "Port\xE3o de Cerejeira", 167: "Port\xE3o de B\xE9tula" });
 Object.assign(ITEM_NAMES, { 159: "Degrau de Carvalho", 160: "Degrau de Cerejeira", 161: "Degrau de B\xE9tula" });
 ITEM_NAMES[Item.DEGRAU_PEDRA] = "Degrau de Pedra";
 ITEM_NAMES[Item.HASTE] = "Haste de Madeira";
 var maxStack = (item) => item === Item.CAPSULE || item === Item.LANTERN || item === Item.WORKBENCH || isBucket(item) || isTool(item) ? 1 : 64;
-var isItem = (n) => Number.isInteger(n) && n >= 1 && (n <= 118 || n >= 123 && n <= 173) && n !== 86 && n !== 113;
+var isItem = (n) => Number.isInteger(n) && n >= 1 && (n <= 118 || n >= 123 && n <= 175) && n !== 86 && n !== 113;
 var isBoatItem = (item) => item === Item.BOTE_CARVALHO || item === Item.BOTE_BETULA || item === Item.BOTE_CEREJEIRA;
 var isBucket = (item) => item === Item.BALDE || item === Item.BALDE_CHEIO;
 function blockOfItem(item) {
@@ -720,7 +720,10 @@ var TOOLS = {
   [Item.PA_MADEIRA]: { kind: "shovel", tier: "wood" },
   [Item.PA_PEDRA]: { kind: "shovel", tier: "rock" },
   [Item.ENXADA_MADEIRA]: { kind: "hoe", tier: "wood" },
-  [Item.ENXADA_PEDRA]: { kind: "hoe", tier: "rock" }
+  [Item.ENXADA_PEDRA]: { kind: "hoe", tier: "rock" },
+  [Item.ESPADA_MADEIRA]: { kind: "sword", tier: "wood" },
+  [Item.ESPADA_PEDRA]: { kind: "sword", tier: "rock" }
+  // espadas do Orvalis (ADR 0145)
 };
 var toolOf = (item) => item ? TOOLS[item] ?? null : null;
 var isTool = (item) => item in TOOLS;
@@ -945,6 +948,8 @@ var RECIPES = [
   // Ferramentas do Orvalis em voxel (ADR 0112), na Mesa de Carpintaria; a de madeira só de tábuas de carvalho por ora (pendência: "qualquer tábua")
   { id: "picareta-madeira", name: "Picareta de Madeira", group: "ferramentas", result: { item: Item.PICARETA_MADEIRA, count: 1 }, ingredients: [{ item: Item.TABUA_CARVALHO, count: 3 }, { item: Item.HASTE, count: 2 }], station: "workbench", world: "orvalis" },
   { id: "picareta-pedra", name: "Picareta de Pedra", group: "ferramentas", result: { item: Item.PICARETA_PEDRA, count: 1 }, ingredients: [{ item: Item.STONE, count: 3 }, { item: Item.HASTE, count: 2 }], station: "workbench", world: "orvalis" },
+  { id: "espada-madeira", name: "Espada de Madeira", group: "ferramentas", result: { item: Item.ESPADA_MADEIRA, count: 1 }, ingredients: [{ item: Item.TABUA_CARVALHO, count: 2 }, { item: Item.HASTE, count: 1 }], station: "workbench", world: "orvalis" },
+  { id: "espada-pedra", name: "Espada de Pedra", group: "ferramentas", result: { item: Item.ESPADA_PEDRA, count: 1 }, ingredients: [{ item: Item.STONE, count: 2 }, { item: Item.HASTE, count: 1 }], station: "workbench", world: "orvalis" },
   { id: "machado-madeira", name: "Machado de Madeira", group: "ferramentas", result: { item: Item.MACHADO_MADEIRA, count: 1 }, ingredients: [{ item: Item.TABUA_CARVALHO, count: 3 }, { item: Item.HASTE, count: 2 }], station: "workbench", world: "orvalis" },
   { id: "machado-pedra", name: "Machado de Pedra", group: "ferramentas", result: { item: Item.MACHADO_PEDRA, count: 1 }, ingredients: [{ item: Item.STONE, count: 3 }, { item: Item.HASTE, count: 2 }], station: "workbench", world: "orvalis" },
   { id: "pa-madeira", name: "P\xE1 de Madeira", group: "ferramentas", result: { item: Item.PA_MADEIRA, count: 1 }, ingredients: [{ item: Item.TABUA_CARVALHO, count: 1 }, { item: Item.HASTE, count: 2 }], station: "workbench", world: "orvalis" },
@@ -1549,15 +1554,18 @@ var MAX_DURABILITY = {
   [Item.PICARETA_PEDRA]: 131,
   [Item.MACHADO_PEDRA]: 131,
   [Item.PA_PEDRA]: 131,
-  [Item.ENXADA_PEDRA]: 131
+  [Item.ENXADA_PEDRA]: 131,
+  [Item.ESPADA_MADEIRA]: 59,
+  [Item.ESPADA_PEDRA]: 131
+  // espadas do Orvalis (ADR 0145): como as outras ferramentas de madeira e pedra
 };
 var maxDurability = (item) => MAX_DURABILITY[item] ?? null;
 function wearCost(tool, action) {
   const t = toolOf(tool);
   if (!t) return 0;
   if (action.type === "use") return 1;
-  if (action.type === "break_block") return isCollectBlock(action.block) ? 0 : t.kind === "dagger" ? 2 : 1;
-  return t.kind === "dagger" ? 1 : 2;
+  if (action.type === "break_block") return isCollectBlock(action.block) ? 0 : t.kind === "dagger" || t.kind === "sword" ? 2 : 1;
+  return t.kind === "dagger" || t.kind === "sword" ? 1 : 2;
 }
 
 // src/titan/inventory.ts
@@ -3215,7 +3223,9 @@ var WEAPON_DAMAGE = {
   [Item.PA_MADEIRA]: 1,
   [Item.PA_PEDRA]: 2,
   [Item.ENXADA_MADEIRA]: 1,
-  [Item.ENXADA_PEDRA]: 1
+  [Item.ENXADA_PEDRA]: 1,
+  [Item.ESPADA_MADEIRA]: 4,
+  [Item.ESPADA_PEDRA]: 5
 };
 var damageOf = (item) => item ? WEAPON_DAMAGE[item] ?? FIST_DAMAGE : FIST_DAMAGE;
 var LOOT = { pequeno: { meat: 1, plate: 1 }, grande: { meat: 2, plate: 1 } };
