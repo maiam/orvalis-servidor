@@ -174,7 +174,7 @@ test('a sala 102 abre pelo WebSocket com o mundo do Orvalis e a seed da sala', a
   const a = client(url); await a.open;
   a.send({ t: 'hello', v: net.TITAN_PROTOCOL_VERSION, name: 'Ana', room: 102 });
   const w = await a.wait((m) => m.t === 'welcome');
-  assert.equal(w.header.world, 'orvalis'); assert.equal(w.header.seed, net.TITAN_ROOMS.find((r) => r.id === 102).seed); assert.equal(w.header.generatorVersion, 101); assert.equal(net.TITAN_PROTOCOL_VERSION, 7); assert.equal(s.rooms.get(102).room.world.grunhos.length, 48); // 101 = a Aldeia da Costa com os 4 acampamentos de 12 Grunhos (ADR 0147 do jogo; a 100, sem eles, é recusada: o arquivo salvo antigo é descartado) // a sala 102 é a Aldeia da Costa (ADR 0142 do jogo)
+  assert.equal(w.header.world, 'orvalis'); assert.equal(w.header.seed, net.TITAN_ROOMS.find((r) => r.id === 102).seed); assert.equal(w.header.generatorVersion, 102); assert.equal(net.TITAN_PROTOCOL_VERSION, 8); assert.equal(s.rooms.get(102).room.world.grunhos.length, 48); // 102 = a Aldeia da Costa com as casas (ADR 0149 do jogo; a 101 é recusada, o arquivo salvo antigo fica na cópia .bak) e os 4 acampamentos de 12 Grunhos (ADR 0147 do jogo; a 100, sem eles, é recusada: o arquivo salvo antigo é descartado) // a sala 102 é a Aldeia da Costa (ADR 0142 do jogo)
   assert.equal(s.rooms.get(102).room.size, 1); assert.equal(s.rooms.get(101).room.size, 0);
   a.ws.close(); await s.close();
 });
