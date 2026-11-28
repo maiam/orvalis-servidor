@@ -1,4 +1,4 @@
-// Gerado por mundoblocos-2d v0.222.0 (b270faf) — npm run build:net. NÃO EDITE: atualize pelo jogo.
+// Gerado por mundoblocos-2d v0.227.0 (b9681dc) — npm run build:net. NÃO EDITE: atualize pelo jogo.
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -165,8 +165,8 @@ var REGION_V6 = { min: -64, max: 64 };
 var regionFor = (generatorVersion) => generatorVersion >= 6 ? REGION_V6 : REGION_LEGACY;
 var REGION_MIN = REGION_LEGACY.min;
 var REGION_MAX = REGION_LEGACY.max;
-var T = { AIR: 0, SAND: 1, DAMP_SAND: 2, DARK_ROCK: 3, FROST: 4, LAKE: 5, BEDROCK: 6, LANTERN: 7, VEIN_ROCK: 8, VEIN_FROST: 9, WORKBENCH: 10, EMBER: 11, SLAB: 12, WORKBENCH_90: 13, WORKBENCH_180: 14, WORKBENCH_270: 15, SLAB_TOP: 16, SLAB_DOUBLE: 17, MARCO: 18, MARCO_90: 19, MARCO_180: 20, MARCO_270: 21, PAINEL: 22, PAINEL_Z: 23, VEIN_COPPER: 24, BRAZIER: 25, BRAZIER_LIT: 26, CARAPACE: 27, EMBER_VEIN: 28, EMBER_BLOCK: 29, MAT: 30, LADDER: 31, LADDER_90: 32, LADDER_180: 33, LADDER_270: 34, CHEST: 35, CHEST_90: 36, CHEST_180: 37, CHEST_270: 38, BED: 39, BED_90: 40, BED_180: 41, BED_270: 42, BED_HEAD: 43, BED_HEAD_90: 44, BED_HEAD_180: 45, BED_HEAD_270: 46, REED_BLOCK: 47, REED_SLAB: 48, REED_SLAB_TOP: 49, REED_STAIR: 50, REED_STAIR_90: 51, REED_STAIR_180: 52, REED_STAIR_270: 53, REED_CHAIR: 54, REED_CHAIR_90: 55, REED_CHAIR_180: 56, REED_CHAIR_270: 57, DOOR: 58, DOOR_LAST: 89, GRASS: 90, DIRT: 91, STONE: 92, BEACH: 93, LOG_OAK: 94, LEAVES_OAK: 95, LOG_CHERRY: 96, LEAVES_CHERRY: 97, LOG_BIRCH: 98, LEAVES_BIRCH: 99, PLANKS_OAK: 100, PLANKS_CHERRY: 101, PLANKS_BIRCH: 102, CARPENTRY: 103, CARPENTRY_90: 104, CARPENTRY_180: 105, CARPENTRY_270: 106, STONE_SMOOTH: 107, STONE_BRICK: 108, STONE_SLAB: 109, STONE_SLAB_TOP: 110, STONE_STAIR: 111, STONE_STAIR_90: 112, STONE_STAIR_180: 113, STONE_STAIR_270: 114, STONE_WALL: 115, STONE_WALL_LAST: 130, FARMLAND_DRY: 131, FARMLAND_WET: 132, PATH: 133, DIRT_INFERTILE: 134, CLAY_BLOCK: 135, BRICK_BLOCK: 136, FURNACE: 137, FURNACE_90: 138, FURNACE_180: 139, FURNACE_270: 140, FURNACE_LIT: 141, FURNACE_LIT_90: 142, FURNACE_LIT_180: 143, FURNACE_LIT_270: 144, TORCH: 145, TORCH_WALL: 146, TORCH_WALL_90: 147, TORCH_WALL_180: 148, TORCH_WALL_270: 149, COAL_ORE: 150, COAL_BLOCK: 151, MELON: 152, PUMPKIN: 153, SEAGRASS: 154, SEAGRASS_TALL: 155, SEAGRASS_TALL_TOP: 156, KELP: 157, KELP_TOP: 158, DRIED_KELP_BLOCK: 159, CORAL: 160, CORAL_FAN: 170, CORAL_BLOCK: 180, SLAB_OAK: 190, SLAB_OAK_TOP: 191, SLAB_CHERRY: 192, SLAB_CHERRY_TOP: 193, SLAB_BIRCH: 194, SLAB_BIRCH_TOP: 195, STAIR_OAK: 196, STAIR_OAK_270: 199, STAIR_CHERRY: 200, STAIR_BIRCH: 204, STAIR_BIRCH_270: 207, FENCE_OAK: 208, FENCE_BIRCH_LAST: 255, GATE_OAK: 256, GATE_BIRCH_LAST: 279, DOOR_WOOD: 280, DOOR_WOOD_LAST: 375, TRAPDOOR: 376, TRAPDOOR_LAST: 423 };
-var T_MAX = T.TRAPDOOR_LAST;
+var T = { AIR: 0, SAND: 1, DAMP_SAND: 2, DARK_ROCK: 3, FROST: 4, LAKE: 5, BEDROCK: 6, LANTERN: 7, VEIN_ROCK: 8, VEIN_FROST: 9, WORKBENCH: 10, EMBER: 11, SLAB: 12, WORKBENCH_90: 13, WORKBENCH_180: 14, WORKBENCH_270: 15, SLAB_TOP: 16, SLAB_DOUBLE: 17, MARCO: 18, MARCO_90: 19, MARCO_180: 20, MARCO_270: 21, PAINEL: 22, PAINEL_Z: 23, VEIN_COPPER: 24, BRAZIER: 25, BRAZIER_LIT: 26, CARAPACE: 27, EMBER_VEIN: 28, EMBER_BLOCK: 29, MAT: 30, LADDER: 31, LADDER_90: 32, LADDER_180: 33, LADDER_270: 34, CHEST: 35, CHEST_90: 36, CHEST_180: 37, CHEST_270: 38, BED: 39, BED_90: 40, BED_180: 41, BED_270: 42, BED_HEAD: 43, BED_HEAD_90: 44, BED_HEAD_180: 45, BED_HEAD_270: 46, REED_BLOCK: 47, REED_SLAB: 48, REED_SLAB_TOP: 49, REED_STAIR: 50, REED_STAIR_90: 51, REED_STAIR_180: 52, REED_STAIR_270: 53, REED_CHAIR: 54, REED_CHAIR_90: 55, REED_CHAIR_180: 56, REED_CHAIR_270: 57, DOOR: 58, DOOR_LAST: 89, GRASS: 90, DIRT: 91, STONE: 92, BEACH: 93, LOG_OAK: 94, LEAVES_OAK: 95, LOG_CHERRY: 96, LEAVES_CHERRY: 97, LOG_BIRCH: 98, LEAVES_BIRCH: 99, PLANKS_OAK: 100, PLANKS_CHERRY: 101, PLANKS_BIRCH: 102, CARPENTRY: 103, CARPENTRY_90: 104, CARPENTRY_180: 105, CARPENTRY_270: 106, STONE_SMOOTH: 107, STONE_BRICK: 108, STONE_SLAB: 109, STONE_SLAB_TOP: 110, STONE_STAIR: 111, STONE_STAIR_90: 112, STONE_STAIR_180: 113, STONE_STAIR_270: 114, STONE_WALL: 115, STONE_WALL_LAST: 130, FARMLAND_DRY: 131, FARMLAND_WET: 132, PATH: 133, DIRT_INFERTILE: 134, CLAY_BLOCK: 135, BRICK_BLOCK: 136, FURNACE: 137, FURNACE_90: 138, FURNACE_180: 139, FURNACE_270: 140, FURNACE_LIT: 141, FURNACE_LIT_90: 142, FURNACE_LIT_180: 143, FURNACE_LIT_270: 144, TORCH: 145, TORCH_WALL: 146, TORCH_WALL_90: 147, TORCH_WALL_180: 148, TORCH_WALL_270: 149, COAL_ORE: 150, COAL_BLOCK: 151, MELON: 152, PUMPKIN: 153, SEAGRASS: 154, SEAGRASS_TALL: 155, SEAGRASS_TALL_TOP: 156, KELP: 157, KELP_TOP: 158, DRIED_KELP_BLOCK: 159, CORAL: 160, CORAL_FAN: 170, CORAL_BLOCK: 180, SLAB_OAK: 190, SLAB_OAK_TOP: 191, SLAB_CHERRY: 192, SLAB_CHERRY_TOP: 193, SLAB_BIRCH: 194, SLAB_BIRCH_TOP: 195, STAIR_OAK: 196, STAIR_OAK_270: 199, STAIR_CHERRY: 200, STAIR_BIRCH: 204, STAIR_BIRCH_270: 207, FENCE_OAK: 208, FENCE_BIRCH_LAST: 255, GATE_OAK: 256, GATE_BIRCH_LAST: 279, DOOR_WOOD: 280, DOOR_WOOD_LAST: 375, TRAPDOOR: 376, TRAPDOOR_LAST: 423, CAMPFIRE: 424 };
+var T_MAX = T.CAMPFIRE;
 var BLOCK_NAMES = { 1: "Areia ocre", 2: "Areia \xFAmida", 3: "Rocha escura", 4: "Gelo fosco", 5: "Lago escuro", 6: "Rocha-m\xE3e", 7: "Lanterna da margem", 8: "Rocha com veio", 9: "Gelo com veio", 10: "Mesa de Trabalho", 11: "Brasa de \xE2mbar", 12: "Laje de rocha", 13: "Mesa de Trabalho", 14: "Mesa de Trabalho", 15: "Mesa de Trabalho", 16: "Laje de rocha", 17: "Laje dupla de rocha", 18: "Marco de Margem", 19: "Marco de Margem", 20: "Marco de Margem", 21: "Marco de Margem", 22: "Painel de Junco", 23: "Painel de Junco", 24: "Veio de Cobre de Duna", 25: "Braseiro de Rocha", 26: "Braseiro de Rocha (aceso)", 27: "Revestimento de Carapa\xE7a", 28: "Veio de \xC2mbar", 29: "Bloco de \xC2mbar Compactado", 30: "Esteira de Junco", 31: "Escada de Junco", 32: "Escada de Junco", 33: "Escada de Junco", 34: "Escada de Junco", 35: "Ba\xFA de Rocha e Junco", 36: "Ba\xFA de Rocha e Junco", 37: "Ba\xFA de Rocha e Junco", 38: "Ba\xFA de Rocha e Junco", 39: "Cama de Junco", 40: "Cama de Junco", 41: "Cama de Junco", 42: "Cama de Junco", 43: "Cama de Junco", 44: "Cama de Junco", 45: "Cama de Junco", 46: "Cama de Junco", 47: "Bloco de Junco", 48: "Laje de Junco", 49: "Laje de Junco", 50: "Degrau de Junco", 51: "Degrau de Junco", 52: "Degrau de Junco", 53: "Degrau de Junco", 54: "Cadeira de Junco", 55: "Cadeira de Junco", 56: "Cadeira de Junco", 57: "Cadeira de Junco" };
 for (let id = T.DOOR; id <= T.DOOR_LAST; id++) BLOCK_NAMES[id] = "Porta de Junco";
 for (let t = 0; t < 4; t++) {
@@ -174,6 +174,7 @@ for (let t = 0; t < 4; t++) {
   BLOCK_NAMES[T.FURNACE_LIT + t] = "Fornalha acesa";
 }
 for (let id = T.TORCH; id <= T.TORCH_WALL_270; id++) BLOCK_NAMES[id] = "Tocha";
+BLOCK_NAMES[T.CAMPFIRE] = "Fogueira";
 BLOCK_NAMES[T.COAL_ORE] = "Min\xE9rio de Carv\xE3o";
 BLOCK_NAMES[T.COAL_BLOCK] = "Bloco de Carv\xE3o";
 BLOCK_NAMES[T.SEAGRASS] = "Erva Marinha";
@@ -212,6 +213,8 @@ var isFurnaceLit = (id) => id >= T.FURNACE_LIT && id <= T.FURNACE_LIT_270;
 var furnaceTurn = (id) => isFurnace(id) ? (id - T.FURNACE) % 4 : 0;
 var furnaceId = (turn, lit) => (lit ? T.FURNACE_LIT : T.FURNACE) + (turn % 4 + 4) % 4;
 var isTorch = (id) => id >= T.TORCH && id <= T.TORCH_WALL_270;
+var isCampfire = (id) => id === T.CAMPFIRE;
+var CAMPFIRE_LIGHT = 15;
 var isWallTorch = (id) => id >= T.TORCH_WALL && id <= T.TORCH_WALL_270;
 var wallTorchTurn = (id) => isWallTorch(id) ? id - T.TORCH_WALL : 0;
 var wallTorchId = (turn) => T.TORCH_WALL + (turn % 4 + 4) % 4;
@@ -232,8 +235,8 @@ var coralBase = (id) => isCoralPlant(id) ? T.CORAL : isCoralFan(id) ? T.CORAL_FA
 var isCoralLive = (id) => isCoral(id) && id - coralBase(id) < 5;
 var deadCoral = (id) => isCoralLive(id) ? id + 5 : id;
 var isLiquidCell = (id) => id === T.LAKE || isWaterPlant(id);
-var isSolid = (id) => id !== T.AIR && id !== T.LAKE && !isWaterPlant(id) && id !== T.LANTERN && !isMarco(id) && id !== T.MAT && !isLadder(id) && !isTorch(id) && !isGateOpen(id);
-var isTarget = (id) => isSolid(id) || isWaterPlant(id) || id === T.LANTERN || isMarco(id) || id === T.MAT || isLadder(id) || isTorch(id) || isGateOpen(id);
+var isSolid = (id) => id !== T.AIR && id !== T.LAKE && !isWaterPlant(id) && id !== T.LANTERN && !isMarco(id) && id !== T.MAT && !isLadder(id) && !isTorch(id) && !isCampfire(id) && !isGateOpen(id);
+var isTarget = (id) => isSolid(id) || isWaterPlant(id) || id === T.LANTERN || isMarco(id) || id === T.MAT || isLadder(id) || isTorch(id) || isCampfire(id) || isGateOpen(id);
 var blocksLight = (id) => isFull(id) && !isLeaves(id);
 var isOccupied = isTarget;
 var blockHeight = (id) => blockSpan(id)[1];
@@ -375,7 +378,7 @@ var blockBoxes = (id) => BOXES.get(id) ?? null;
 var isBrazier = (id) => id === T.BRAZIER || id === T.BRAZIER_LIT;
 var BRAZIER_HEIGHT = 0.774;
 var BRAZIER_LIGHT = 13;
-var lightLevelOf = (id) => id === T.LANTERN ? 15 : isTorch(id) ? TORCH_LIGHT : id === T.BRAZIER_LIT || isFurnaceLit(id) ? BRAZIER_LIGHT : 0;
+var lightLevelOf = (id) => id === T.LANTERN ? 15 : isCampfire(id) ? CAMPFIRE_LIGHT : isTorch(id) ? TORCH_LIGHT : id === T.BRAZIER_LIT || isFurnaceLit(id) ? BRAZIER_LIGHT : 0;
 var isCopperVein = (id) => id === T.VEIN_COPPER;
 var isAmberVein = (id) => id === T.EMBER_VEIN;
 var WORKBENCH_IDS = [T.WORKBENCH, T.WORKBENCH_90, T.WORKBENCH_180, T.WORKBENCH_270];
@@ -427,6 +430,7 @@ function modelOf(id) {
   if (isMarco(id)) return { kind: "marco", turn: marcoTurn(id) };
   if (isPanel(id)) return { kind: "painel", turn: id === T.PAINEL ? 0 : 1 };
   if (isLadder(id)) return { kind: "escada", turn: ladderTurn(id) };
+  if (isCampfire(id)) return { kind: "fogueira", turn: 0 };
   if (isTorch(id)) return id === T.TORCH ? { kind: "tocha", turn: 0 } : { kind: "tochaParede", turn: wallTorchTurn(id) };
   if (isChest(id)) return { kind: "bau", turn: chestTurn(id) };
   if (isBedFoot(id)) return { kind: "cama", turn: bedTurn(id) };
@@ -550,7 +554,7 @@ function hoeResult(v, block, x, y, z) {
 var shovelResult = (block) => block === T.GRASS || block === T.DIRT ? T.PATH : null;
 
 // src/titan/items.ts
-var Item = { SAND: 1, DAMP_SAND: 2, DARK_ROCK: 3, FROST: 4, ROCK_SHARD: 5, FROST_SHARD: 6, CAPSULE: 7, LANTERN: 8, WORKBENCH: 9, ICE_LENS: 10, EMBER: 11, GLASS_REED: 12, SLAB: 13, MARCO: 14, PAINEL: 15, NOZ: 16, COPPER_SHARD: 17, COPPER_INGOT: 18, DRY_REED: 19, STONE_PICK: 20, BRAZIER: 21, STONE_DAGGER: 22, COPPER_PICK: 23, COPPER_DAGGER: 24, PLATE: 25, CARAPACE: 26, RAW_MEAT: 27, COOKED_MEAT: 28, EMBER_BLOCK: 29, NOZ_TORRADA: 30, ESTEIRA: 31, ESCADA: 32, BAU: 33, CAMA: 34, BALDE: 35, BALDE_CHEIO: 36, BLOCO_JUNCO: 37, LAJE_JUNCO: 38, DEGRAU_JUNCO: 39, CADEIRA_JUNCO: 40, PORTA_JUNCO: 41, GRASS: 42, DIRT: 43, STONE: 44, BEACH: 45, LOG_OAK: 46, LEAVES_OAK: 47, LOG_CHERRY: 48, LEAVES_CHERRY: 49, LOG_BIRCH: 50, LEAVES_BIRCH: 51, TABUA_CARVALHO: 52, TABUA_CEREJEIRA: 53, TABUA_BETULA: 54, HASTE: 55, MESA_CARPINTARIA: 56, PEDRA_LISA: 57, TIJOLO_PEDRA: 58, LAJE_PEDRA: 59, DEGRAU_PEDRA: 60, MURETA_PEDRA: 61, TERRA_ARADA_SECA: 62, TERRA_ARADA_UMIDA: 63, CAMINHO_TERRA: 64, TERRA_INFERTIL: 65, BLOCO_ARGILA: 66, BLOCO_TIJOLOS: 67, BOLA_ARGILA: 68, TIJOLO: 69, PICARETA_MADEIRA: 70, PICARETA_PEDRA: 71, MACHADO_MADEIRA: 72, MACHADO_PEDRA: 73, PA_MADEIRA: 74, PA_PEDRA: 75, ENXADA_MADEIRA: 76, ENXADA_PEDRA: 77, SEMENTE_TRIGO: 78, TRIGO: 79, CENOURA: 80, BATATA: 81, TOMATE: 82, FORNALHA: 83, CARVAO_VEGETAL: 84, TOCHA: 85, CARVAO: 87, BLOCO_CARVAO: 88, COURO: 89, LA: 90, PENA: 91, PORCO_CRU: 92, PORCO_ASSADO: 93, BOVINA_CRUA: 94, BIFE: 95, CARNEIRO_CRU: 96, CARNEIRO_ASSADO: 97, FRANGO_CRU: 98, FRANGO_ASSADO: 99, BETERRABA: 100, SEMENTE_BETERRABA: 101, SEMENTE_ABOBORA: 102, SEMENTE_MELANCIA: 103, FATIA_MELANCIA: 104, BLOCO_ABOBORA: 105, VARA_PESCA: 106, BACALHAU_CRU: 107, SALMAO_CRU: 108, BAIACU: 109, PEIXE_TROPICAL: 110, BACALHAU_ASSADO: 111, SALMAO_ASSADO: 112, BOIA: 113, LINHA: 114, ERVA_MARINHA: 115, ALGA: 116, ALGA_SECA: 117, BLOCO_ALGA_SECA: 118, CORAL_VIVO: 123, CORAL_MORTO: 128, GORGONIA_VIVA: 133, GORGONIA_MORTA: 138, BLOCO_CORAL_VIVO: 143, BLOCO_CORAL_MORTO: 148, BOTE_CARVALHO: 153, BOTE_BETULA: 154, BOTE_CEREJEIRA: 155, LAJE_CARVALHO: 156, LAJE_CEREJEIRA: 157, LAJE_BETULA: 158, DEGRAU_CARVALHO: 159, DEGRAU_CEREJEIRA: 160, DEGRAU_BETULA: 161, CERCA_CARVALHO: 162, CERCA_CEREJEIRA: 163, CERCA_BETULA: 164, PORTAO_CARVALHO: 165, PORTAO_CEREJEIRA: 166, PORTAO_BETULA: 167, PORTA_CARVALHO: 168, PORTA_CEREJEIRA: 169, PORTA_BETULA: 170, ALCAPAO_CARVALHO: 171, ALCAPAO_CEREJEIRA: 172, ALCAPAO_BETULA: 173, ESPADA_MADEIRA: 174, ESPADA_PEDRA: 175 };
+var Item = { SAND: 1, DAMP_SAND: 2, DARK_ROCK: 3, FROST: 4, ROCK_SHARD: 5, FROST_SHARD: 6, CAPSULE: 7, LANTERN: 8, WORKBENCH: 9, ICE_LENS: 10, EMBER: 11, GLASS_REED: 12, SLAB: 13, MARCO: 14, PAINEL: 15, NOZ: 16, COPPER_SHARD: 17, COPPER_INGOT: 18, DRY_REED: 19, STONE_PICK: 20, BRAZIER: 21, STONE_DAGGER: 22, COPPER_PICK: 23, COPPER_DAGGER: 24, PLATE: 25, CARAPACE: 26, RAW_MEAT: 27, COOKED_MEAT: 28, EMBER_BLOCK: 29, NOZ_TORRADA: 30, ESTEIRA: 31, ESCADA: 32, BAU: 33, CAMA: 34, BALDE: 35, BALDE_CHEIO: 36, BLOCO_JUNCO: 37, LAJE_JUNCO: 38, DEGRAU_JUNCO: 39, CADEIRA_JUNCO: 40, PORTA_JUNCO: 41, GRASS: 42, DIRT: 43, STONE: 44, BEACH: 45, LOG_OAK: 46, LEAVES_OAK: 47, LOG_CHERRY: 48, LEAVES_CHERRY: 49, LOG_BIRCH: 50, LEAVES_BIRCH: 51, TABUA_CARVALHO: 52, TABUA_CEREJEIRA: 53, TABUA_BETULA: 54, HASTE: 55, MESA_CARPINTARIA: 56, PEDRA_LISA: 57, TIJOLO_PEDRA: 58, LAJE_PEDRA: 59, DEGRAU_PEDRA: 60, MURETA_PEDRA: 61, TERRA_ARADA_SECA: 62, TERRA_ARADA_UMIDA: 63, CAMINHO_TERRA: 64, TERRA_INFERTIL: 65, BLOCO_ARGILA: 66, BLOCO_TIJOLOS: 67, BOLA_ARGILA: 68, TIJOLO: 69, PICARETA_MADEIRA: 70, PICARETA_PEDRA: 71, MACHADO_MADEIRA: 72, MACHADO_PEDRA: 73, PA_MADEIRA: 74, PA_PEDRA: 75, ENXADA_MADEIRA: 76, ENXADA_PEDRA: 77, SEMENTE_TRIGO: 78, TRIGO: 79, CENOURA: 80, BATATA: 81, TOMATE: 82, FORNALHA: 83, CARVAO_VEGETAL: 84, TOCHA: 85, CARVAO: 87, BLOCO_CARVAO: 88, COURO: 89, LA: 90, PENA: 91, PORCO_CRU: 92, PORCO_ASSADO: 93, BOVINA_CRUA: 94, BIFE: 95, CARNEIRO_CRU: 96, CARNEIRO_ASSADO: 97, FRANGO_CRU: 98, FRANGO_ASSADO: 99, BETERRABA: 100, SEMENTE_BETERRABA: 101, SEMENTE_ABOBORA: 102, SEMENTE_MELANCIA: 103, FATIA_MELANCIA: 104, BLOCO_ABOBORA: 105, VARA_PESCA: 106, BACALHAU_CRU: 107, SALMAO_CRU: 108, BAIACU: 109, PEIXE_TROPICAL: 110, BACALHAU_ASSADO: 111, SALMAO_ASSADO: 112, BOIA: 113, LINHA: 114, ERVA_MARINHA: 115, ALGA: 116, ALGA_SECA: 117, BLOCO_ALGA_SECA: 118, CORAL_VIVO: 123, CORAL_MORTO: 128, GORGONIA_VIVA: 133, GORGONIA_MORTA: 138, BLOCO_CORAL_VIVO: 143, BLOCO_CORAL_MORTO: 148, BOTE_CARVALHO: 153, BOTE_BETULA: 154, BOTE_CEREJEIRA: 155, LAJE_CARVALHO: 156, LAJE_CEREJEIRA: 157, LAJE_BETULA: 158, DEGRAU_CARVALHO: 159, DEGRAU_CEREJEIRA: 160, DEGRAU_BETULA: 161, CERCA_CARVALHO: 162, CERCA_CEREJEIRA: 163, CERCA_BETULA: 164, PORTAO_CARVALHO: 165, PORTAO_CEREJEIRA: 166, PORTAO_BETULA: 167, PORTA_CARVALHO: 168, PORTA_CEREJEIRA: 169, PORTA_BETULA: 170, ALCAPAO_CARVALHO: 171, ALCAPAO_CEREJEIRA: 172, ALCAPAO_BETULA: 173, ESPADA_MADEIRA: 174, ESPADA_PEDRA: 175, FOGUEIRA: 176, CLAVA_MADEIRA: 177 };
 var ITEM_NAMES = {
   1: "Areia ocre",
   2: "Areia \xFAmida",
@@ -595,7 +599,7 @@ var ITEM_NAMES = {
   41: "Porta de Junco"
 };
 var CORAL_ITEM_BLOCKS = Object.fromEntries(Array.from({ length: 30 }, (_, i) => [123 + i, [T.CORAL, T.CORAL_FAN, T.CORAL_BLOCK][Math.floor(i / 10)] + i % 10]));
-var ORVALIS_ITEM_BLOCKS = { ...CORAL_ITEM_BLOCKS, [Item.GRASS]: T.GRASS, [Item.DIRT]: T.DIRT, [Item.STONE]: T.STONE, [Item.BEACH]: T.BEACH, [Item.LOG_OAK]: T.LOG_OAK, [Item.LEAVES_OAK]: T.LEAVES_OAK, [Item.LOG_CHERRY]: T.LOG_CHERRY, [Item.LEAVES_CHERRY]: T.LEAVES_CHERRY, [Item.LOG_BIRCH]: T.LOG_BIRCH, [Item.LEAVES_BIRCH]: T.LEAVES_BIRCH, [Item.TABUA_CARVALHO]: T.PLANKS_OAK, [Item.TABUA_CEREJEIRA]: T.PLANKS_CHERRY, [Item.TABUA_BETULA]: T.PLANKS_BIRCH, [Item.MESA_CARPINTARIA]: T.CARPENTRY, [Item.PEDRA_LISA]: T.STONE_SMOOTH, [Item.TIJOLO_PEDRA]: T.STONE_BRICK, [Item.LAJE_PEDRA]: T.STONE_SLAB, [Item.TERRA_ARADA_SECA]: T.FARMLAND_DRY, [Item.TERRA_ARADA_UMIDA]: T.FARMLAND_WET, [Item.CAMINHO_TERRA]: T.PATH, [Item.TERRA_INFERTIL]: T.DIRT_INFERTILE, [Item.BLOCO_ARGILA]: T.CLAY_BLOCK, [Item.BLOCO_TIJOLOS]: T.BRICK_BLOCK, [Item.FORNALHA]: T.FURNACE, [Item.TOCHA]: T.TORCH, [Item.BLOCO_CARVAO]: T.COAL_BLOCK, [Item.BLOCO_ABOBORA]: T.PUMPKIN, [Item.ERVA_MARINHA]: T.SEAGRASS, [Item.LAJE_CARVALHO]: T.SLAB_OAK, [Item.LAJE_CEREJEIRA]: T.SLAB_CHERRY, [Item.LAJE_BETULA]: T.SLAB_BIRCH, [Item.ALGA]: T.KELP, [Item.BLOCO_ALGA_SECA]: T.DRIED_KELP_BLOCK };
+var ORVALIS_ITEM_BLOCKS = { ...CORAL_ITEM_BLOCKS, [Item.GRASS]: T.GRASS, [Item.DIRT]: T.DIRT, [Item.STONE]: T.STONE, [Item.BEACH]: T.BEACH, [Item.LOG_OAK]: T.LOG_OAK, [Item.LEAVES_OAK]: T.LEAVES_OAK, [Item.LOG_CHERRY]: T.LOG_CHERRY, [Item.LEAVES_CHERRY]: T.LEAVES_CHERRY, [Item.LOG_BIRCH]: T.LOG_BIRCH, [Item.LEAVES_BIRCH]: T.LEAVES_BIRCH, [Item.TABUA_CARVALHO]: T.PLANKS_OAK, [Item.TABUA_CEREJEIRA]: T.PLANKS_CHERRY, [Item.TABUA_BETULA]: T.PLANKS_BIRCH, [Item.MESA_CARPINTARIA]: T.CARPENTRY, [Item.PEDRA_LISA]: T.STONE_SMOOTH, [Item.TIJOLO_PEDRA]: T.STONE_BRICK, [Item.LAJE_PEDRA]: T.STONE_SLAB, [Item.TERRA_ARADA_SECA]: T.FARMLAND_DRY, [Item.TERRA_ARADA_UMIDA]: T.FARMLAND_WET, [Item.CAMINHO_TERRA]: T.PATH, [Item.TERRA_INFERTIL]: T.DIRT_INFERTILE, [Item.BLOCO_ARGILA]: T.CLAY_BLOCK, [Item.BLOCO_TIJOLOS]: T.BRICK_BLOCK, [Item.FORNALHA]: T.FURNACE, [Item.TOCHA]: T.TORCH, [Item.FOGUEIRA]: T.CAMPFIRE, [Item.BLOCO_CARVAO]: T.COAL_BLOCK, [Item.BLOCO_ABOBORA]: T.PUMPKIN, [Item.ERVA_MARINHA]: T.SEAGRASS, [Item.LAJE_CARVALHO]: T.SLAB_OAK, [Item.LAJE_CEREJEIRA]: T.SLAB_CHERRY, [Item.LAJE_BETULA]: T.SLAB_BIRCH, [Item.ALGA]: T.KELP, [Item.BLOCO_ALGA_SECA]: T.DRIED_KELP_BLOCK };
 var ORVALIS_BLOCK_ITEMS = { ...Object.fromEntries(Object.entries(ORVALIS_ITEM_BLOCKS).map(([item, block]) => [block, Number(item)])), ...Object.fromEntries(Array.from({ length: 8 }, (_, t) => [T.FURNACE + t, Item.FORNALHA])), ...Object.fromEntries(Array.from({ length: 5 }, (_, t) => [T.TORCH + t, Item.TOCHA])), [T.COAL_ORE]: Item.CARVAO, [T.MELON]: Item.FATIA_MELANCIA, [T.SEAGRASS_TALL]: Item.ERVA_MARINHA, [T.SEAGRASS_TALL_TOP]: Item.ERVA_MARINHA, [T.KELP_TOP]: Item.ALGA };
 for (const [item, block] of Object.entries(ORVALIS_ITEM_BLOCKS)) ITEM_NAMES[Number(item)] = BLOCK_NAMES[block];
 Object.assign(ITEM_NAMES, { 70: "Picareta de Madeira", 71: "Picareta de Pedra", 72: "Machado de Madeira", 73: "Machado de Pedra", 74: "P\xE1 de Madeira", 75: "P\xE1 de Pedra", 76: "Enxada de Madeira", 77: "Enxada de Pedra" });
@@ -607,13 +611,13 @@ ITEM_NAMES[Item.BOLA_ARGILA] = "Bola de Argila";
 ITEM_NAMES[Item.TIJOLO] = "Tijolo";
 ITEM_NAMES[Item.MURETA_PEDRA] = "Mureta de Pedra";
 Object.assign(ITEM_NAMES, { 153: "Bote de Carvalho", 154: "Bote de B\xE9tula", 155: "Bote de Cerejeira" });
-Object.assign(ITEM_NAMES, { 168: "Porta de Carvalho", 169: "Porta de Cerejeira", 170: "Porta de B\xE9tula", 171: "Al\xE7ap\xE3o de Carvalho", 172: "Al\xE7ap\xE3o de Cerejeira", 173: "Al\xE7ap\xE3o de B\xE9tula", 174: "Espada de Madeira", 175: "Espada de Pedra" });
+Object.assign(ITEM_NAMES, { 168: "Porta de Carvalho", 169: "Porta de Cerejeira", 170: "Porta de B\xE9tula", 171: "Al\xE7ap\xE3o de Carvalho", 172: "Al\xE7ap\xE3o de Cerejeira", 173: "Al\xE7ap\xE3o de B\xE9tula", 174: "Espada de Madeira", 175: "Espada de Pedra", 176: "Fogueira", 177: "Clava de Madeira" });
 Object.assign(ITEM_NAMES, { 162: "Cerca de Carvalho", 163: "Cerca de Cerejeira", 164: "Cerca de B\xE9tula", 165: "Port\xE3o de Carvalho", 166: "Port\xE3o de Cerejeira", 167: "Port\xE3o de B\xE9tula" });
 Object.assign(ITEM_NAMES, { 159: "Degrau de Carvalho", 160: "Degrau de Cerejeira", 161: "Degrau de B\xE9tula" });
 ITEM_NAMES[Item.DEGRAU_PEDRA] = "Degrau de Pedra";
 ITEM_NAMES[Item.HASTE] = "Haste de Madeira";
 var maxStack = (item) => item === Item.CAPSULE || item === Item.LANTERN || item === Item.WORKBENCH || isBucket(item) || isTool(item) ? 1 : 64;
-var isItem = (n) => Number.isInteger(n) && n >= 1 && (n <= 118 || n >= 123 && n <= 175) && n !== 86 && n !== 113;
+var isItem = (n) => Number.isInteger(n) && n >= 1 && (n <= 118 || n >= 123 && n <= 177) && n !== 86 && n !== 113;
 var isBoatItem = (item) => item === Item.BOTE_CARVALHO || item === Item.BOTE_BETULA || item === Item.BOTE_CEREJEIRA;
 var isBucket = (item) => item === Item.BALDE || item === Item.BALDE_CHEIO;
 function blockOfItem(item) {
@@ -721,6 +725,8 @@ var TOOLS = {
   [Item.PA_PEDRA]: { kind: "shovel", tier: "rock" },
   [Item.ENXADA_MADEIRA]: { kind: "hoe", tier: "wood" },
   [Item.ENXADA_PEDRA]: { kind: "hoe", tier: "rock" },
+  [Item.CLAVA_MADEIRA]: { kind: "club", tier: "wood" },
+  // clava de madeira (ADR 0148)
   [Item.ESPADA_MADEIRA]: { kind: "sword", tier: "wood" },
   [Item.ESPADA_PEDRA]: { kind: "sword", tier: "rock" }
   // espadas do Orvalis (ADR 0145)
@@ -948,6 +954,8 @@ var RECIPES = [
   // Ferramentas do Orvalis em voxel (ADR 0112), na Mesa de Carpintaria; a de madeira só de tábuas de carvalho por ora (pendência: "qualquer tábua")
   { id: "picareta-madeira", name: "Picareta de Madeira", group: "ferramentas", result: { item: Item.PICARETA_MADEIRA, count: 1 }, ingredients: [{ item: Item.TABUA_CARVALHO, count: 3 }, { item: Item.HASTE, count: 2 }], station: "workbench", world: "orvalis" },
   { id: "picareta-pedra", name: "Picareta de Pedra", group: "ferramentas", result: { item: Item.PICARETA_PEDRA, count: 1 }, ingredients: [{ item: Item.STONE, count: 3 }, { item: Item.HASTE, count: 2 }], station: "workbench", world: "orvalis" },
+  { id: "clava-madeira", name: "Clava de Madeira", group: "ferramentas", result: { item: Item.CLAVA_MADEIRA, count: 1 }, ingredients: [{ item: Item.TABUA_CARVALHO, count: 3 }, { item: Item.HASTE, count: 2 }], station: "workbench", world: "orvalis" },
+  // a clava do Grunho (ADR 0148)
   { id: "espada-madeira", name: "Espada de Madeira", group: "ferramentas", result: { item: Item.ESPADA_MADEIRA, count: 1 }, ingredients: [{ item: Item.TABUA_CARVALHO, count: 2 }, { item: Item.HASTE, count: 1 }], station: "workbench", world: "orvalis" },
   { id: "espada-pedra", name: "Espada de Pedra", group: "ferramentas", result: { item: Item.ESPADA_PEDRA, count: 1 }, ingredients: [{ item: Item.STONE, count: 2 }, { item: Item.HASTE, count: 1 }], station: "workbench", world: "orvalis" },
   { id: "machado-madeira", name: "Machado de Madeira", group: "ferramentas", result: { item: Item.MACHADO_MADEIRA, count: 1 }, ingredients: [{ item: Item.TABUA_CARVALHO, count: 3 }, { item: Item.HASTE, count: 2 }], station: "workbench", world: "orvalis" },
@@ -979,6 +987,8 @@ var RECIPES = [
   { id: "assar-bife", name: "Bife", group: "materiais", result: { item: Item.BIFE, count: 1 }, ingredients: [{ item: Item.BOVINA_CRUA, count: 1 }], station: "furnace", world: "orvalis" },
   { id: "assar-carneiro", name: "Carneiro Assado", group: "materiais", result: { item: Item.CARNEIRO_ASSADO, count: 1 }, ingredients: [{ item: Item.CARNEIRO_CRU, count: 1 }], station: "furnace", world: "orvalis" },
   { id: "assar-frango", name: "Frango Assado", group: "materiais", result: { item: Item.FRANGO_ASSADO, count: 1 }, ingredients: [{ item: Item.FRANGO_CRU, count: 1 }], station: "furnace", world: "orvalis" },
+  { id: "fogueira", name: "Fogueira", group: "utilidades", result: { item: Item.FOGUEIRA, count: 1 }, ingredients: [{ item: Item.HASTE, count: 3 }, { item: Item.CARVAO_VEGETAL, count: 1 }, { item: Item.LOG_OAK, count: 3 }], station: "workbench", world: "orvalis" },
+  // Wiki (espelhos): 3 gravetos + 1 carvão + 3 troncos (ADR 0146)
   { id: "tocha", name: "Tocha", group: "utilidades", result: { item: Item.TOCHA, count: 4 }, ingredients: [{ item: Item.CARVAO_VEGETAL, count: 1 }, { item: Item.HASTE, count: 1 }], station: "personal", world: "orvalis" },
   // Wiki: carvão (vegetal) + graveto → 4 (ADR 0121)
   { id: "tocha-carvao", name: "Tocha (carv\xE3o)", group: "utilidades", result: { item: Item.TOCHA, count: 4 }, ingredients: [{ item: Item.CARVAO, count: 1 }, { item: Item.HASTE, count: 1 }], station: "personal", world: "orvalis" },
@@ -1555,6 +1565,7 @@ var MAX_DURABILITY = {
   [Item.MACHADO_PEDRA]: 131,
   [Item.PA_PEDRA]: 131,
   [Item.ENXADA_PEDRA]: 131,
+  [Item.CLAVA_MADEIRA]: 59,
   [Item.ESPADA_MADEIRA]: 59,
   [Item.ESPADA_PEDRA]: 131
   // espadas do Orvalis (ADR 0145): como as outras ferramentas de madeira e pedra
@@ -1564,8 +1575,8 @@ function wearCost(tool, action) {
   const t = toolOf(tool);
   if (!t) return 0;
   if (action.type === "use") return 1;
-  if (action.type === "break_block") return isCollectBlock(action.block) ? 0 : t.kind === "dagger" || t.kind === "sword" ? 2 : 1;
-  return t.kind === "dagger" || t.kind === "sword" ? 1 : 2;
+  if (action.type === "break_block") return isCollectBlock(action.block) ? 0 : t.kind === "dagger" || t.kind === "sword" || t.kind === "club" ? 2 : 1;
+  return t.kind === "dagger" || t.kind === "sword" || t.kind === "club" ? 1 : 2;
 }
 
 // src/titan/inventory.ts
@@ -2177,6 +2188,9 @@ function releaseTorches(s, x, y, z) {
     if (s.volume.remove(tx, ty, tz)) spillBlock(s, Item.TOCHA, 1, tx, ty, tz);
   };
   if (s.volume.get(x, y + 1, z) === T.TORCH) drop(x, y + 1, z);
+  if (s.volume.get(x, y + 1, z) === T.CAMPFIRE) {
+    if (s.volume.remove(x, y + 1, z)) spillBlock(s, Item.FOGUEIRA, 1, x, y + 1, z);
+  }
   for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
     const id = s.volume.get(x + dx, y, z + dz);
     if (isWallTorch(id)) {
@@ -2775,6 +2789,9 @@ function placeFromSlotCore(s, hit, slot) {
       if (!torchTopSupport(base)) return { ok: false, msg: "A tocha precisa de um apoio firme" };
     } else if (!torchSideSupport(base)) return { ok: false, msg: "A tocha precisa de um bloco inteiro para se prender" };
     else block = wallTorchId(ladderTurnOf(hit.nx, hit.nz));
+  } else if (block === T.CAMPFIRE) {
+    const base = s.volume.get(hit.x, hit.y, hit.z);
+    if (hit.item || hit.ny <= 0 || !torchTopSupport(base)) return { ok: false, msg: "A fogueira precisa de um ch\xE3o firme" };
   } else if (block === T.WORKBENCH) block = workbenchId(workbenchTurnFacing(s.yaw));
   else if (block === T.MARCO) block = marcoId(marcoTurnFacing(s.yaw));
   else if (block === T.PAINEL) block = panelIdFacing(s.yaw);
@@ -3150,13 +3167,13 @@ function feedFauna(f, item) {
 }
 function tickBreeding(list, counter) {
   const born = [];
-  const dist2 = (a, b) => Math.hypot(a.body.x - b.body.x, a.body.z - b.body.z);
+  const dist3 = (a, b) => Math.hypot(a.body.x - b.body.x, a.body.z - b.body.z);
   for (const a of list) {
     if (a.baby || a.love <= 0 || a.phase === "panic") continue;
     let mate = null;
-    for (const b of list) if (b !== a && !b.baby && b.kind === a.kind && b.love > 0 && b.phase !== "panic" && Math.abs(b.body.y - a.body.y) < 2 && (!mate || dist2(a, b) < dist2(a, mate))) mate = b;
-    if (!mate || dist2(a, mate) > MATE_RANGE) continue;
-    if (dist2(a, mate) <= MATE_TOUCH) {
+    for (const b of list) if (b !== a && !b.baby && b.kind === a.kind && b.love > 0 && b.phase !== "panic" && Math.abs(b.body.y - a.body.y) < 2 && (!mate || dist3(a, b) < dist3(a, mate))) mate = b;
+    if (!mate || dist3(a, mate) > MATE_RANGE) continue;
+    if (dist3(a, mate) <= MATE_TOUCH) {
       if (list.length + born.length >= MAX_FAUNA) continue;
       const baby = newBaby(a, mate, counter.n++);
       a.love = 0;
@@ -3173,8 +3190,8 @@ function tickBreeding(list, counter) {
   for (const f of list) {
     if (!f.baby) continue;
     let adult = null;
-    for (const b of list) if (!b.baby && b.kind === f.kind && dist2(f, b) <= 12 && (!adult || dist2(f, b) < dist2(f, adult))) adult = b;
-    if (adult && dist2(f, adult) > 2.5) {
+    for (const b of list) if (!b.baby && b.kind === f.kind && dist3(f, b) <= 12 && (!adult || dist3(f, b) < dist3(f, adult))) adult = b;
+    if (adult && dist3(f, adult) > 2.5) {
       f.goal = { x: adult.body.x, z: adult.body.z };
       f.pause = 0;
       f.stuck = 0;
@@ -3207,6 +3224,168 @@ function faunaFromData(raw, seed, inRegion2) {
   return out;
 }
 
+// src/titan/grunho.ts
+var GRUNHO = {
+  hp: 20,
+  damage: 3,
+  /** Pausa mínima entre o início de um golpe e o seguinte (s). */
+  hitIntervalS: 1.5,
+  /** Duração do gesto do golpe (s) e o instante em que a clava acerta. */
+  swingS: 0.5,
+  hitAtS: 0.3,
+  /** Alcance para começar o golpe e para ele ainda acertar (m, entre os pés). */
+  reach: 1.6,
+  hitReach: 2,
+  /** Avisa o viajante a este raio (m) e não persegue além deste raio **da fogueira**. */
+  alertRadius: 12,
+  chaseRadius: 25,
+  /** Passeio em volta do lugar dele na roda (m) e as velocidades (m/s): o jogador anda 4,3 e corre 5,6, então dá para fugir. */
+  wanderRadius: 1.5,
+  walk: 1,
+  run: 3,
+  /** Caixa de acerto (m): largura × altura. */
+  width: 0.7,
+  height: 1.4,
+  /** Depois de abatido, volta em tantos segundos. */
+  respawnS: 600,
+  /** Chance de soltar a Clava de Madeira ao ser abatido (ADR 0148; o sorteio é da seed, do goblin e do instante). */
+  dropChance: 0.25
+};
+var WALK_REF2 = 4.3;
+function newGrunho(sp, seed) {
+  const hx = sp.x + 0.5, hz = sp.z + 0.5, cx = sp.campX + 0.5, cz = sp.campZ + 0.5;
+  const salt = [...sp.id].reduce((a, ch) => Math.imul(a, 31) + ch.charCodeAt(0) >>> 0, 7);
+  return { id: sp.id, camp: { x: cx, z: cz }, body: newBody(hx, sp.y, hz), yaw: faunaYaw(cx - hx, cz - hz), phase: "wander", t: 0, home: { x: hx, z: hz }, goal: { x: hx, z: hz }, pause: 0.5 + 2 * hash2(seed, salt, 7), stuck: 0, hp: GRUNHO.hp, hurt: 99, cooldown: 0, swing: -1, hitDone: false, target: null, deadFor: 0, clock: hash2(seed, salt, 5) * 10, seed: salt };
+}
+var grunhoSpecs = (g) => (g.camps ?? []).flatMap((c) => c.slots.map((s, i) => ({ id: `g:${c.id}:${i}`, x: s.x, y: s.y, z: s.z, campX: c.x, campZ: c.z })));
+var newGrunhosFromSpecs = (specs, seed) => specs.map((sp) => newGrunho(sp, seed));
+var dist2 = (ax, az, bx, bz) => Math.hypot(ax - bx, az - bz);
+function stepGrunho(g, vol, dt, targets) {
+  const hits = [];
+  g.clock += dt;
+  g.t += dt;
+  g.hurt += dt;
+  if (g.phase === "dead") {
+    g.deadFor += dt;
+    if (g.deadFor >= GRUNHO.respawnS) {
+      g.phase = "wander";
+      g.t = 0;
+      g.hp = GRUNHO.hp;
+      g.deadFor = 0;
+      g.target = null;
+      g.swing = -1;
+      g.cooldown = 0;
+      g.body.x = g.home.x;
+      g.body.z = g.home.z;
+      g.body.vx = g.body.vz = 0;
+      g.goal = { x: g.home.x, z: g.home.z };
+      g.pause = 1;
+    }
+    return { hits, moving: false };
+  }
+  if (g.cooldown > 0) g.cooldown = Math.max(0, g.cooldown - dt);
+  const b = g.body;
+  let dirX = 0, dirZ = 0, speed = 0;
+  const walkTo = (tx, tz, mps) => {
+    const dx = tx - b.x, dz = tz - b.z, d = Math.hypot(dx, dz);
+    if (d < 1e-6) return;
+    dirX = dx / d;
+    dirZ = dz / d;
+    speed = mps / WALK_REF2;
+    g.yaw = faunaYaw(dirX, dirZ);
+  };
+  const face = (tx, tz) => {
+    if (Math.hypot(tx - b.x, tz - b.z) > 1e-6) g.yaw = faunaYaw(tx - b.x, tz - b.z);
+  };
+  if (g.swing >= 0) {
+    g.swing += dt;
+    if (!g.hitDone && g.swing >= GRUNHO.hitAtS) {
+      g.hitDone = true;
+      const tg = targets.find((t) => t.id === g.target);
+      if (tg && dist2(tg.x, tg.z, b.x, b.z) <= GRUNHO.hitReach && Math.abs(tg.y - b.y) < 1.6) hits.push({ target: tg.id, damage: GRUNHO.damage, dx: tg.x - b.x, dz: tg.z - b.z });
+    }
+    if (g.swing >= GRUNHO.swingS) g.swing = -1;
+  }
+  const radius = g.phase === "chase" ? GRUNHO.chaseRadius : GRUNHO.alertRadius;
+  let best = null, bestD = Infinity;
+  for (const t of targets) {
+    const d = dist2(t.x, t.z, b.x, b.z);
+    if (d <= radius && dist2(t.x, t.z, g.camp.x, g.camp.z) <= GRUNHO.chaseRadius && Math.abs(t.y - b.y) < 6 && d < bestD) {
+      best = t;
+      bestD = d;
+    }
+  }
+  const leashed = dist2(b.x, b.z, g.camp.x, g.camp.z) > GRUNHO.chaseRadius;
+  if (best && !leashed && g.phase !== "return") {
+    if (g.phase !== "chase") {
+      g.phase = "chase";
+      g.t = 0;
+    }
+    g.target = best.id;
+  } else if (g.phase === "chase") {
+    g.phase = "return";
+    g.t = 0;
+    g.target = null;
+    g.swing = -1;
+  }
+  if (g.phase === "chase" && best) {
+    if (g.swing >= 0) face(best.x, best.z);
+    else if (bestD <= GRUNHO.reach) {
+      face(best.x, best.z);
+      if (g.cooldown === 0) {
+        g.swing = 0;
+        g.hitDone = false;
+        g.cooldown = GRUNHO.hitIntervalS;
+      }
+    } else walkTo(best.x, best.z, GRUNHO.run);
+  } else if (g.phase === "return") {
+    if (dist2(b.x, b.z, g.home.x, g.home.z) < 0.6) {
+      g.phase = "wander";
+      g.t = 0;
+      g.hp = GRUNHO.hp;
+      g.pause = 1;
+      g.goal = { x: g.home.x, z: g.home.z };
+    } else walkTo(g.home.x, g.home.z, GRUNHO.run);
+  } else if (g.pause > 0) {
+    g.pause -= dt;
+    g.stuck = 0;
+    face(g.camp.x, g.camp.z);
+  } else if (dist2(b.x, b.z, g.goal.x, g.goal.z) < 0.3 || g.stuck > 4) {
+    g.pause = 2 + 4 * hash2(g.seed, Math.floor(g.clock), 5);
+    g.stuck = 0;
+    const a = hash2(g.seed, Math.floor(g.clock * 0.5), 11) * Math.PI * 2, r = GRUNHO.wanderRadius * (0.3 + 0.7 * hash2(g.seed, Math.floor(g.clock * 0.5), 23));
+    g.goal = { x: g.home.x + Math.cos(a) * r, z: g.home.z + Math.sin(a) * r };
+  } else {
+    walkTo(g.goal.x, g.goal.z, GRUNHO.walk);
+    g.stuck += dt;
+  }
+  stepBody(vol, b, { dirX: dirX * speed, dirZ: dirZ * speed, jump: false }, dt);
+  return { hits, moving: speed > 0 && Math.hypot(b.vx, b.vz) > 0.05 };
+}
+function hurtGrunho(g, damage, by = null) {
+  if (g.phase === "dead") return { dead: false };
+  g.hp = Math.max(0, g.hp - Math.max(0, damage));
+  g.hurt = 0;
+  if (g.hp <= 0) {
+    g.phase = "dead";
+    g.deadFor = 0;
+    g.swing = -1;
+    g.target = null;
+    g.t = 0;
+    return { dead: true };
+  }
+  if (by) {
+    g.target = by;
+    if (g.phase !== "chase") {
+      g.phase = "chase";
+      g.t = 0;
+    }
+  }
+  return { dead: false };
+}
+var grunhoDrops = (g, seed) => hash2(seed, g.seed, Math.floor(g.clock * 10) + 17) < GRUNHO.dropChance ? [{ item: Item.CLAVA_MADEIRA, count: 1 }] : [];
+var grunhoAlive = (g) => g.phase !== "dead";
+
 // src/titan/combat.ts
 var ATTACK_REACH = 3;
 var ATTACK_COOLDOWN_S = 0.6;
@@ -3225,7 +3404,8 @@ var WEAPON_DAMAGE = {
   [Item.ENXADA_MADEIRA]: 1,
   [Item.ENXADA_PEDRA]: 1,
   [Item.ESPADA_MADEIRA]: 4,
-  [Item.ESPADA_PEDRA]: 5
+  [Item.ESPADA_PEDRA]: 5,
+  [Item.CLAVA_MADEIRA]: 5
 };
 var damageOf = (item) => item ? WEAPON_DAMAGE[item] ?? FIST_DAMAGE : FIST_DAMAGE;
 var LOOT = { pequeno: { meat: 1, plate: 1 }, grande: { meat: 2, plate: 1 } };
@@ -3284,6 +3464,21 @@ function attackFauna(s, index) {
   loot.forEach((l, i) => restDrop(s, `${base}:${n}:${i}`, l.item, f.body.x, f.body.y, f.body.z, l.count));
   const txt = loot.map((l) => `${l.count} ${ITEM_NAMES[l.item]}`).join(", ");
   return { ok: true, damage, dead: true, broken: w.broken, toolName: w.name, msg: `${FAUNA_KINDS[f.kind].name}${f.baby ? " (filhote)" : ""} abatido${txt ? `: ${txt}` : ""}${broke ? `; ${broke}` : ""}` };
+}
+function attackGrunho(s, index, by = null) {
+  const g = s.grunhos[index];
+  if (!g || !grunhoAlive(g)) return { ok: false, damage: 0, dead: false, broken: false };
+  const damage = damageOf(s.inventory.get(s.selected)?.item);
+  const w = wearHeldTool(s, { type: "attack" });
+  const r = hurtGrunho(g, damage, by);
+  const broke = w.broken ? `${w.name} quebrou` : void 0;
+  if (!r.dead) return { ok: true, damage, dead: false, broken: w.broken, toolName: w.name, msg: broke };
+  const loot = grunhoDrops(g, s.seed), base = `m:${g.id}`;
+  let n = 0;
+  while (s.drops.has(`${base}:${n}`)) n++;
+  loot.forEach((l, i) => restDrop(s, `${base}:${n}:${i}`, l.item, g.body.x, g.body.y, g.body.z, l.count));
+  const txt = loot.map((l) => `${l.count} ${ITEM_NAMES[l.item]}`).join(", ");
+  return { ok: true, damage, dead: true, broken: w.broken, toolName: w.name, msg: `Grunho abatido${txt ? `: ${txt}` : ""}${broke ? `; ${broke}` : ""}` };
 }
 
 // src/titan/faunaFeed.ts
@@ -3936,9 +4131,9 @@ var TitanGenerator = class {
       let found = false;
       for (let k = 0; k < (v1 ? 48 : 240); k++) {
         const phi = phi0 + k * 2.399963;
-        const dist2 = v1 ? 9 + k % 4 * 2 : 8 + k % 6 * 2;
-        const x = Math.round(a.x + Math.cos(phi) * dist2);
-        const z = Math.round(a.z + Math.sin(phi) * dist2);
+        const dist3 = v1 ? 9 + k % 4 * 2 : 8 + k % 6 * 2;
+        const x = Math.round(a.x + Math.cos(phi) * dist3);
+        const z = Math.round(a.z + Math.sin(phi) * dist3);
         const m = v1 ? 6 : 5;
         if (x < this.region.min + m || x >= this.region.max - m || z < this.region.min + m || z >= this.region.max - m) continue;
         if (this.lakeField(x, z) > -4) continue;
@@ -4386,7 +4581,14 @@ var OrvalisGenerator = class {
     });
   }
 };
-var COSTA_GENERATOR_VERSION = 100;
+var COSTA_GENERATOR_VERSION = 101;
+var COSTA_LEGACY_VERSION = 100;
+var COSTA_CAMP_SITES = [{ id: "oeste", x: -38, z: 4 }, { id: "sudoeste", x: -32, z: 28 }, { id: "nordeste", x: 35, z: -10 }, { id: "sudeste", x: 37, z: 26 }];
+var CAMP_SIZE = 12;
+var CAMP_FLAT_R = 5.5;
+var CAMP_BLEND_R = 12;
+var CAMP_RING_R = 3.5;
+var CAMP_TREE_R = 10;
 var COSTA_N = 128;
 var COSTA_MIN = -64;
 var b64 = (s) => {
@@ -4418,8 +4620,40 @@ var COSTA_PLANTIO = [COSTA_PLAN.talhoes[0].caixa, COSTA_PLAN.talhoes[1].caixa];
 var COSTA_PENS = [{ pen: 0, kind: "galinha", n: 3 }, { pen: 0, kind: "porco", n: 1 }, { pen: 1, kind: "vaca", n: 2 }, { pen: 1, kind: "ovelha", n: 2 }];
 var CostaGenerator = class extends OrvalisGenerator {
   costaTrees = null;
-  constructor(seed) {
-    super(seed, COSTA_GENERATOR_VERSION);
+  campList = null;
+  constructor(seed, version = COSTA_GENERATOR_VERSION) {
+    super(seed, version);
+  }
+  /** Há acampamentos só a partir da versão 101. */
+  get hasCamps() {
+    return this.version >= 101;
+  }
+  /** Altura mediana (Y do topo natural) num raio de 5 em volta do centro: a altura da clareira. */
+  campBase(cx, cz) {
+    const hs = [];
+    for (let dz = -5; dz <= 5; dz++) for (let dx = -5; dx <= 5; dx++) if (dx * dx + dz * dz <= 25 && costaIn(cx + dx, cz + dz)) hs.push(COSTA_H[costaIdx(cx + dx, cz + dz)]);
+    hs.sort((a, b) => a - b);
+    return hs[hs.length >> 1];
+  }
+  campAround(x, z, r) {
+    if (!this.hasCamps) return null;
+    for (const c of COSTA_CAMP_SITES) if (Math.hypot(x - c.x, z - c.z) <= r) return { ...c, y: this.campBase(c.x, c.z) };
+    return null;
+  }
+  /** Os acampamentos (ADR 0147): a Fogueira (`x, y, z` = a célula dela) e os `CAMP_SIZE` lugares dos goblins na roda, nos pés (sobre a clareira). */
+  get camps() {
+    if (!this.hasCamps) return void 0;
+    if (!this.campList) {
+      this.campList = COSTA_CAMP_SITES.map((c) => {
+        const y = this.column(c.x, c.z).top + 1;
+        const slots = Array.from({ length: CAMP_SIZE }, (_, i) => {
+          const a = i / CAMP_SIZE * Math.PI * 2, sx = c.x + Math.round(Math.cos(a) * CAMP_RING_R), sz = c.z + Math.round(Math.sin(a) * CAMP_RING_R);
+          return { x: sx, y: this.column(sx, sz).top + 1, z: sz };
+        });
+        return { id: c.id, x: c.x, y, z: c.z, slots };
+      });
+    }
+    return this.campList;
   }
   /** Chegada no portão da praia (vão do muro em Z = 35, X 5–9), de frente para a aldeia (norte). */
   findArrival() {
@@ -4428,8 +4662,18 @@ var CostaGenerator = class extends OrvalisGenerator {
   }
   computeColumn(x, z) {
     if (!costaIn(x, z)) return { top: 44, surface: T.BEACH, sub: T.BEACH };
-    const i = costaIdx(x, z), top = COSTA_H[i], m = COSTA_M[i];
+    const i = costaIdx(x, z), m = COSTA_M[i];
+    let top = COSTA_H[i], trodden = false;
+    const camp = m === 0 ? null : this.campAround(x, z, CAMP_BLEND_R);
+    if (camp) {
+      const d = Math.hypot(x - camp.x, z - camp.z);
+      if (d <= CAMP_FLAT_R) {
+        top = camp.y;
+        trodden = true;
+      } else top = Math.round(camp.y + (top - camp.y) * ((d - CAMP_FLAT_R) / (CAMP_BLEND_R - CAMP_FLAT_R)));
+    }
     if (top <= LAKE_LAST_Y || m === 0 || m === 1) return { top, surface: T.BEACH, sub: T.BEACH };
+    if (trodden) return { top, surface: T.PATH, sub: T.DIRT };
     switch (m) {
       case 4:
         return { top, surface: T.STONE, sub: T.STONE };
@@ -4450,6 +4694,7 @@ var CostaGenerator = class extends OrvalisGenerator {
     if (!this.costaTrees) {
       const m = /* @__PURE__ */ new Map();
       COSTA_PLAN.arvores.forEach(([tx, tz], n) => {
+        if (this.campAround(tx, tz, CAMP_TREE_R)) return;
         const t = { x: tx, z: tz, top: this.column(tx, tz).top, h: 4 + Math.floor(hash2(this.seed, n, 31) * 3), sp: "oak", seed: Math.floor(hash2(this.seed, n, 37) * 4294967296) };
         for (let dz = -3; dz <= 3; dz++) for (let dx = -3; dx <= 3; dx++) {
           const k = cellKey(tx + dx, tz + dz);
@@ -4463,6 +4708,7 @@ var CostaGenerator = class extends OrvalisGenerator {
   /** Muro de pedra lisa (4 blocos), cercas e porteiras de carvalho por cima do terreno; o resto é o da base. */
   blockAt(x, y, z) {
     const k = cellKey(x, z);
+    if (this.hasCamps && COSTA_CAMP_SITES.some((c) => c.x === x && c.z === z) && y === this.column(x, z).top + 1) return T.CAMPFIRE;
     if (y >= COSTA_PLAN.muro.y[0] && y <= COSTA_PLAN.muro.y[1] && COSTA_WALL.has(k)) return T.STONE_SMOOTH;
     if (y === COSTA_PLAN.cercas.yBase) {
       if (COSTA_FENCE.has(k)) {
@@ -4501,7 +4747,7 @@ var CostaGenerator = class extends OrvalisGenerator {
     return out;
   }
 };
-var orvalisGeneratorFor = (seed, version) => version === COSTA_GENERATOR_VERSION ? new CostaGenerator(seed) : Number.isInteger(version) && version >= 1 && version <= ORVALIS_GENERATOR_VERSION ? new OrvalisGenerator(seed, version) : null;
+var orvalisGeneratorFor = (seed, version) => version === COSTA_GENERATOR_VERSION || version === COSTA_LEGACY_VERSION ? new CostaGenerator(seed, version) : Number.isInteger(version) && version >= 1 && version <= ORVALIS_GENERATOR_VERSION ? new OrvalisGenerator(seed, version) : null;
 
 // src/titan/save.ts
 var TITAN_SAVE_VERSION = 8;
@@ -4794,6 +5040,7 @@ var SkyLight = class {
 var TitanVolume = class _TitanVolume {
   constructor(gen) {
     this.gen = gen;
+    for (const c of gen.camps ?? []) this.emitters.set(lightKey(c.x, c.y, c.z), [c.x, c.y, c.z, lightLevelOf(T.CAMPFIRE)]);
   }
   gen;
   /** Edições por chunk: índice da célula na coluna → id. */
@@ -4917,7 +5164,7 @@ var TitanVolume = class _TitanVolume {
   }
   /** Coloca um sólido na célula (ar ou líquido; o líquido é deslocado, mas continua na base para voltar depois). */
   place(x, y, z, id) {
-    if (!isSolid(id) && id !== T.LANTERN && !isMarco(id) && id !== T.MAT && !isLadder(id) && !isTorch(id)) return false;
+    if (!isSolid(id) && id !== T.LANTERN && !isMarco(id) && id !== T.MAT && !isLadder(id) && !isTorch(id) && !isCampfire(id)) return false;
     if (isOccupied(this.get(x, y, z))) return false;
     return this.set(x, y, z, id);
   }
@@ -5022,7 +5269,7 @@ var TitanVolume = class _TitanVolume {
   }
   // ---- Luz de lanterna ----
   /** Modelos 3D colocados (mesa, Marco de Margem, Painel de Junco): o renderer desenha uma instância por célula; `modelVersion` muda a cada peça posta, retirada ou carregada. */
-  models = { workbench: /* @__PURE__ */ new Map(), marco: /* @__PURE__ */ new Map(), painel: /* @__PURE__ */ new Map(), escada: /* @__PURE__ */ new Map(), bau: /* @__PURE__ */ new Map(), cama: /* @__PURE__ */ new Map(), braseiro: /* @__PURE__ */ new Map(), braseiroAceso: /* @__PURE__ */ new Map(), degrau: /* @__PURE__ */ new Map(), degrauPedra: /* @__PURE__ */ new Map(), cadeira: /* @__PURE__ */ new Map(), porta: /* @__PURE__ */ new Map(), tocha: /* @__PURE__ */ new Map(), tochaParede: /* @__PURE__ */ new Map(), ervaMarinha: /* @__PURE__ */ new Map(), ervaAlta: /* @__PURE__ */ new Map(), ervaAltaTopo: /* @__PURE__ */ new Map(), alga: /* @__PURE__ */ new Map(), algaTopo: /* @__PURE__ */ new Map(), ...Object.fromEntries(CORAL_KINDS.map((k) => [k, /* @__PURE__ */ new Map()])), ...Object.fromEntries(WOOD_STAIR_KINDS.map((k) => [k, /* @__PURE__ */ new Map()])), ...Object.fromEntries(FENCE_KINDS.map((k) => [k, /* @__PURE__ */ new Map()])), ...Object.fromEntries(WOOD_DOOR_KINDS.map((k) => [k, /* @__PURE__ */ new Map()])), ...Object.fromEntries(TRAPDOOR_KINDS.map((k) => [k, /* @__PURE__ */ new Map()])), ...Object.fromEntries(GATE_KINDS.map((k) => [k, /* @__PURE__ */ new Map()])), ...Object.fromEntries(MURETA_KINDS.map((k) => [k, /* @__PURE__ */ new Map()])) };
+  models = { workbench: /* @__PURE__ */ new Map(), marco: /* @__PURE__ */ new Map(), painel: /* @__PURE__ */ new Map(), escada: /* @__PURE__ */ new Map(), bau: /* @__PURE__ */ new Map(), cama: /* @__PURE__ */ new Map(), braseiro: /* @__PURE__ */ new Map(), braseiroAceso: /* @__PURE__ */ new Map(), degrau: /* @__PURE__ */ new Map(), degrauPedra: /* @__PURE__ */ new Map(), cadeira: /* @__PURE__ */ new Map(), porta: /* @__PURE__ */ new Map(), tocha: /* @__PURE__ */ new Map(), tochaParede: /* @__PURE__ */ new Map(), fogueira: /* @__PURE__ */ new Map(), ervaMarinha: /* @__PURE__ */ new Map(), ervaAlta: /* @__PURE__ */ new Map(), ervaAltaTopo: /* @__PURE__ */ new Map(), alga: /* @__PURE__ */ new Map(), algaTopo: /* @__PURE__ */ new Map(), ...Object.fromEntries(CORAL_KINDS.map((k) => [k, /* @__PURE__ */ new Map()])), ...Object.fromEntries(WOOD_STAIR_KINDS.map((k) => [k, /* @__PURE__ */ new Map()])), ...Object.fromEntries(FENCE_KINDS.map((k) => [k, /* @__PURE__ */ new Map()])), ...Object.fromEntries(WOOD_DOOR_KINDS.map((k) => [k, /* @__PURE__ */ new Map()])), ...Object.fromEntries(TRAPDOOR_KINDS.map((k) => [k, /* @__PURE__ */ new Map()])), ...Object.fromEntries(GATE_KINDS.map((k) => [k, /* @__PURE__ */ new Map()])), ...Object.fromEntries(MURETA_KINDS.map((k) => [k, /* @__PURE__ */ new Map()])) };
   modelVersion = 0;
   /** Cada peça: `[x, y, z, giro]` (giro 0–3 em quartos de volta ao redor de Y; o painel usa 0 = ao longo de X e 1 = ao longo de Z). */
   /** Registra um modelo que vem do **gerador** (a flora marinha, ADR 0135), descoberto quando a seção é malhada: os modelos editados entram por `set` e pelo carregamento; os da base, só aqui. Idempotente. */
@@ -5310,7 +5557,7 @@ function fresh(gen) {
   const crops = /* @__PURE__ */ new Map();
   for (const c of gen.startCrops ?? []) crops.set(cropKey(c.x, c.y, c.z), { x: c.x, y: c.y, z: c.z, age: c.age, species: c.species });
   const grants = {};
-  const s = { seed: gen.seed, volume, body: newBody(a.x, a.y, a.z), yaw: a.yaw, pitch: -0.12, selected: 0, resumed: false, relocated: false, time: START_FRAC, days: 0, weather: newWeather(Math.random), inventory: Inventory.starting(), collected, collectedRev: 0, regrow, crops, furnaces: /* @__PURE__ */ new Map(), chests: /* @__PURE__ */ new Map(), spawn: null, respawn: /* @__PURE__ */ new Map(), creatures: creaturesFor(gen), fauna: faunaFor(gen), savedStateRev: -1, drops: /* @__PURE__ */ new Map(), dropFx: /* @__PURE__ */ new Map(), fishing: null, coralWatch: /* @__PURE__ */ new Map(), boats: [], boatRide: null, dropsRev: 0, vitals: newVitals(), known: /* @__PURE__ */ new Set(), grants, metaRev: 0, items: makeItems({ volume, collected, grants, regrow, crops }) };
+  const s = { seed: gen.seed, volume, body: newBody(a.x, a.y, a.z), yaw: a.yaw, pitch: -0.12, selected: 0, resumed: false, relocated: false, time: START_FRAC, days: 0, weather: newWeather(Math.random), inventory: Inventory.starting(), collected, collectedRev: 0, regrow, crops, furnaces: /* @__PURE__ */ new Map(), chests: /* @__PURE__ */ new Map(), spawn: null, respawn: /* @__PURE__ */ new Map(), creatures: creaturesFor(gen), fauna: faunaFor(gen), grunhos: newGrunhosFromSpecs(grunhoSpecs(gen), gen.seed), savedStateRev: -1, drops: /* @__PURE__ */ new Map(), dropFx: /* @__PURE__ */ new Map(), fishing: null, coralWatch: /* @__PURE__ */ new Map(), boats: [], boatRide: null, dropsRev: 0, vitals: newVitals(), known: /* @__PURE__ */ new Set(), grants, metaRev: 0, items: makeItems({ volume, collected, grants, regrow, crops }) };
   return s;
 }
 function resume(gen, save) {
@@ -5333,7 +5580,7 @@ function resume(gen, save) {
   const crops = validCrops(save.header.crops, volume, save.header.v);
   const respawn = validRespawn(save.header.respawn, new Set(creatureSpecs(gen).map((c) => c.id)));
   const known = new Set((save.header.recipes ?? []).filter((x) => typeof x === "string"));
-  const s = { seed: gen.seed, volume, body: newBody(safe.x, safe.y, safe.z), yaw: p.yaw, pitch: p.pitch, selected: Math.max(0, Math.min(HOTBAR - 1, save.header.selected | 0)), resumed: true, relocated: moved, time: validDay(save.header.time), days: Number.isInteger(save.header.days) && save.header.days >= 0 ? save.header.days : 0, weather: weatherFromData(save.header.weather, Math.random), inventory: inv, collected, collectedRev: 0, regrow, crops, furnaces: validFurnaces(save.header.furnaces, volume), chests: validChests(save.header.chests, volume), spawn: validSpawn(save.header.spawn, volume), respawn, creatures: creaturesFor(gen).filter((c) => !respawn.has(c.id)), fauna: faunaFromSave(save.header.fauna, gen, volume), savedStateRev: -1, drops: validDrops(save.header.drops, gen), dropFx: /* @__PURE__ */ new Map(), fishing: null, coralWatch: /* @__PURE__ */ new Map(), boats: boatsFromData(save.header.boats), boatRide: null, dropsRev: 0, known, grants, metaRev: 0, vitals: vitalsFromData(save.header.vitals), items: makeItems({ volume, collected, grants, regrow, crops }) };
+  const s = { seed: gen.seed, volume, body: newBody(safe.x, safe.y, safe.z), yaw: p.yaw, pitch: p.pitch, selected: Math.max(0, Math.min(HOTBAR - 1, save.header.selected | 0)), resumed: true, relocated: moved, time: validDay(save.header.time), days: Number.isInteger(save.header.days) && save.header.days >= 0 ? save.header.days : 0, weather: weatherFromData(save.header.weather, Math.random), inventory: inv, collected, collectedRev: 0, regrow, crops, furnaces: validFurnaces(save.header.furnaces, volume), chests: validChests(save.header.chests, volume), spawn: validSpawn(save.header.spawn, volume), respawn, creatures: creaturesFor(gen).filter((c) => !respawn.has(c.id)), fauna: faunaFromSave(save.header.fauna, gen, volume), grunhos: newGrunhosFromSpecs(grunhoSpecs(gen), gen.seed), savedStateRev: -1, drops: validDrops(save.header.drops, gen), dropFx: /* @__PURE__ */ new Map(), fishing: null, coralWatch: /* @__PURE__ */ new Map(), boats: boatsFromData(save.header.boats), boatRide: null, dropsRev: 0, known, grants, metaRev: 0, vitals: vitalsFromData(save.header.vitals), items: makeItems({ volume, collected, grants, regrow, crops }) };
   const granted = gen.version < 4 && !grants.ember ? grantEmber(s) : false;
   discoverRecipes(s);
   const clean = save.header.inventory && inv.rev === revBefore && !converted && !granted && save.header.v >= TITAN_SAVE_VERSION;
@@ -5445,7 +5692,7 @@ function headerOf(s) {
 }
 
 // src/net/titan/protocol.ts
-var TITAN_PROTOCOL_VERSION = 6;
+var TITAN_PROTOCOL_VERSION = 7;
 var TITAN_MAX_PLAYERS = 10;
 var TITAN_NAME_MIN = 2;
 var TITAN_NAME_MAX = 16;
@@ -5507,7 +5754,7 @@ function parseTitanAction(v) {
   if (a.k === "strike") return typeof o.id === "string" && o.id.length > 0 && o.id.length <= 20 ? { k: "strike", id: o.id } : null;
   if (a.k === "dismountBoat") return { k: "dismountBoat" };
   if (a.k === "mountBoat") return typeof o.id === "string" && o.id.length > 0 && o.id.length <= 20 ? { k: "mountBoat", id: o.id } : null;
-  if (a.k === "strikeFauna" || a.k === "feedFauna") return typeof o.id === "string" && o.id.length > 0 && o.id.length <= 40 ? { k: a.k, id: o.id } : null;
+  if (a.k === "strikeFauna" || a.k === "feedFauna" || a.k === "strikeGrunho") return typeof o.id === "string" && o.id.length > 0 && o.id.length <= 40 ? { k: a.k, id: o.id } : null;
   if (a.k === "die") return { k: "die" };
   return null;
 }
@@ -5553,6 +5800,10 @@ var TITAN_SIM_RADIUS = 56;
 var TITAN_SHOW_RADIUS = 64;
 var TITAN_CREATURES_EVERY = 0.1;
 var TITAN_FURNACES_EVERY = 1;
+var TITAN_GRUNHO_SIM_RADIUS = 48;
+var TITAN_GRUNHO_SHOW_RADIUS = 64;
+var TITAN_GRUNHO_SHOW_MAX = 40;
+var TITAN_GRUNHO_EVERY = 0.15;
 var TITAN_FAUNA_SIM_RADIUS = 48;
 var TITAN_FAUNA_SHOW_RADIUS = 64;
 var TITAN_FAUNA_SHOW_MAX = 40;
@@ -5603,6 +5854,8 @@ var TitanRoom = class {
   lastBoatsSig = "[]";
   sinceFaunaSave = 0;
   faunaMoving = /* @__PURE__ */ new Map();
+  grunhoMoving = /* @__PURE__ */ new Map();
+  sinceGrunhos = 0;
   faunaCounter = { n: 0 };
   hook() {
     this.world.volume.onSet = (x, y, z, id) => {
@@ -5781,6 +6034,9 @@ var TitanRoom = class {
         case "strikeFauna":
           r = this.strikeFauna(p, a.id);
           break;
+        case "strikeGrunho":
+          r = this.strikeGrunho(p, a.id);
+          break;
         case "feedFauna":
           r = this.feedFauna(p, a.id);
           break;
@@ -5840,6 +6096,21 @@ var TitanRoom = class {
     return this.world.boats.map((b) => ({ id: b.id, k: b.kind, x: Math.round(b.x * 100) / 100, y: Math.round(b.y * 100) / 100, z: Math.round(b.z * 100) / 100, r: Math.round(b.yaw * 100) / 100, d: rider.get(b.id) ?? 0 }));
   }
   /** Animal de fazenda pelo id, ao alcance de `p` (o olho até o centro do corpo). */
+  /** Golpe num Grunho (ADR 0147): alcance, pausa entre golpes e `attackGrunho` (a Clava de Madeira, se sair, cai no chão da sala; o goblin passa a perseguir quem bateu). */
+  strikeGrunho(p, id) {
+    const idx = this.world.grunhos.findIndex((e) => e.id === id), g = this.world.grunhos[idx], b = p.view.body;
+    if (!g || !grunhoAlive(g)) return { ok: false };
+    if (Math.hypot(g.body.x - b.x, g.body.y + 0.7 - (b.y + EYE_HEIGHT), g.body.z - b.z) > TITAN_STRIKE_REACH) return { ok: false, msg: "Longe demais" };
+    if (this.clock - p.struckAt < ATTACK_COOLDOWN_S - 0.05) return { ok: false };
+    p.struckAt = this.clock;
+    const r = attackGrunho(p.view, idx, String(p.id));
+    this.sinceGrunhos = TITAN_GRUNHO_EVERY;
+    return { ok: r.ok, ...r.msg ? { msg: r.msg } : {} };
+  }
+  wireGrunho(g) {
+    const r22 = (v) => Math.round(v * 100) / 100;
+    return { id: g.id, x: r22(g.body.x), y: r22(g.body.y), z: r22(g.body.z), yaw: r22(g.yaw), ph: g.phase === "dead" ? "wander" : g.phase, hp: g.hp, sw: g.swing < 0 ? -1 : r22(g.swing), hu: Math.round(Math.min(g.hurt, 9) * 10) / 10, m: this.grunhoMoving.get(g.id) ? 1 : 0, c: r22(g.clock) };
+  }
   faunaNear(p, id) {
     const idx = this.world.fauna.findIndex((e) => e.id === id), f = this.world.fauna[idx], b = p.view.body;
     return f && Math.hypot(f.body.x - b.x, f.body.y - (b.y + EYE_HEIGHT), f.body.z - b.z) <= TITAN_STRIKE_REACH ? { idx, f } : null;
@@ -5963,6 +6234,23 @@ var TitanRoom = class {
       if (this.sinceFaunaSave >= TITAN_FAUNA_SAVE_EVERY) {
         this.sinceFaunaSave = 0;
         this.dirty = true;
+      }
+    }
+    if (list.length && w.grunhos.length) {
+      const targets = list.map((p) => ({ id: String(p.id), x: p.view.body.x, y: p.view.body.y, z: p.view.body.z }));
+      for (const g of w.grunhos) {
+        if (g.phase === "wander" && !targets.some((t) => Math.hypot(g.body.x - t.x, g.body.z - t.z) <= TITAN_GRUNHO_SIM_RADIUS)) continue;
+        const ev = stepGrunho(g, w.volume, dt, targets);
+        this.grunhoMoving.set(g.id, ev.moving);
+        for (const h of ev.hits) out.push({ to: Number(h.target), msg: { t: "hurt", damage: h.damage, kind: "grunho" } });
+      }
+    }
+    this.sinceGrunhos += dt;
+    if (this.sinceGrunhos >= TITAN_GRUNHO_EVERY && list.length && w.grunhos.length) {
+      this.sinceGrunhos = 0;
+      for (const p of list) {
+        const near = w.grunhos.filter(grunhoAlive).map((g) => ({ g, d: Math.hypot(g.body.x - p.view.body.x, g.body.z - p.view.body.z) })).filter((e) => e.d <= TITAN_GRUNHO_SHOW_RADIUS).sort((a, b) => a.d - b.d).slice(0, TITAN_GRUNHO_SHOW_MAX);
+        out.push({ to: p.id, msg: { t: "grunhos", list: near.map((e) => this.wireGrunho(e.g)) } });
       }
     }
     this.sinceFauna += dt;
